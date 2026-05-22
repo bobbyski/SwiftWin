@@ -34,16 +34,27 @@ public enum FontWeight: Sendable, Hashable {
 
 public struct Button: View {
     private let title: String
+    private let style: ButtonStyle
     private let action: () -> Void
 
-    public init(_ title: String, action: @escaping () -> Void) {
+    public init(
+        _ title: String,
+        style: ButtonStyle = .secondary,
+        action: @escaping () -> Void
+    ) {
         self.title = title
+        self.style = style
         self.action = action
     }
 
     public func render(into context: RenderContext) {
-        context.renderer.button(title, action: action)
+        context.renderer.button(title, style: style, action: action)
     }
+}
+
+public enum ButtonStyle: Sendable, Hashable {
+    case primary
+    case secondary
 }
 
 public struct Spacer: View {

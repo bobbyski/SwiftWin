@@ -32,7 +32,7 @@ public final class Win32Renderer: Renderer {
             }
         }
 
-        layoutStack = [LayoutState(axis: .vertical, x: 32, y: 32, spacing: 10)]
+        layoutStack = [LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)]
     }
 
     public func endWindow() {
@@ -46,7 +46,7 @@ public final class Win32Renderer: Renderer {
     }
 
     public func beginStack(axis: StackAxis, spacing: Double) {
-        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 24, y: 24, spacing: 8)
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
         layoutStack.append(LayoutState(axis: axis, x: origin.x, y: origin.y, spacing: Int32(spacing)))
     }
 
@@ -55,8 +55,8 @@ public final class Win32Renderer: Renderer {
             return
         }
 
-        let consumedWidth = max(1, child.x - (layoutStack.last?.x ?? 0))
-        let consumedHeight = max(1, child.y - (layoutStack.last?.y ?? 0))
+        let consumedWidth = max(child.maxCrossAxis, child.x - child.originX)
+        let consumedHeight = max(child.maxCrossAxis, child.y - child.originY)
         advance(width: consumedWidth, height: consumedHeight)
     }
 
@@ -73,14 +73,15 @@ public final class Win32Renderer: Renderer {
         }
     }
 
-    public func button(_ title: String, action: @escaping () -> Void) {
+    public func button(_ title: String, style buttonStyle: ButtonStyle, action: @escaping () -> Void) {
         if let control = createControl(
             className: "BUTTON",
             title: title,
-            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
-            width: max(116, Int32(title.count * 9 + 44)),
-            height: 36,
-            action: action
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
+            width: max(buttonStyle == .primary ? 136 : 116, Int32(title.count * 9 + 48)),
+            height: 40,
+            action: action,
+            button: ButtonRenderState(title: title, style: buttonStyle)
         ) {
             applyFont(.body, to: control)
         }
@@ -117,7 +118,8 @@ public final class Win32Renderer: Renderer {
         style: DWORD,
         width: Int32,
         height: Int32,
-        action: (() -> Void)?
+        action: (() -> Void)?,
+        button: ButtonRenderState? = nil
     ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
             return nil
@@ -128,6 +130,9 @@ public final class Win32Renderer: Renderer {
 
         if let action {
             Win32ActionRegistry.actions[controlID] = action
+        }
+        if let button {
+            Win32ActionRegistry.buttons[UInt32(controlID)] = button
         }
 
         return withWideString(className) { controlClass in
@@ -220,14 +225,31 @@ public final class Win32Renderer: Renderer {
 
 private struct LayoutState {
     var axis: StackAxis
+    var originX: Int32
+    var originY: Int32
     var x: Int32
     var y: Int32
     var spacing: Int32
     var maxCrossAxis: Int32 = 0
+
+    init(axis: StackAxis, x: Int32, y: Int32, spacing: Int32) {
+        self.axis = axis
+        self.originX = x
+        self.originY = y
+        self.x = x
+        self.y = y
+        self.spacing = spacing
+    }
 }
 
 private enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
+    nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
+}
+
+private struct ButtonRenderState {
+    var title: String
+    var style: ButtonStyle
 }
 
 private enum Win32PaintResources {
@@ -249,12 +271,95 @@ private func swiftWinUIWindowProc(
         _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
         _ = SetTextColor(HDC(bitPattern: wParam), 0x00271811)
         return LRESULT(Int(bitPattern: Win32PaintResources.backgroundBrush))
+    case WM_DRAWITEM:
+        guard let drawItem = UnsafePointer<DRAWITEMSTRUCT>(bitPattern: lParam)?.pointee else {
+            return 0
+        }
+        drawButton(drawItem)
+        return 1
     case WM_DESTROY:
         PostQuitMessage(0)
         return 0
     default:
         return DefWindowProcW(hwnd, message, wParam, lParam)
     }
+}
+
+private func drawButton(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let button = Win32ActionRegistry.buttons[item.CtlID] else {
+        return
+    }
+
+    let isPressed = (item.itemState & ODS_SELECTED) != 0
+    let isFocused = (item.itemState & ODS_FOCUS) != 0
+    let palette = buttonPalette(for: button.style, isPressed: isPressed)
+    let fillBrush = CreateSolidBrush(palette.fill)
+    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, palette.border)
+    let oldBrush = SelectObject(deviceContext, fillBrush)
+    let oldPen = SelectObject(deviceContext, borderPen)
+
+    var rect = item.rcItem
+    let offset: Int32 = isPressed ? 1 : 0
+    _ = RoundRect(
+        deviceContext,
+        rect.left + offset,
+        rect.top + offset,
+        rect.right - 1 + offset,
+        rect.bottom - 1 + offset,
+        10,
+        10
+    )
+
+    if let oldBrush {
+        _ = SelectObject(deviceContext, oldBrush)
+    }
+    if let oldPen {
+        _ = SelectObject(deviceContext, oldPen)
+    }
+    _ = DeleteObject(fillBrush)
+    _ = DeleteObject(borderPen)
+
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, palette.text)
+
+    rect.left += 12 + offset
+    rect.right -= 12 - offset
+    rect.top += offset
+    rect.bottom += offset
+
+    withWideString(button.title) { title in
+        _ = DrawTextW(
+            deviceContext,
+            title,
+            -1,
+            &rect,
+            DT_CENTER | DT_VCENTER | DT_SINGLELINE
+        )
+    }
+}
+
+private func buttonPalette(for style: ButtonStyle, isPressed: Bool) -> ButtonPalette {
+    switch style {
+    case .primary:
+        return ButtonPalette(
+            fill: isPressed ? 0x00c8521d : 0x00eb6325,
+            border: isPressed ? 0x00b84818 : 0x00d95b20,
+            text: 0x00ffffff
+        )
+    case .secondary:
+        return ButtonPalette(
+            fill: isPressed ? 0x00f0ecea : 0x00ffffff,
+            border: 0x00ddd4cf,
+            text: 0x00271811
+        )
+    }
+}
+
+private struct ButtonPalette {
+    var fill: DWORD
+    var border: DWORD
+    var text: DWORD
 }
 
 private func withWideString<Result>(
@@ -281,6 +386,8 @@ private typealias HCURSOR = UnsafeMutableRawPointer
 private typealias HBRUSH = UnsafeMutableRawPointer
 private typealias HFONT = UnsafeMutableRawPointer
 private typealias HDC = UnsafeMutableRawPointer
+private typealias HGDIOBJ = UnsafeMutableRawPointer
+private typealias HPEN = UnsafeMutableRawPointer
 private typealias HMENU = UnsafeMutableRawPointer
 private typealias WNDPROC = @convention(c) (HWND?, UINT, WPARAM, LPARAM) -> LRESULT
 
@@ -296,6 +403,25 @@ private struct MSG {
     var lParam: LPARAM = 0
     var time: DWORD = 0
     var pt = POINT()
+}
+
+private struct RECT {
+    var left: Int32 = 0
+    var top: Int32 = 0
+    var right: Int32 = 0
+    var bottom: Int32 = 0
+}
+
+private struct DRAWITEMSTRUCT {
+    var CtlType: UINT
+    var CtlID: UINT
+    var itemID: UINT
+    var itemAction: UINT
+    var itemState: UINT
+    var hwndItem: HWND?
+    var hDC: HDC?
+    var rcItem: RECT
+    var itemData: UInt
 }
 
 private struct WNDCLASSEXW {
@@ -320,14 +446,20 @@ private let WS_VISIBLE: DWORD = 0x10000000
 private let WS_TABSTOP: DWORD = 0x00010000
 private let WS_OVERLAPPEDWINDOW: DWORD = 0x00cf0000
 private let BS_PUSHBUTTON: DWORD = 0x00000000
+private let BS_DEFPUSHBUTTON: DWORD = 0x00000001
+private let BS_OWNERDRAW: DWORD = 0x0000000b
 private let SS_LEFT: DWORD = 0x00000000
 private let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 private let SW_SHOW: Int32 = 5
 private let WM_SETFONT: UINT = 0x0030
 private let WM_COMMAND: UINT = 0x0111
+private let WM_DRAWITEM: UINT = 0x002b
 private let WM_CTLCOLORSTATIC: UINT = 0x0138
 private let WM_DESTROY: UINT = 0x0002
+private let ODS_SELECTED: UINT = 0x0001
+private let ODS_FOCUS: UINT = 0x0010
 private let TRANSPARENT: Int32 = 1
+private let PS_SOLID: Int32 = 0
 private let FW_REGULAR: Int32 = 400
 private let FW_SEMIBOLD: Int32 = 600
 private let FW_BOLD: Int32 = 700
@@ -337,6 +469,9 @@ private let CLIP_DEFAULT_PRECIS: DWORD = 0
 private let CLEARTYPE_QUALITY: DWORD = 5
 private let DEFAULT_PITCH: DWORD = 0
 private let FF_DONTCARE: DWORD = 0
+private let DT_CENTER: UINT = 0x00000001
+private let DT_VCENTER: UINT = 0x00000004
+private let DT_SINGLELINE: UINT = 0x00000020
 
 @_silgen_name("GetModuleHandleW")
 private func GetModuleHandleW(_ moduleName: UnsafePointer<UInt16>?) -> HINSTANCE?
@@ -400,6 +535,35 @@ private func SetBkMode(_ deviceContext: HDC?, _ backgroundMode: Int32) -> Int32
 
 @_silgen_name("SetTextColor")
 private func SetTextColor(_ deviceContext: HDC?, _ color: DWORD) -> DWORD
+
+@_silgen_name("CreatePen")
+private func CreatePen(_ style: Int32, _ width: Int32, _ color: DWORD) -> HPEN?
+
+@_silgen_name("SelectObject")
+private func SelectObject(_ deviceContext: HDC, _ object: HGDIOBJ?) -> HGDIOBJ?
+
+@_silgen_name("DeleteObject")
+private func DeleteObject(_ object: HGDIOBJ?) -> BOOL
+
+@_silgen_name("RoundRect")
+private func RoundRect(
+    _ deviceContext: HDC,
+    _ left: Int32,
+    _ top: Int32,
+    _ right: Int32,
+    _ bottom: Int32,
+    _ width: Int32,
+    _ height: Int32
+) -> BOOL
+
+@_silgen_name("DrawTextW")
+private func DrawTextW(
+    _ deviceContext: HDC,
+    _ text: UnsafePointer<UInt16>,
+    _ count: Int32,
+    _ rect: UnsafeMutablePointer<RECT>,
+    _ format: UINT
+) -> Int32
 
 @_silgen_name("GetMessageW")
 private func GetMessageW(

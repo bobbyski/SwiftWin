@@ -23,6 +23,7 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("gdi32", .when(platforms: [.windows])),
                 .linkedLibrary("kernel32", .when(platforms: [.windows])),
+                .linkedLibrary("uxtheme", .when(platforms: [.windows])),
                 .linkedLibrary("user32", .when(platforms: [.windows]))
             ]
         ),

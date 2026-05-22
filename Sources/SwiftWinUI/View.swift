@@ -16,7 +16,7 @@ public protocol Renderer: AnyObject {
     func beginStack(axis: StackAxis, spacing: Double)
     func endStack()
     func text(_ value: String, style: TextStyle)
-    func button(_ title: String, action: @escaping () -> Void)
+    func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     func spacer()
 }
 

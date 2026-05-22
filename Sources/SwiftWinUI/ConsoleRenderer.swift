@@ -25,8 +25,8 @@ public final class ConsoleRenderer: Renderer {
         write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight))")
     }
 
-    public func button(_ title: String, action: @escaping () -> Void) {
-        write("Button(\"\(title)\")")
+    public func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void) {
+        write("Button(\"\(title)\", style: \(style))")
     }
 
     public func spacer() {
