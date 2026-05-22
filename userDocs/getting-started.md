@@ -27,6 +27,28 @@ swift build
 
 The demo opens a native Win32 window. Click `Create Window` or `Settings` to verify button actions and native dialogs.
 
+## Sanity Scripts
+
+The package includes Windows batch scripts for quick manual testing:
+
+```bat
+buildandrun.bat          rem build and run SwiftWinUIDemo
+buildandrun.bat legacy   rem build and run SwiftWinLegacyDemo
+run.bat                  rem run the previously built SwiftWinUIDemo
+run.bat legacy           rem run the previously built SwiftWinLegacyDemo
+```
+
+Unix-like shell scripts are also available for macOS, Linux, or Windows shells that actually provide `sh`:
+
+```sh
+sh ./buildandrun.sh          # build and run SwiftWinUIDemo
+sh ./buildandrun.sh legacy   # build and run SwiftWinLegacyDemo
+sh ./run.sh                  # run the previously built SwiftWinUIDemo
+sh ./run.sh legacy           # run the previously built SwiftWinLegacyDemo
+```
+
+Windows note: SwiftPM debug executables usually live under a target-triple path such as `.build/aarch64-unknown-windows-msvc/debug`. The scripts check that Windows layout as well as the usual `.build/debug` layout used on macOS and Linux.
+
 ## Use The Console Renderer
 
 The console renderer prints the declarative UI tree instead of opening a native window.

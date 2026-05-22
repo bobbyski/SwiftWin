@@ -32,6 +32,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 20% | focused protocols, small functions, separable runtime/layout/platform pieces | Initial public protocols exist in `SwiftWinLegacy`. The monolithic Win32 runtime should be split next. |
 | 14: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
+| 15: Demo Application Ladder | In Progress | 10% | increasingly complex demoable apps, real viability app | Current basic demos exist. The ladder below defines the proof path from smoke demos to a real application. |
 
 ## Milestones
 
@@ -96,6 +97,102 @@ Status: In Progress
 - Make the imperative layer usable directly for developers who do not want declarative UI.
 - Wrap Phase II internally from Phase I so both frameworks evolve together.
 - Keep shared renderer/runtime/platform code in one place to avoid divergent behavior.
+
+## Demo Application Checklist
+
+This checklist turns framework progress into increasingly complex applications that can be run, inspected, and used as viability tests. Each demo should exist in both forms when practical: a `SwiftWinLegacy` version that proves the imperative layer, and a `SwiftWinUI` version that proves the declarative wrapper.
+
+### Milestone 1 Demo: Window Smoke Test
+
+Goal: prove that Swift can create and run a native Windows desktop process with a visible UI.
+
+- [x] Create a native top-level Win32 window.
+- [x] Render static text.
+- [x] Render clickable buttons.
+- [x] Route button actions to Swift closures.
+- [x] Show native message dialogs.
+- [x] Provide both `SwiftWinUIDemo` and `SwiftWinLegacyDemo`.
+- [ ] Add screenshots to the README and user documentation.
+
+Demoable app: a simple welcome window with two buttons and a status/caption line.
+
+### Milestone 2 Demo: Form And State Demo
+
+Goal: prove that basic desktop form workflows are viable.
+
+- [ ] Add `TextField` / `WinTextField`.
+- [ ] Add `Toggle` / `WinToggle`.
+- [ ] Add `Picker` or segmented selection.
+- [ ] Add `Slider` or numeric entry.
+- [ ] Add `@State` and `Binding`-style data flow in `SwiftWinUI`.
+- [ ] Add imperative value change callbacks in `SwiftWinLegacy`.
+- [ ] Validate input and show inline error text.
+- [ ] Update the UI without recreating the whole native window.
+
+Demoable app: a small settings editor with text fields, toggles, validation, save/cancel actions, and live preview text.
+
+### Milestone 3 Demo: Layout And Navigation Gallery
+
+Goal: prove that the framework can handle real app layout, resizing, and navigation patterns.
+
+- [ ] Add measure/place layout passes.
+- [ ] Add padding, frame, alignment, min/max size, and flexible spacer behavior.
+- [ ] Add `ScrollView` / `WinScrollView`.
+- [ ] Add `List` or table-like row rendering.
+- [ ] Add toolbar or command strip controls.
+- [ ] Handle window resizing without broken layout.
+- [ ] Add keyboard traversal and focused control styling.
+- [ ] Add high-DPI scaling checks.
+
+Demoable app: a component gallery with sidebar navigation, resizable panes, scrollable content, and examples of every implemented control.
+
+### Milestone 4 Demo: Document-Style Productivity App
+
+Goal: prove that SwiftWinUI can support a normal desktop workflow with persistent data.
+
+- [ ] Add menus or command routing for common actions.
+- [ ] Add file open/save dialogs or equivalent native file integration.
+- [ ] Add text editing beyond a single-line field.
+- [ ] Add dirty-state tracking and close confirmation.
+- [ ] Add keyboard shortcuts and command enable/disable state.
+- [ ] Add local persistence for app settings.
+- [ ] Add accessibility labels for primary controls.
+- [ ] Add light/dark/high-contrast theme checks.
+
+Demoable app: a small notes or markdown editor with a document list, editor pane, preview/status area, save/load behavior, and keyboard shortcuts.
+
+### Milestone 5 Demo: WebView And WebAssembly Workbench
+
+Goal: prove that modern embedded web content is viable on Windows.
+
+- [ ] Add `WinWebView` backed by Microsoft Edge WebView2.
+- [ ] Add SwiftUI-compatible `WebView`.
+- [ ] Load remote URLs.
+- [ ] Load local HTML assets.
+- [ ] Run a WebAssembly sample in the embedded view.
+- [ ] Add Swift-to-JavaScript and JavaScript-to-Swift messaging.
+- [ ] Document WebView2 runtime detection and distribution.
+- [ ] Document security defaults for local content, host objects, and script injection.
+
+Demoable app: a WebView workbench with an address field, navigation controls, local sample selector, JavaScript bridge log, and WebAssembly demo page.
+
+### Milestone 6 Demo: Real Viability Application
+
+Goal: prove that SwiftWinUI and SwiftWinLegacy are credible foundations for real Windows application development.
+
+- [ ] Combine forms, lists, navigation, persistence, commands, dialogs, WebView2, and custom styling in one app.
+- [ ] Exercise both declarative and imperative APIs in meaningful places.
+- [ ] Use protocol-backed custom controls to validate extensibility.
+- [ ] Include a realistic multi-pane layout with resizing and scrolling.
+- [ ] Include local project/document persistence.
+- [ ] Include embedded web documentation or preview content through WebView2.
+- [ ] Include background work with UI progress and cancellation.
+- [ ] Include robust error presentation and recovery flows.
+- [ ] Include keyboard shortcuts, focus behavior, and accessibility labels.
+- [ ] Include smoke tests or snapshot checks for the main screens.
+- [ ] Package build/run instructions so another developer can clone and evaluate the app.
+
+Candidate real app: a Swift package workbench for Windows that can open a SwiftPM package, show package targets/files, edit notes or markdown documentation, run configured build commands, display logs, and show embedded WebView documentation/previews. This would test whether the framework can support a practical developer tool rather than only a UI toy.
 
 ## Phase Details
 

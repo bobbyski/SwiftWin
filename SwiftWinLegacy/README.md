@@ -58,4 +58,4 @@ This lets the traditional framework and SwiftUI-compatible framework evolve simu
 
 ## License
 
-MIT. Copyright (c) Bobby Skinner.
+MIT. Copyright (c) 2026 Bobby Skinner. All rights reserved.
