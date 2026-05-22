@@ -172,6 +172,17 @@ struct DemoContent: View {
 
 Current limitation: state writes schedule renderer invalidation, but the Win32 renderer does not yet reconcile or rebuild arbitrary dependent views. Buttons and control callbacks read updated state today.
 
+Dynamic `Text` values also refresh through the current invalidation hook:
+
+```swift
+@State private var scale = 50
+
+Slider("Scale", value: $scale, range: 0...100)
+Text("Live scale preview: \(scale)", style: .caption)
+```
+
+This is a narrow bridge toward SwiftUI-style body invalidation, not a full diffing engine yet.
+
 ## Stacks
 
 `VStack` and `HStack` place child views vertically or horizontally.

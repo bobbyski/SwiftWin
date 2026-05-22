@@ -3,18 +3,18 @@
 /// This is the SwiftUI-compatible wrapper that currently maps to
 /// `SwiftWinLegacy.WinText` on Windows.
 public struct Text: View {
-    private let value: String
+    private let value: () -> String
     private let style: TextStyle
 
     /// Creates static text.
-    public init(_ value: String, style: TextStyle = .body) {
+    public init(_ value: @autoclosure @escaping () -> String, style: TextStyle = .body) {
         self.value = value
         self.style = style
     }
 
     /// Emits a semantic text operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.text(value, style: style)
+        context.renderer.dynamicText(value, style: style)
     }
 }
 

@@ -23,6 +23,7 @@ struct DemoContent: View {
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
             Picker("Theme", options: themes, selectedIndex: $themeIndex)
             Slider("Scale", value: $scale, range: 0...100)
+            Text("Live scale preview: \(scale)", style: .caption)
             HStack(spacing: 10) {
                 Button("Create Window", style: .primary) {
                     // Use a native dialog rather than `print` so the action

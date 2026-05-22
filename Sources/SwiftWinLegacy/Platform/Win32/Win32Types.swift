@@ -194,6 +194,8 @@ func GetWindowTextLengthW(_ window: HWND) -> Int32
 func GetWindowTextW(_ window: HWND, _ text: UnsafeMutablePointer<UInt16>?, _ maximumCount: Int32) -> Int32
 @_silgen_name("SetWindowTextW")
 func SetWindowTextW(_ window: HWND, _ text: UnsafePointer<UInt16>) -> BOOL
+@_silgen_name("GetDlgCtrlID")
+func GetDlgCtrlID(_ control: HWND) -> Int32
 @_silgen_name("GetMessageW")
 func GetMessageW(_ message: UnsafeMutablePointer<MSG>, _ window: HWND?, _ minimumMessage: UINT, _ maximumMessage: UINT) -> BOOL
 @_silgen_name("TranslateMessage")

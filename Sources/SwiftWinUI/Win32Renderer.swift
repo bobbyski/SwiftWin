@@ -26,7 +26,9 @@ public final class Win32Renderer: Renderer {
     /// controls are currently emitted directly into child HWNDs. This hook is
     /// intentionally present now so the next renderer iteration has a single
     /// place to schedule diffing/reconciliation.
-    public func invalidate() {}
+    public func invalidate() {
+        WinDynamicTextInvalidation.invalidateAll()
+    }
 
     /// Starts an imperative `WinWindow` for the current declarative scene.
     public func beginWindow(_ descriptor: WindowDescriptor) {
@@ -60,6 +62,11 @@ public final class Win32Renderer: Renderer {
     /// Adapts SwiftWinUI text to `WinText`.
     public func text(_ value: String, style: TextStyle) {
         add(WinText(value, style: style.winTextStyle))
+    }
+
+    /// Adapts dynamic SwiftWinUI text to `WinDynamicText`.
+    public func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
+        add(WinDynamicText(value, style: style.winTextStyle))
     }
 
     /// Adapts SwiftWinUI button to `WinButton`.

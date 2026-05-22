@@ -49,10 +49,19 @@ Slider("Scale", value: $scale, range: 0...100)
 ```
 
 State writes also notify a renderer invalidation hook. The current Win32
-renderer intentionally treats that hook as a no-op until the framework has a
-native reconciliation or diffing layer. Control-owned values and button actions
-see updated state today; arbitrary dependent views still need the future
-rebuild pass.
+renderer uses that hook to refresh dynamic `Text` values, so simple dependent
+labels can update after state changes.
+
+```swift
+@State private var scale = 50
+
+Slider("Scale", value: $scale, range: 0...100)
+Text("Live scale preview: \(scale)", style: .caption)
+```
+
+Full native reconciliation is still planned. Layout changes, conditional view
+changes, and arbitrary control replacement still need the future rebuild/diff
+pass.
 
 ## Design Rules
 

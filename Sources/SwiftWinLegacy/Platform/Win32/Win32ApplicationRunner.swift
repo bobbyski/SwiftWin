@@ -67,6 +67,8 @@ final class Win32ApplicationRunner {
             endStack()
         case let text as WinText:
             createText(text.value, style: text.style)
+        case let text as WinDynamicText:
+            createDynamicText(text)
         case let button as WinButton:
             createButton(button.title, style: button.style, action: button.action)
         case let textField as WinTextField:
@@ -122,6 +124,15 @@ final class Win32ApplicationRunner {
         }
 
         return nil
+    }
+
+    /// Creates a native static text control backed by a dynamic provider.
+    private func createDynamicText(_ text: WinDynamicText) {
+        if let control = createText(text.value, style: text.style) {
+            let controlID = UInt16(GetDlgCtrlID(control))
+            let state = DynamicTextRenderState(text: text, control: control)
+            Win32ActionRegistry.dynamicTexts[controlID] = state
+        }
     }
 
     /// Creates an owner-drawn native button.

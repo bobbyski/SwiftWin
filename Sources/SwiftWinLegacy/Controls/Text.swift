@@ -12,6 +12,29 @@ public final class WinText: WinTextDisplaying {
     }
 }
 
+/// Text element whose value can be re-evaluated after state changes.
+///
+/// This is a narrow bridge toward SwiftUI-style invalidation. It lets the
+/// declarative layer refresh dependent text without rebuilding the whole HWND
+/// tree yet.
+public final class WinDynamicText: WinElement {
+    /// Current displayed text.
+    public var value: String {
+        provider()
+    }
+
+    /// Text style used by the native runtime.
+    public var style: WinTextStyle
+
+    private let provider: () -> String
+
+    /// Creates dynamic text.
+    public init(_ provider: @escaping () -> String, style: WinTextStyle = .body) {
+        self.provider = provider
+        self.style = style
+    }
+}
+
 /// Font description for `WinText`.
 public struct WinTextStyle: Sendable, Hashable {
     /// Font size in prototype points/pixels.

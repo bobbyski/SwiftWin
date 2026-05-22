@@ -79,6 +79,8 @@ public protocol Renderer: AnyObject {
     func endStack()
     /// Renders static text.
     func text(_ value: String, style: TextStyle)
+    /// Renders text that can be re-evaluated after state changes.
+    func dynamicText(_ value: @escaping () -> String, style: TextStyle)
     /// Renders a button and stores its action for native event dispatch.
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
@@ -96,6 +98,11 @@ public protocol Renderer: AnyObject {
 public extension Renderer {
     /// Default invalidation hook for renderers that do not yet support rebuilds.
     func invalidate() {}
+
+    /// Default dynamic text implementation for renderers without invalidation.
+    func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
+        text(value(), style: style)
+    }
 }
 
 /// Axis for stack layout.

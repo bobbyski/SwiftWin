@@ -36,6 +36,11 @@ public final class ConsoleRenderer: Renderer {
         write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight))")
     }
 
+    /// Prints dynamic text by evaluating its current value.
+    public func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
+        text(value(), style: style)
+    }
+
     /// Prints a button node.
     public func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void) {
         write("Button(\"\(title)\", style: \(style))")

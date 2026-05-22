@@ -24,6 +24,8 @@ final class ConsoleLegacyRenderer {
             indent -= 1
         case let text as WinText:
             write("WinText(\"\(text.value)\", size: \(text.style.size), weight: \(text.style.weight))")
+        case let text as WinDynamicText:
+            write("WinDynamicText(\"\(text.value)\", size: \(text.style.size), weight: \(text.style.weight))")
         case let button as WinButton:
             write("WinButton(\"\(button.title)\", style: \(button.style))")
         case let textField as WinTextField:

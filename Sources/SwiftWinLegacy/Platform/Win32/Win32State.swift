@@ -9,12 +9,38 @@
 enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
+    nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
     nonisolated(unsafe) static var toggles: [UInt16: WinToggle] = [:]
     nonisolated(unsafe) static var toggleControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
+}
+
+/// Native control associated with dynamic text.
+struct DynamicTextRenderState {
+    var text: WinDynamicText
+    var control: HWND
+}
+
+/// Invalidates dynamic text controls after declarative state changes.
+public enum WinDynamicTextInvalidation {
+    /// Refreshes all registered dynamic text labels.
+    public static func invalidateAll() {
+        #if os(Windows)
+        for state in Win32ActionRegistry.dynamicTexts.values {
+            updateDynamicText(state)
+        }
+        #endif
+    }
+}
+
+/// Updates one dynamic text HWND from its provider.
+private func updateDynamicText(_ state: DynamicTextRenderState) {
+    withWideString(state.text.value) { value in
+        _ = SetWindowTextW(state.control, value)
+    }
 }
 
 /// Owner-draw metadata for a button.

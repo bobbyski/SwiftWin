@@ -25,7 +25,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 5: SwiftUI Control Coverage | In Progress | 45% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Button`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 20% | stack positioning, spacing, basic child advancement | Current layout is direct placement. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 35% | text styles, button styles, background brush, owner-drawn button/toggle/picker paint | Primary/secondary buttons, toggles, and picker options now have custom drawing. Needs color tokens, hover state, disabled state, focus rings, theme switching, and modern surfaces. |
-| 8: SwiftUI State And Invalidation | In Progress | 35% | `@State`, `Binding`, event invalidation, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
+| 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 45% | GitHub README, architecture notes, examples, API docs | README is in good shape. Needs API reference, design docs, screenshots, and sample apps. |
 | 11: Phase II Traditional Swift Framework | In Progress | 20% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
@@ -127,7 +127,8 @@ Goal: prove that basic desktop form workflows are viable.
 - [x] Add `@State` and `Binding`-style data flow in `SwiftWinUI`.
 - [x] Add imperative value change callbacks in `SwiftWinLegacy`.
 - [ ] Validate input and show inline error text.
-- [ ] Update the UI without recreating the whole native window.
+- [x] Update simple dependent text without recreating the whole native window.
+- [ ] Update arbitrary controls/layout without recreating the whole native window.
 
 Demoable app: a small settings editor with text fields, toggles, validation, save/cancel actions, and live preview text.
 
@@ -403,6 +404,7 @@ Implemented:
 - Closure-backed `Binding`.
 - Binding overloads for `TextField`, `Toggle`, `Picker`, and `Slider`.
 - Event-driven invalidation hook through `StateInvalidation` and `Renderer.invalidate()`.
+- Dynamic `Text` refresh for simple state-dependent labels.
 
 Remaining:
 
@@ -575,7 +577,7 @@ app.run(window)
 | Text | Basic static text | No wrapping, selection, rich text, dynamic color, or accessibility metadata |
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning | No full measurement, alignment, padding, flexible sizing, resize handling, or scroll layout |
-| State | Partial | `@State`, `Binding`, and invalidation hook exist. No observable models, environment, or native reconciliation yet |
+| State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
 | Forms | Partial | `TextField`, `Toggle`, `Picker`, and `Slider` exist with callback and binding changes. No validation yet |
 | WebView | None | No WebView2 hosting, navigation API, JavaScript bridge, local asset loading, or WebAssembly sample |
 | Lists | None | No table/list view, diffing, selection, or virtualization |
