@@ -8,9 +8,18 @@ SwiftWinUI renders the declarative view tree through backend renderers. The curr
 
 > Status: early prototype. It opens native windows, lays out basic views, wires button actions, and shows native dialogs. It is not production-ready yet.
 
+## Design Philosophy
+
+SwiftWinUI and SwiftWinLegacy are intentionally protocol-oriented. Public behavior should be described by small protocols first when that improves type safety, interoperability, or future customization. Concrete controls such as `WinButton` and `WinStack` should be default implementations, not permanent dead ends.
+
+Functions should stay as small as reasonably practical. When an implementation starts mixing platform declarations, layout, rendering, resource ownership, and event routing, that is a sign to split it into clearer protocol-backed components.
+
 ## Features
 
+- Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
 - SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `Button`, and `Spacer`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinButton`, `WinSpacer`, and `WinDialog`
+- Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
 - Button actions routed through Win32 `WM_COMMAND`
@@ -21,6 +30,8 @@ SwiftWinUI renders the declarative view tree through backend renderers. The curr
 ## User Documentation
 
 User-facing documentation lives in [userDocs](userDocs/README.md).
+
+The traditional API also has a GitHub-style README at [SwiftWinLegacy/README.md](SwiftWinLegacy/README.md).
 
 ## Compatibility Goal
 
@@ -125,6 +136,10 @@ Window(title: SwiftWinUI Demo, size: 960x640)
 SwiftWinUI
   Package.swift
   Sources
+    SwiftWinLegacy
+      SwiftWinLegacy.swift   # Traditional imperative API and native runtime
+    SwiftWinLegacyDemo
+      main.swift             # Traditional API demo
     SwiftWinUI
       Application.swift      # App, Scene, WindowGroup, runtime entry point
       View.swift             # View protocol, renderer protocol, result builder
@@ -141,17 +156,26 @@ SwiftWinUI
 
 ## Architecture
 
-SwiftWinUI separates the public declarative API from native rendering:
+SwiftWinUI now has two public layers:
+
+- `SwiftWinLegacy`: traditional imperative Swift API and current native Win32 implementation.
+- `SwiftWinUI`: SwiftUI-compatible declarative API that depends on and wraps `SwiftWinLegacy`.
 
 ```text
-User App
-  -> App / Scene
-  -> View tree
-  -> Renderer protocol
-  -> Win32Renderer or ConsoleRenderer
+SwiftWinUI App
+  -> App / Scene / View tree
+  -> Win32Renderer adapter
+  -> SwiftWinLegacy objects
+  -> Win32 runtime
+
+SwiftWinLegacy App
+  -> WinApplication / WinWindow / WinElement tree
+  -> Win32 runtime
 ```
 
-This keeps app code stable while the native backend evolves. The Win32 renderer currently uses hand-declared Windows APIs to avoid relying on `WinSDK` imports in toolchains where the Windows SDK module is unstable.
+This keeps the SwiftUI-compatible API focused on compatibility while the traditional layer owns imperative controls, events, and native runtime behavior. The native runtime currently uses hand-declared Windows APIs to avoid relying on `WinSDK` imports in toolchains where the Windows SDK module is unstable.
+
+The codebase should keep moving toward smaller files and smaller functions: public protocols and model types, layout, native control creation, event routing, and Win32 declarations should become separate pieces as the framework grows.
 
 ## Requirements
 
@@ -209,4 +233,4 @@ Known issue: some ARM64 Windows Swift snapshots fail while importing XCTest beca
 
 ## License
 
-No license has been selected yet.
+MIT. Copyright (c) Bobby Skinner.

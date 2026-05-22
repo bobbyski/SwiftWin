@@ -9,8 +9,16 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "SwiftWinLegacy",
+            targets: ["SwiftWinLegacy"]
+        ),
+        .library(
             name: "SwiftWinUI",
             targets: ["SwiftWinUI"]
+        ),
+        .executable(
+            name: "SwiftWinLegacyDemo",
+            targets: ["SwiftWinLegacyDemo"]
         ),
         .executable(
             name: "SwiftWinUIDemo",
@@ -19,13 +27,20 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftWinUI",
+            name: "SwiftWinLegacy",
             linkerSettings: [
                 .linkedLibrary("gdi32", .when(platforms: [.windows])),
                 .linkedLibrary("kernel32", .when(platforms: [.windows])),
-                .linkedLibrary("uxtheme", .when(platforms: [.windows])),
                 .linkedLibrary("user32", .when(platforms: [.windows]))
             ]
+        ),
+        .target(
+            name: "SwiftWinUI",
+            dependencies: ["SwiftWinLegacy"]
+        ),
+        .executableTarget(
+            name: "SwiftWinLegacyDemo",
+            dependencies: ["SwiftWinLegacy"]
         ),
         .executableTarget(
             name: "SwiftWinUIDemo",

@@ -23,12 +23,15 @@ Next work:
 - Add a real layout engine
 - Add common controls such as `TextField`, `Toggle`, `List`, and `Image`
 - Add `WebView` backed by WebView2
+- Keep renderer and layout work protocol-oriented so custom implementations can plug in later
 
 ## Phase II: Traditional Swift Framework
 
-Goal: add a non-declarative Swift API for Windows UI.
+Goal: maintain a non-declarative Swift API for Windows UI in parallel with SwiftWinUI.
 
-This may be built in parallel if it makes Phase I easier. The declarative layer could wrap the traditional layer internally.
+This is now the selected approach. `SwiftWinLegacy` is a package product and `SwiftWinUI` depends on it. The declarative layer wraps the traditional layer internally for the current Win32 path.
+
+Design rule: keep functions small and use focused protocols for useful extension points. The first protocol contracts now cover app running, containers, text display, titled controls, action controls, and button-like controls.
 
 Candidate shape:
 
@@ -80,6 +83,7 @@ swift build
 
 Planned:
 
+- split the current monolithic Win32 runtime into smaller protocol-backed files
 - console snapshot tests
 - layout tests
 - native smoke tests

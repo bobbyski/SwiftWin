@@ -1,592 +1,123 @@
 #if os(Windows)
-public final class Win32Renderer: Renderer {
-    private var instance: HINSTANCE?
-    private var window: HWND?
-    private var layoutStack: [LayoutState] = []
-    private var nextControlID: UInt16 = 100
-    private var fonts: [TextStyle: HFONT] = [:]
+import SwiftWinLegacy
 
+/// Windows renderer for the SwiftUI-compatible layer.
+///
+/// This renderer intentionally acts as an adapter, not as a second native UI
+/// implementation. Declarative SwiftWinUI render calls are converted into
+/// `SwiftWinLegacy` imperative objects, and then `WinApplication` owns the
+/// native window/runtime path.
+public final class Win32Renderer: Renderer {
+    private var window: WinWindow?
+
+    // Implementation note:
+    // `stackPath` is a construction stack, not a layout stack. It tracks the
+    // current parent `WinStack` while the declarative tree is rendered into
+    // imperative legacy objects.
+    private var stackPath: [WinStack] = []
+
+    /// Creates a Windows renderer.
     public init() {}
 
+    /// Starts an imperative `WinWindow` for the current declarative scene.
     public func beginWindow(_ descriptor: WindowDescriptor) {
-        instance = GetModuleHandleW(nil)
-        Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
-        registerWindowClass()
-
-        withWideString("SwiftWinUIWindow") { className in
-            withWideString(descriptor.title) { title in
-                window = CreateWindowExW(
-                    0,
-                    className,
-                    title,
-                    WS_OVERLAPPEDWINDOW,
-                    CW_USEDEFAULT,
-                    CW_USEDEFAULT,
-                    Int32(descriptor.width),
-                    Int32(descriptor.height),
-                    nil,
-                    nil,
-                    instance,
-                    nil
-                )
-            }
-        }
-
-        layoutStack = [LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)]
+        window = WinWindow(title: descriptor.title, width: descriptor.width, height: descriptor.height)
+        stackPath.removeAll()
     }
 
+    /// Runs the generated `SwiftWinLegacy` window.
     public func endWindow() {
         guard let window else {
             return
         }
 
-        _ = ShowWindow(window, SW_SHOW)
-        _ = UpdateWindow(window)
-        runMessageLoop()
+        WinApplication().run(window)
     }
 
+    /// Begins collecting children into a `WinStack`.
     public func beginStack(axis: StackAxis, spacing: Double) {
-        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
-        layoutStack.append(LayoutState(axis: axis, x: origin.x, y: origin.y, spacing: Int32(spacing)))
+        stackPath.append(WinStack(axis: axis.winAxis, spacing: spacing))
     }
 
+    /// Closes the current `WinStack` and appends it to its parent/window.
     public func endStack() {
-        guard layoutStack.count > 1, let child = layoutStack.popLast() else {
+        guard let stack = stackPath.popLast() else {
             return
         }
 
-        let consumedWidth = max(child.maxCrossAxis, child.x - child.originX)
-        let consumedHeight = max(child.maxCrossAxis, child.y - child.originY)
-        advance(width: consumedWidth, height: consumedHeight)
+        add(stack)
     }
 
+    /// Adapts SwiftWinUI text to `WinText`.
     public func text(_ value: String, style: TextStyle) {
-        if let control = createControl(
-            className: "STATIC",
-            title: value,
-            style: WS_CHILD | WS_VISIBLE | SS_LEFT,
-            width: max(220, Int32(value.count * 9 + 32)),
-            height: style.size >= 20 ? 36 : 26,
-            action: nil
-        ) {
-            applyFont(style, to: control)
-        }
+        add(WinText(value, style: style.winTextStyle))
     }
 
-    public func button(_ title: String, style buttonStyle: ButtonStyle, action: @escaping () -> Void) {
-        if let control = createControl(
-            className: "BUTTON",
-            title: title,
-            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
-            width: max(buttonStyle == .primary ? 136 : 116, Int32(title.count * 9 + 48)),
-            height: 40,
-            action: action,
-            button: ButtonRenderState(title: title, style: buttonStyle)
-        ) {
-            applyFont(.body, to: control)
-        }
+    /// Adapts SwiftWinUI button to `WinButton`.
+    public func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void) {
+        add(WinButton(title, style: style.winButtonStyle, action: action))
     }
 
+    /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
-        advance(width: 20, height: 20)
+        add(WinSpacer())
     }
 
-    private func registerWindowClass() {
-        withWideString("SwiftWinUIWindow") { className in
-            var windowClass = WNDCLASSEXW(
-                cbSize: UInt32(MemoryLayout<WNDCLASSEXW>.size),
-                style: CS_HREDRAW | CS_VREDRAW,
-                lpfnWndProc: swiftWinUIWindowProc,
-                cbClsExtra: 0,
-                cbWndExtra: 0,
-                hInstance: instance,
-                hIcon: nil,
-                hCursor: nil,
-                hbrBackground: Win32PaintResources.backgroundBrush,
-                lpszMenuName: nil,
-                lpszClassName: className,
-                hIconSm: nil
-            )
-
-            _ = RegisterClassExW(&windowClass)
+    // Implementation note:
+    // Top-level content becomes `window.content`; nested content is appended to
+    // the current legacy stack. This keeps SwiftWinUI's renderer stateless from
+    // the native runtime's perspective.
+    private func add(_ element: WinElement) {
+        if let parent = stackPath.last {
+            parent.add(element)
+        } else {
+            window?.content = element
         }
     }
+}
 
-    private func createControl(
-        className: String,
-        title: String,
-        style: DWORD,
-        width: Int32,
-        height: Int32,
-        action: (() -> Void)?,
-        button: ButtonRenderState? = nil
-    ) -> HWND? {
-        guard let window, let layout = layoutStack.last else {
-            return nil
-        }
-
-        let controlID = nextControlID
-        nextControlID += 1
-
-        if let action {
-            Win32ActionRegistry.actions[controlID] = action
-        }
-        if let button {
-            Win32ActionRegistry.buttons[UInt32(controlID)] = button
-        }
-
-        return withWideString(className) { controlClass in
-            withWideString(title) { controlTitle in
-                let control = CreateWindowExW(
-                    0,
-                    controlClass,
-                    controlTitle,
-                    style,
-                    layout.x,
-                    layout.y,
-                    width,
-                    height,
-                    window,
-                    HMENU(bitPattern: Int(controlID)),
-                    instance,
-                    nil
-                )
-                advance(width: width, height: height)
-                return control
-            }
-        }
-    }
-
-    private func applyFont(_ style: TextStyle, to control: HWND) {
-        let font = fonts[style] ?? createFont(for: style)
-        fonts[style] = font
-        _ = SendMessageW(control, WM_SETFONT, WPARAM(UInt(bitPattern: font)), 1)
-    }
-
-    private func createFont(for style: TextStyle) -> HFONT {
-        let height = -Int32(style.size * 1.35)
-        let weight: Int32
-
-        switch style.weight {
-        case .regular:
-            weight = FW_REGULAR
-        case .semibold:
-            weight = FW_SEMIBOLD
-        case .bold:
-            weight = FW_BOLD
-        }
-
-        return withWideString("Segoe UI") { faceName in
-            CreateFontW(
-                height,
-                0,
-                0,
-                0,
-                weight,
-                0,
-                0,
-                0,
-                DEFAULT_CHARSET,
-                OUT_DEFAULT_PRECIS,
-                CLIP_DEFAULT_PRECIS,
-                CLEARTYPE_QUALITY,
-                DEFAULT_PITCH | FF_DONTCARE,
-                faceName
-            )
-        }
-    }
-
-    private func advance(width: Int32, height: Int32) {
-        guard let layout = layoutStack.popLast() else {
-            return
-        }
-
-        var updated = layout
-        switch updated.axis {
+/// Maps declarative stack axes to legacy stack axes.
+private extension StackAxis {
+    var winAxis: WinAxis {
+        switch self {
         case .horizontal:
-            updated.x += width + updated.spacing
-            updated.maxCrossAxis = max(updated.maxCrossAxis, height)
+            return .horizontal
         case .vertical:
-            updated.y += height + updated.spacing
-            updated.maxCrossAxis = max(updated.maxCrossAxis, width)
-        }
-
-        layoutStack.append(updated)
-    }
-
-    private func runMessageLoop() {
-        var message = MSG()
-        while GetMessageW(&message, nil, 0, 0) > 0 {
-            _ = TranslateMessage(&message)
-            _ = DispatchMessageW(&message)
+            return .vertical
         }
     }
 }
 
-private struct LayoutState {
-    var axis: StackAxis
-    var originX: Int32
-    var originY: Int32
-    var x: Int32
-    var y: Int32
-    var spacing: Int32
-    var maxCrossAxis: Int32 = 0
-
-    init(axis: StackAxis, x: Int32, y: Int32, spacing: Int32) {
-        self.axis = axis
-        self.originX = x
-        self.originY = y
-        self.x = x
-        self.y = y
-        self.spacing = spacing
+/// Maps declarative text styles to legacy text styles.
+private extension TextStyle {
+    var winTextStyle: WinTextStyle {
+        WinTextStyle(size: size, weight: weight.winFontWeight)
     }
 }
 
-private enum Win32ActionRegistry {
-    nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
-    nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
-}
-
-private struct ButtonRenderState {
-    var title: String
-    var style: ButtonStyle
-}
-
-private enum Win32PaintResources {
-    nonisolated(unsafe) static var backgroundBrush: HBRUSH?
-}
-
-private func swiftWinUIWindowProc(
-    hwnd: HWND?,
-    message: UINT,
-    wParam: WPARAM,
-    lParam: LPARAM
-) -> LRESULT {
-    switch message {
-    case WM_COMMAND:
-        let controlID = UInt16(wParam & 0xffff)
-        Win32ActionRegistry.actions[controlID]?()
-        return 0
-    case WM_CTLCOLORSTATIC:
-        _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
-        _ = SetTextColor(HDC(bitPattern: wParam), 0x00271811)
-        return LRESULT(Int(bitPattern: Win32PaintResources.backgroundBrush))
-    case WM_DRAWITEM:
-        guard let drawItem = UnsafePointer<DRAWITEMSTRUCT>(bitPattern: lParam)?.pointee else {
-            return 0
+/// Maps declarative font weights to legacy font weights.
+private extension FontWeight {
+    var winFontWeight: WinFontWeight {
+        switch self {
+        case .regular:
+            return .regular
+        case .semibold:
+            return .semibold
+        case .bold:
+            return .bold
         }
-        drawButton(drawItem)
-        return 1
-    case WM_DESTROY:
-        PostQuitMessage(0)
-        return 0
-    default:
-        return DefWindowProcW(hwnd, message, wParam, lParam)
     }
 }
 
-private func drawButton(_ item: DRAWITEMSTRUCT) {
-    guard let deviceContext = item.hDC,
-          let button = Win32ActionRegistry.buttons[item.CtlID] else {
-        return
-    }
-
-    let isPressed = (item.itemState & ODS_SELECTED) != 0
-    let isFocused = (item.itemState & ODS_FOCUS) != 0
-    let palette = buttonPalette(for: button.style, isPressed: isPressed)
-    let fillBrush = CreateSolidBrush(palette.fill)
-    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, palette.border)
-    let oldBrush = SelectObject(deviceContext, fillBrush)
-    let oldPen = SelectObject(deviceContext, borderPen)
-
-    var rect = item.rcItem
-    let offset: Int32 = isPressed ? 1 : 0
-    _ = RoundRect(
-        deviceContext,
-        rect.left + offset,
-        rect.top + offset,
-        rect.right - 1 + offset,
-        rect.bottom - 1 + offset,
-        10,
-        10
-    )
-
-    if let oldBrush {
-        _ = SelectObject(deviceContext, oldBrush)
-    }
-    if let oldPen {
-        _ = SelectObject(deviceContext, oldPen)
-    }
-    _ = DeleteObject(fillBrush)
-    _ = DeleteObject(borderPen)
-
-    _ = SetBkMode(deviceContext, TRANSPARENT)
-    _ = SetTextColor(deviceContext, palette.text)
-
-    rect.left += 12 + offset
-    rect.right -= 12 - offset
-    rect.top += offset
-    rect.bottom += offset
-
-    withWideString(button.title) { title in
-        _ = DrawTextW(
-            deviceContext,
-            title,
-            -1,
-            &rect,
-            DT_CENTER | DT_VCENTER | DT_SINGLELINE
-        )
+/// Maps declarative button styles to legacy button styles.
+private extension ButtonStyle {
+    var winButtonStyle: WinButtonStyle {
+        switch self {
+        case .primary:
+            return .primary
+        case .secondary:
+            return .secondary
+        }
     }
 }
-
-private func buttonPalette(for style: ButtonStyle, isPressed: Bool) -> ButtonPalette {
-    switch style {
-    case .primary:
-        return ButtonPalette(
-            fill: isPressed ? 0x00c8521d : 0x00eb6325,
-            border: isPressed ? 0x00b84818 : 0x00d95b20,
-            text: 0x00ffffff
-        )
-    case .secondary:
-        return ButtonPalette(
-            fill: isPressed ? 0x00f0ecea : 0x00ffffff,
-            border: 0x00ddd4cf,
-            text: 0x00271811
-        )
-    }
-}
-
-private struct ButtonPalette {
-    var fill: DWORD
-    var border: DWORD
-    var text: DWORD
-}
-
-private func withWideString<Result>(
-    _ value: String,
-    _ body: (UnsafePointer<UInt16>) -> Result
-) -> Result {
-    var wideValue = Array(value.utf16)
-    wideValue.append(0)
-    return wideValue.withUnsafeBufferPointer { buffer in
-        body(buffer.baseAddress!)
-    }
-}
-
-private typealias BOOL = Int32
-private typealias DWORD = UInt32
-private typealias UINT = UInt32
-private typealias WPARAM = UInt
-private typealias LPARAM = Int
-private typealias LRESULT = Int
-private typealias HWND = UnsafeMutableRawPointer
-private typealias HINSTANCE = UnsafeMutableRawPointer
-private typealias HICON = UnsafeMutableRawPointer
-private typealias HCURSOR = UnsafeMutableRawPointer
-private typealias HBRUSH = UnsafeMutableRawPointer
-private typealias HFONT = UnsafeMutableRawPointer
-private typealias HDC = UnsafeMutableRawPointer
-private typealias HGDIOBJ = UnsafeMutableRawPointer
-private typealias HPEN = UnsafeMutableRawPointer
-private typealias HMENU = UnsafeMutableRawPointer
-private typealias WNDPROC = @convention(c) (HWND?, UINT, WPARAM, LPARAM) -> LRESULT
-
-private struct POINT {
-    var x: Int32 = 0
-    var y: Int32 = 0
-}
-
-private struct MSG {
-    var hwnd: HWND?
-    var message: UINT = 0
-    var wParam: WPARAM = 0
-    var lParam: LPARAM = 0
-    var time: DWORD = 0
-    var pt = POINT()
-}
-
-private struct RECT {
-    var left: Int32 = 0
-    var top: Int32 = 0
-    var right: Int32 = 0
-    var bottom: Int32 = 0
-}
-
-private struct DRAWITEMSTRUCT {
-    var CtlType: UINT
-    var CtlID: UINT
-    var itemID: UINT
-    var itemAction: UINT
-    var itemState: UINT
-    var hwndItem: HWND?
-    var hDC: HDC?
-    var rcItem: RECT
-    var itemData: UInt
-}
-
-private struct WNDCLASSEXW {
-    var cbSize: UINT
-    var style: UINT
-    var lpfnWndProc: WNDPROC?
-    var cbClsExtra: Int32
-    var cbWndExtra: Int32
-    var hInstance: HINSTANCE?
-    var hIcon: HICON?
-    var hCursor: HCURSOR?
-    var hbrBackground: HBRUSH?
-    var lpszMenuName: UnsafePointer<UInt16>?
-    var lpszClassName: UnsafePointer<UInt16>?
-    var hIconSm: HICON?
-}
-
-private let CS_VREDRAW: UINT = 0x0001
-private let CS_HREDRAW: UINT = 0x0002
-private let WS_CHILD: DWORD = 0x40000000
-private let WS_VISIBLE: DWORD = 0x10000000
-private let WS_TABSTOP: DWORD = 0x00010000
-private let WS_OVERLAPPEDWINDOW: DWORD = 0x00cf0000
-private let BS_PUSHBUTTON: DWORD = 0x00000000
-private let BS_DEFPUSHBUTTON: DWORD = 0x00000001
-private let BS_OWNERDRAW: DWORD = 0x0000000b
-private let SS_LEFT: DWORD = 0x00000000
-private let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
-private let SW_SHOW: Int32 = 5
-private let WM_SETFONT: UINT = 0x0030
-private let WM_COMMAND: UINT = 0x0111
-private let WM_DRAWITEM: UINT = 0x002b
-private let WM_CTLCOLORSTATIC: UINT = 0x0138
-private let WM_DESTROY: UINT = 0x0002
-private let ODS_SELECTED: UINT = 0x0001
-private let ODS_FOCUS: UINT = 0x0010
-private let TRANSPARENT: Int32 = 1
-private let PS_SOLID: Int32 = 0
-private let FW_REGULAR: Int32 = 400
-private let FW_SEMIBOLD: Int32 = 600
-private let FW_BOLD: Int32 = 700
-private let DEFAULT_CHARSET: DWORD = 1
-private let OUT_DEFAULT_PRECIS: DWORD = 0
-private let CLIP_DEFAULT_PRECIS: DWORD = 0
-private let CLEARTYPE_QUALITY: DWORD = 5
-private let DEFAULT_PITCH: DWORD = 0
-private let FF_DONTCARE: DWORD = 0
-private let DT_CENTER: UINT = 0x00000001
-private let DT_VCENTER: UINT = 0x00000004
-private let DT_SINGLELINE: UINT = 0x00000020
-
-@_silgen_name("GetModuleHandleW")
-private func GetModuleHandleW(_ moduleName: UnsafePointer<UInt16>?) -> HINSTANCE?
-
-@_silgen_name("RegisterClassExW")
-private func RegisterClassExW(_ windowClass: UnsafePointer<WNDCLASSEXW>) -> UInt16
-
-@_silgen_name("CreateWindowExW")
-private func CreateWindowExW(
-    _ extendedStyle: DWORD,
-    _ className: UnsafePointer<UInt16>,
-    _ windowName: UnsafePointer<UInt16>,
-    _ style: DWORD,
-    _ x: Int32,
-    _ y: Int32,
-    _ width: Int32,
-    _ height: Int32,
-    _ parent: HWND?,
-    _ menu: HMENU?,
-    _ instance: HINSTANCE?,
-    _ parameter: UnsafeMutableRawPointer?
-) -> HWND?
-
-@_silgen_name("ShowWindow")
-private func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
-
-@_silgen_name("UpdateWindow")
-private func UpdateWindow(_ window: HWND) -> BOOL
-
-@_silgen_name("SendMessageW")
-private func SendMessageW(
-    _ window: HWND,
-    _ message: UINT,
-    _ wParam: WPARAM,
-    _ lParam: LPARAM
-) -> LRESULT
-
-@_silgen_name("CreateFontW")
-private func CreateFontW(
-    _ height: Int32,
-    _ width: Int32,
-    _ escapement: Int32,
-    _ orientation: Int32,
-    _ weight: Int32,
-    _ italic: DWORD,
-    _ underline: DWORD,
-    _ strikeOut: DWORD,
-    _ charSet: DWORD,
-    _ outputPrecision: DWORD,
-    _ clipPrecision: DWORD,
-    _ quality: DWORD,
-    _ pitchAndFamily: DWORD,
-    _ faceName: UnsafePointer<UInt16>
-) -> HFONT
-
-@_silgen_name("CreateSolidBrush")
-private func CreateSolidBrush(_ color: DWORD) -> HBRUSH?
-
-@_silgen_name("SetBkMode")
-private func SetBkMode(_ deviceContext: HDC?, _ backgroundMode: Int32) -> Int32
-
-@_silgen_name("SetTextColor")
-private func SetTextColor(_ deviceContext: HDC?, _ color: DWORD) -> DWORD
-
-@_silgen_name("CreatePen")
-private func CreatePen(_ style: Int32, _ width: Int32, _ color: DWORD) -> HPEN?
-
-@_silgen_name("SelectObject")
-private func SelectObject(_ deviceContext: HDC, _ object: HGDIOBJ?) -> HGDIOBJ?
-
-@_silgen_name("DeleteObject")
-private func DeleteObject(_ object: HGDIOBJ?) -> BOOL
-
-@_silgen_name("RoundRect")
-private func RoundRect(
-    _ deviceContext: HDC,
-    _ left: Int32,
-    _ top: Int32,
-    _ right: Int32,
-    _ bottom: Int32,
-    _ width: Int32,
-    _ height: Int32
-) -> BOOL
-
-@_silgen_name("DrawTextW")
-private func DrawTextW(
-    _ deviceContext: HDC,
-    _ text: UnsafePointer<UInt16>,
-    _ count: Int32,
-    _ rect: UnsafeMutablePointer<RECT>,
-    _ format: UINT
-) -> Int32
-
-@_silgen_name("GetMessageW")
-private func GetMessageW(
-    _ message: UnsafeMutablePointer<MSG>,
-    _ window: HWND?,
-    _ minimumMessage: UINT,
-    _ maximumMessage: UINT
-) -> BOOL
-
-@_silgen_name("TranslateMessage")
-private func TranslateMessage(_ message: UnsafePointer<MSG>) -> BOOL
-
-@_silgen_name("DispatchMessageW")
-private func DispatchMessageW(_ message: UnsafePointer<MSG>) -> LRESULT
-
-@_silgen_name("DefWindowProcW")
-private func DefWindowProcW(
-    _ window: HWND?,
-    _ message: UINT,
-    _ wParam: WPARAM,
-    _ lParam: LPARAM
-) -> LRESULT
-
-@_silgen_name("PostQuitMessage")
-private func PostQuitMessage(_ exitCode: Int32)
 #endif

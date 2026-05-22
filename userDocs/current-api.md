@@ -125,3 +125,16 @@ SwiftWinUI uses a renderer boundary.
 ```swift
 DemoApp.main(renderer: ConsoleRenderer())
 ```
+
+## SwiftWinLegacy Protocols
+
+The traditional layer now exposes focused protocols for extension points:
+
+- `WinApplicationRunning`
+- `WinContainer`
+- `WinTextDisplaying`
+- `WinTitledControl`
+- `WinActionControl`
+- `WinButtonDisplaying`
+
+These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, and `WinButton` implementations.

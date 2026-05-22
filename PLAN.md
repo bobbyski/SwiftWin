@@ -6,9 +6,11 @@ This plan covers the work needed to grow the current experimental SwiftWinUI pac
 
 The strategic goal is maximum practical SwiftUI compatibility. SwiftWinUI should strive for source-level compatibility with common SwiftUI app code, even though 100% compatibility may not be achievable on Windows. Public API decisions should prefer SwiftUI naming, modifier shape, result-builder behavior, state concepts, layout semantics, and view composition patterns wherever practical. Platform-specific differences should be pushed behind renderer internals or documented as explicit compatibility gaps.
 
+The core engineering style is small-function, protocol-oriented Swift. Public behavior should be captured in focused protocols wherever that improves type safety, interoperability, testability, or future custom implementations. Concrete classes should be default implementations of those contracts, and large implementation areas should be split before they become difficult to reason about.
+
 Overall planned-code progress: [###-------] 30%
 
-The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, and a GitHub-style README. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and decide whether the traditional imperative framework should be built in parallel as the underlying engine for the declarative layer.
+The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
 
 Unsupported and partially supported UI capabilities are tracked in [Unsupported SwiftWinUI Coverage](#unsupported-swiftwinui-coverage).
 
@@ -26,9 +28,10 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 8: SwiftUI State And Invalidation | Not Started | 0% | `@State`, `Binding`, observable models, event invalidation, diff or rerender path | Required before apps can update UI without rebuilding windows manually. Compatibility with SwiftUI state concepts is a primary goal. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 45% | GitHub README, architecture notes, examples, API docs | README is in good shape. Needs API reference, design docs, screenshots, and sample apps. |
-| 11: Phase II Traditional Swift Framework | Planned | 0% | imperative windows, controls, events, layout, app lifecycle | A parallel non-declarative API may be easier to build simultaneously if the declarative SwiftUI-compatible layer wraps it. |
+| 11: Phase II Traditional Swift Framework | In Progress | 20% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
-| 13: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
+| 13: Protocol-Oriented Architecture | In Progress | 20% | focused protocols, small functions, separable runtime/layout/platform pieces | Initial public protocols exist in `SwiftWinLegacy`. The monolithic Win32 runtime should be split next. |
+| 14: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
 
 ## Milestones
 
@@ -86,12 +89,12 @@ Status: Planned
 
 ### Milestone 6: Phase II Traditional Framework
 
-Status: Planned
+Status: In Progress
 
 - Define a traditional Swift API for windows, controls, layout containers, and events.
-- Decide package/product naming for the imperative framework, such as `SwiftWin` or `SwiftWinCore`.
+- Use `SwiftWinLegacy` as the traditional package product name.
 - Make the imperative layer usable directly for developers who do not want declarative UI.
-- Evaluate whether Phase I should wrap Phase II internally so both frameworks evolve together.
+- Wrap Phase II internally from Phase I so both frameworks evolve together.
 - Keep shared renderer/runtime/platform code in one place to avoid divergent behavior.
 
 ## Phase Details
@@ -313,6 +316,16 @@ Planned:
 6. Build compatibility examples that can be compared against equivalent SwiftUI snippets.
 7. Avoid adding abstractions that would make future SwiftUI compatibility harder.
 
+## Implementation Design Principles
+
+1. Keep functions as small as reasonably practical.
+2. Prefer focused protocols where they make contracts clearer or custom implementations easier.
+3. Let concrete classes be default implementations behind protocol-shaped behavior.
+4. Keep public APIs type-safe, with explicit escape hatches for advanced native interop.
+5. Split platform declarations, layout, event routing, resource ownership, and rendering into separate components as they grow.
+6. Avoid protocols that exist only for ceremony; each protocol should protect a useful extension point or boundary.
+7. Favor shared protocol-backed primitives between `SwiftWinLegacy` and `SwiftWinUI` when that keeps behavior consistent.
+
 ## SwiftUI Compatibility Targets
 
 | Area | Target | Current Status |
@@ -390,7 +403,7 @@ Status: Planned
 
 Phase II adds a parallel traditional Swift interface for Windows UI. This layer is not declarative and does not attempt to look like SwiftUI. It should feel like a clean Swift wrapper over native Windows app concepts: application, windows, controls, containers, events, commands, layout, resources, and dialogs.
 
-This may be implemented after Phase I reaches a stable prototype, or simultaneously if it makes Phase I easier. In particular, if the declarative layer becomes simpler as a wrapper around imperative objects, Phase II should be started during Phase I and treated as the shared runtime/control foundation.
+This is now being implemented simultaneously with Phase I. The declarative layer wraps imperative objects for the current Win32 path, making `SwiftWinLegacy` the shared runtime/control foundation.
 
 ### Phase II Goals
 
@@ -421,13 +434,14 @@ app.run(window)
 
 | Area | Status | Progress | Planned Work | Notes |
 | --- | --- | ---: | --- | --- |
-| Package/Product Shape | Planned | 0% | choose module name, package product, folder layout | Likely separate product beside `SwiftWinUI`. |
-| Application Runtime | Planned | 0% | `WinApplication`, message loop, lifecycle callbacks | Can share code with current `ApplicationRuntime` and `Win32Renderer`. |
-| Window API | Planned | 0% | `WinWindow`, size, title, show/close, events | Should become the primitive that declarative `WindowGroup` can target. |
-| Controls | Planned | 0% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinList` | These can map directly to native HWNDs or custom-drawn controls. |
-| Layout Containers | Planned | 0% | `WinStack`, `WinGrid`, `WinScrollView`, sizing primitives | Could provide the layout engine used by Phase I. |
-| Events And Commands | Planned | 0% | closures, command IDs, keyboard shortcuts, menu actions | Should be explicit and testable. |
-| Styling | Planned | 0% | control styles, theme tokens, fonts, colors | Shared styling engine can feed both Phase I and Phase II. |
+| Package/Product Shape | Implemented | 100% | `SwiftWinLegacy` library product, `SwiftWinLegacyDemo` executable | Module name is chosen and wired into SwiftPM. |
+| Application Runtime | In Progress | 35% | `WinApplication`, message loop, lifecycle callbacks | `WinApplication` can run one `WinWindow`; lifecycle callbacks remain planned. |
+| Window API | In Progress | 30% | `WinWindow`, size, title, show/close, events | `WinWindow` supports title, size, and content. Events remain planned. |
+| Protocol Contracts | In Progress | 25% | app runner, containers, text, titled/action controls, button contracts | Initial public protocols exist so custom controls and runtimes can interoperate. |
+| Controls | In Progress | 25% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinList` | `WinText`, `WinButton`, `WinSpacer`, and `WinDialog` exist. |
+| Layout Containers | In Progress | 20% | `WinStack`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack` conforms to `WinContainer` and uses direct placement. Real layout remains planned. |
+| Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
+| Styling | In Progress | 20% | control styles, theme tokens, fonts, colors | Text and button styles exist; full theme tokens remain planned. |
 | Interop Boundary | Planned | 0% | expose native handles safely when needed | Advanced users may need controlled access to HWND/HDC. |
 
 ### Phase II Design Principles
@@ -438,11 +452,13 @@ app.run(window)
 4. Prefer one shared native implementation beneath both Phase I and Phase II.
 5. Avoid adding Phase II concepts that make SwiftUI compatibility harder for Phase I.
 6. Treat Phase II as the possible substrate for Phase I if it reduces duplication.
+7. Keep implementation functions small and split responsibilities early.
+8. Use protocols for extension points that custom controls, alternate runtimes, and future renderers may need.
 
 ### Phase II Open Questions
 
-- Should the module be named `SwiftWin`, `SwiftWinCore`, or `SwiftWinControls`?
-- Should Phase I depend on Phase II publicly or only internally?
+- Should `SwiftWinLegacy` remain the final name, or eventually graduate to `SwiftWin` once stable?
+- Should Phase I expose the Phase II dependency publicly or keep it mostly internal?
 - Should the imperative API expose actual control objects, lightweight descriptors, or both?
 - Should layout live in Phase II first, then be wrapped by Phase I?
 - How much direct HWND access should advanced users get?
@@ -468,15 +484,13 @@ app.run(window)
 
 1. Add hover tracking for owner-drawn buttons.
 2. Add disabled button support.
-3. Decide whether to start Phase II now as the imperative foundation for Phase I.
-4. Choose a Phase II module/product name.
+3. Split `SwiftWinLegacy.swift` into protocols, controls, layout, Win32 runtime, Win32 declarations, and paint resources.
+4. Extract shared Win32 handle declarations into private platform files under `SwiftWinLegacy`.
 5. Introduce `Padding` and `Frame` modifiers.
-6. Extract Win32 handle declarations into a private platform file.
-7. Add a simple layout node tree.
-8. Add `TextField`.
-9. Prototype `WebView` / `WinWebView` with WebView2.
-10. Add a WebAssembly sample page loaded inside WebView2.
-11. Add a tiny state primitive and rerender sample.
-12. Add console snapshot verification.
-13. Add screenshots to the README.
-14. Choose and add a license.
+6. Add a simple layout node tree.
+7. Add `TextField` / `WinTextField`.
+8. Prototype `WebView` / `WinWebView` with WebView2.
+9. Add a WebAssembly sample page loaded inside WebView2.
+10. Add a tiny state primitive and rerender sample.
+11. Add console snapshot verification.
+12. Add screenshots to the README.

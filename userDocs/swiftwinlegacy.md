@@ -1,0 +1,82 @@
+# Traditional SwiftWinLegacy API
+
+`SwiftWinLegacy` is the traditional, non-declarative Swift library for Windows UI.
+
+It is developed in parallel with `SwiftWinUI`. The current plan is for `SwiftWinUI` to wrap `SwiftWinLegacy` primitives where that keeps the architecture simpler and avoids duplicate native control code.
+
+## Current Status
+
+Implemented:
+
+- `WinApplication`
+- `WinWindow`
+- `WinApplicationRunning`
+- `WinContainer`
+- `WinTextDisplaying`
+- `WinTitledControl`
+- `WinActionControl`
+- `WinButtonDisplaying`
+- `WinStack`
+- `WinText`
+- `WinButton`
+- `WinSpacer`
+- `WinDialog`
+- `SwiftWinLegacyDemo`
+
+The first milestone is complete: `SwiftWinLegacyDemo` reproduces the current SwiftWinUI demo through the imperative API.
+
+## Design Direction
+
+`SwiftWinLegacy` should stay traditional and explicit, but it should also be protocol-oriented where that keeps the API safer and easier to extend.
+
+Current public protocols cover app runners, containers, text elements, titled controls, action controls, and button-like controls. The concrete classes are the default implementations, not the only possible implementations.
+
+Implementation functions should stay small. The current Win32 runtime is still intentionally compact for the prototype, but the plan is to split it into protocol contracts, controls, layout, event routing, Win32 declarations, and paint/resource management as the framework grows.
+
+## Example
+
+```swift
+import SwiftWinLegacy
+
+let window = WinWindow(title: "SwiftWinLegacy Demo", width: 960, height: 640)
+let root = WinStack(axis: .vertical, spacing: 14)
+
+root.add(WinText("SwiftWinLegacy", style: .title))
+root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
+
+let buttons = WinStack(axis: .horizontal, spacing: 10)
+buttons.add(WinButton("Create Window", style: .primary) {
+    WinDialog.show(title: "Create Window", message: "Clicked.")
+})
+buttons.add(WinButton("Settings") {
+    WinDialog.show(title: "Settings", message: "Settings clicked.")
+})
+
+root.add(buttons)
+root.add(WinSpacer())
+root.add(WinText("Phase II traditional API: active.", style: .caption))
+
+window.content = root
+WinApplication().run(window)
+```
+
+## Run The Demo
+
+```powershell
+swift build
+.\.build\aarch64-unknown-windows-msvc\debug\SwiftWinLegacyDemo.exe
+```
+
+## Relationship To SwiftWinUI
+
+`SwiftWinUI` depends on `SwiftWinLegacy`.
+
+The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls into imperative `SwiftWinLegacy` objects:
+
+- `Text` -> `WinText`
+- `Button` -> `WinButton`
+- `VStack` / `HStack` -> `WinStack`
+- `Spacer` -> `WinSpacer`
+- `Dialog.show` -> `WinDialog.show`
+
+This is the intended simultaneous development model unless a future architectural change proves cleaner.
