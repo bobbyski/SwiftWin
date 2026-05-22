@@ -7,27 +7,21 @@ struct DemoContent: View {
     @State private var themeIndex = 0
     @State private var scale = 50
 
-    private var summary: String {
-        """
-        Project name: \(projectName)
-        Diagnostics: \(includeDiagnostics ? "on" : "off")
-        Theme: \(themeName)
-        Scale: \(scale)
-        """
-    }
-
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
     }
 
-    /// Renders the state-backed form.
-    func render(into context: RenderContext) {
+    /// Rebuildable view body using local declarations like SwiftUI.
+    @ViewBuilder
+    var body: some View {
+        let themes = ["System", "Light", "Dark"]
+
         VStack(spacing: 14) {
             Text("SwiftWinUI", style: .title)
             Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
             TextField("Project name", text: $projectName)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
-            Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: $themeIndex)
+            Picker("Theme", options: themes, selectedIndex: $themeIndex)
             Slider("Scale", value: $scale, range: 0...100)
             HStack(spacing: 10) {
                 Button("Create Window", style: .primary) {
@@ -35,7 +29,7 @@ struct DemoContent: View {
                     // is visible when launched as a GUI app.
                     Dialog.show(
                         title: "Create Window",
-                        message: summary
+                        message: formSummary(themeName: themes[themeIndex])
                     )
                 }
                 Button("Settings") {
@@ -48,7 +42,16 @@ struct DemoContent: View {
             Spacer()
             Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
         }
-        .render(into: context)
+    }
+
+    /// Builds the current form summary for button actions.
+    private func formSummary(themeName: String) -> String {
+        """
+        Project name: \(projectName)
+        Diagnostics: \(includeDiagnostics ? "on" : "off")
+        Theme: \(themeName)
+        Scale: \(scale)
+        """
     }
 }
 

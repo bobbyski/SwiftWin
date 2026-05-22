@@ -1,11 +1,53 @@
 /// A declarative SwiftWinUI view.
 ///
-/// This protocol intentionally mirrors SwiftUI's `View` role, but the current
-/// implementation renders immediately into a `Renderer` rather than building a
-/// fully diffable persistent tree. Moving toward a normalized tree is planned.
+/// This protocol intentionally mirrors SwiftUI's `View` role. Custom views can
+/// describe their content with `body`, while primitive controls can implement
+/// `render(into:)` directly as renderer-backed leaves.
 public protocol View {
+    /// The view content produced by this view.
+    associatedtype Body: View = Never
+
+    /// Rebuildable declarative content for this view.
+    ///
+    /// Compatibility note:
+    /// User-authored multi-child bodies should annotate their implementation
+    /// with `@ViewBuilder` until this toolchain can carry the builder cleanly
+    /// from the protocol requirement to all conformers.
+    var body: Body { get }
+
     /// Emits this view into the current renderer.
     func render(into context: RenderContext)
+}
+
+public extension View where Body: View {
+    /// Renders this view by rendering its declarative body.
+    ///
+    /// Implementation note:
+    /// This is the compatibility hook behind SwiftUI-shaped custom views. The
+    /// body can be rebuilt freely; persistent identity and invalidation will be
+    /// layered in later.
+    func render(into context: RenderContext) {
+        body.render(into: context)
+    }
+}
+
+public extension View where Body == Never {
+    /// Primitive views do not expose a body.
+    var body: Never {
+        fatalError("Primitive SwiftWinUI views do not have a body.")
+    }
+}
+
+extension Never: View {
+    public typealias Body = Never
+
+    public var body: Never {
+        fatalError("Never has no view body.")
+    }
+
+    public func render(into context: RenderContext) {
+        fatalError("Never cannot render.")
+    }
 }
 
 /// Rendering context passed through a declarative view tree.
