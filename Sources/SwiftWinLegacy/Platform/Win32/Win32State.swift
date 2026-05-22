@@ -16,6 +16,23 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
+    nonisolated(unsafe) static var controlFramesByHandle: [UInt: ControlFrame] = [:]
+    nonisolated(unsafe) static var scrollState = WindowScrollState()
+
+    /// Clears per-window state before a new demo window is rendered.
+    static func reset() {
+        actions.removeAll()
+        buttons.removeAll()
+        dynamicTexts.removeAll()
+        textFields.removeAll()
+        toggles.removeAll()
+        toggleControls.removeAll()
+        pickerOptions.removeAll()
+        pickerOptionControls.removeAll()
+        slidersByHandle.removeAll()
+        controlFramesByHandle.removeAll()
+        scrollState = WindowScrollState()
+    }
 }
 
 /// Native control associated with dynamic text.
@@ -59,6 +76,21 @@ struct PickerOptionState {
 struct SliderRenderState {
     var slider: WinSlider
     var label: HWND
+}
+
+/// Original position and size for a child HWND before scroll offset is applied.
+struct ControlFrame {
+    var control: HWND
+    var x: Int32
+    var y: Int32
+    var width: Int32
+    var height: Int32
+}
+
+/// Current vertical scroll state for the active prototype window.
+struct WindowScrollState {
+    var contentHeight: Int32 = 0
+    var offset: Int32 = 0
 }
 
 /// Shared paint resources for the current Win32 prototype.

@@ -13,6 +13,10 @@ func swiftWinLegacyWindowProc(
         return handleCommand(wParam: wParam, lParam: lParam)
     case WM_HSCROLL:
         return handleHorizontalScroll(wParam: wParam, lParam: lParam)
+    case WM_MOUSEWHEEL:
+        return handleMouseWheel(hwnd: hwnd, wParam: wParam)
+    case WM_SIZE:
+        return handleWindowSize(hwnd: hwnd)
     case WM_CTLCOLORSTATIC:
         return handleStaticColor(wParam: wParam)
     case WM_DRAWITEM:
@@ -23,6 +27,26 @@ func swiftWinLegacyWindowProc(
     default:
         return DefWindowProcW(hwnd, message, wParam, lParam)
     }
+}
+
+/// Scrolls child HWND controls in response to mouse wheel or trackpad gestures.
+///
+/// Windows note:
+/// A normal Win32 window is not scrollable unless the app explicitly handles
+/// wheel messages and moves or repaints its content. This is our first default
+/// window-level scroll path, before a real `ScrollView` exists.
+private func handleMouseWheel(hwnd: HWND?, wParam: WPARAM) -> LRESULT {
+    let delta = wheelDelta(from: wParam)
+    let step = max(12, abs(delta) / 3)
+    let nextOffset = Win32ActionRegistry.scrollState.offset - Int32(delta > 0 ? step : -step)
+    applyScrollOffset(nextOffset, window: hwnd)
+    return 0
+}
+
+/// Re-clamps scroll offset after the user resizes the window.
+private func handleWindowSize(hwnd: HWND?) -> LRESULT {
+    applyScrollOffset(Win32ActionRegistry.scrollState.offset, window: hwnd)
+    return 0
 }
 
 /// Routes `WM_COMMAND` notifications to Swift actions or text updates.
@@ -79,6 +103,38 @@ private func handleDrawItem(lParam: LPARAM) -> LRESULT {
 
     drawOwnerDrawnControl(drawItem)
     return 1
+}
+
+/// Applies a vertical scroll offset to all registered child controls.
+private func applyScrollOffset(_ requestedOffset: Int32, window: HWND?) {
+    let offset = clampedScrollOffset(requestedOffset, window: window)
+    Win32ActionRegistry.scrollState.offset = offset
+
+    for frame in Win32ActionRegistry.controlFramesByHandle.values {
+        _ = MoveWindow(frame.control, frame.x, frame.y - offset, frame.width, frame.height, 1)
+    }
+}
+
+/// Clamps a requested scroll offset to the rendered content bounds.
+private func clampedScrollOffset(_ requestedOffset: Int32, window: HWND?) -> Int32 {
+    let maximum = max(0, Win32ActionRegistry.scrollState.contentHeight - clientHeight(of: window))
+    return min(max(0, requestedOffset), maximum)
+}
+
+/// Returns the current client height for a window.
+private func clientHeight(of window: HWND?) -> Int32 {
+    var rect = RECT()
+    guard GetClientRect(window, &rect) != 0 else {
+        return 0
+    }
+
+    return max(0, rect.bottom - rect.top)
+}
+
+/// Extracts the signed wheel delta from a Win32 `WPARAM`.
+private func wheelDelta(from wParam: WPARAM) -> Int32 {
+    let highWord = UInt16((wParam >> 16) & 0xffff)
+    return Int32(Int16(bitPattern: highWord))
 }
 
 /// Copies native edit-control text into the matching `WinTextField`.

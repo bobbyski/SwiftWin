@@ -8,7 +8,7 @@ The strategic goal is maximum practical SwiftUI compatibility. SwiftWinUI should
 
 The core engineering style is small-function, protocol-oriented Swift. Public behavior should be captured in focused protocols wherever that improves type safety, interoperability, testability, or future custom implementations. Concrete classes should be default implementations of those contracts, and large implementation areas should be split before they become difficult to reason about.
 
-Overall planned-code progress: [###-------] 34%
+Overall planned-code progress: [####------] 37%
 
 The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
 
@@ -23,12 +23,12 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
 | 5: SwiftUI Control Coverage | In Progress | 45% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Button`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
-| 6: Layout Engine | In Progress | 20% | stack positioning, spacing, basic child advancement | Current layout is direct placement. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
-| 7: Styling And Theming | In Progress | 35% | text styles, button styles, background brush, owner-drawn button/toggle/picker paint | Primary/secondary buttons, toggles, and picker options now have custom drawing. Needs color tokens, hover state, disabled state, focus rings, theme switching, and modern surfaces. |
+| 6: Layout Engine | In Progress | 25% | stack positioning, spacing, padding, fixed frame hints, basic child advancement | Current layout is direct placement with early modifier containers. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
+| 7: Styling And Theming | In Progress | 38% | text styles, button styles, background brush, owner-drawn button/toggle/picker paint, disabled colors | Primary/secondary buttons, toggles, and picker options now have custom drawing and disabled colors. Needs color tokens, hover state, focus rings, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
-| 10: Documentation And Examples | In Progress | 45% | GitHub README, architecture notes, examples, API docs | README is in good shape. Needs API reference, design docs, screenshots, and sample apps. |
-| 11: Phase II Traditional Swift Framework | In Progress | 20% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
+| 10: Documentation And Examples | In Progress | 49% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, and early layout modifiers. Needs API reference, design docs, screenshots, and sample apps. |
+| 11: Phase II Traditional Swift Framework | In Progress | 23% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 35% | focused protocols, small functions, separable runtime/layout/platform pieces | `SwiftWinUI` controls and `SwiftWinLegacy` core/control/platform files are now split by responsibility. |
 | 14: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
@@ -137,7 +137,8 @@ Demoable app: a small settings editor with text fields, toggles, validation, sav
 Goal: prove that the framework can handle real app layout, resizing, and navigation patterns.
 
 - [ ] Add measure/place layout passes.
-- [ ] Add padding, frame, alignment, min/max size, and flexible spacer behavior.
+- [x] Add initial padding and fixed frame modifiers.
+- [ ] Add alignment, min/max size, and flexible spacer behavior.
 - [ ] Add `ScrollView` / `WinScrollView`.
 - [ ] Add `List` or table-like row rendering.
 - [ ] Add toolbar or command strip controls.
@@ -242,7 +243,8 @@ Remaining:
 - Add `Group`.
 - Add `ViewModifier`.
 - Add conditional view support beyond simple optional/either branches.
-- Add modifiers such as `.padding`, `.frame`, `.foregroundStyle`, `.font`, `.disabled`, and `.accessibilityLabel`.
+- Add modifiers such as `.foregroundStyle`, `.font`, `.disabled`, and `.accessibilityLabel`.
+- Expand `.padding` and `.frame(width:height:)` into fuller SwiftUI-compatible layout semantics.
 - Add environment values and environment propagation.
 - Audit public names against SwiftUI before introducing custom names.
 - Decide whether modifiers become wrapper views, environment values, or normalized render nodes.
@@ -357,14 +359,15 @@ Implemented:
 - Basic stack placement.
 - Horizontal and vertical advancement.
 - Spacing support.
+- Uniform padding modifier.
+- Fixed width/height frame proposal.
 
 Remaining:
 
 - Separate measure and place passes.
 - Intrinsic sizes.
 - Alignment.
-- Padding.
-- Fixed and flexible frames.
+- Min/max frame overloads and flexible sizing.
 - SwiftUI-like layout priorities where practical.
 - Minimum and maximum sizes.
 - DPI scaling.
@@ -439,12 +442,12 @@ Remaining:
 | --- | --- | --- |
 | App lifecycle | `App`, `Scene`, `WindowGroup` | Partial |
 | View building | `View`, `@ViewBuilder`, tuple/conditional views | Partial |
-| State | `@State`, `Binding`, observable models | Not started |
+| State | `@State`, `Binding`, observable models | Partial: `@State`, `Binding`, control bindings, dynamic text refresh |
 | Environment | `Environment`, environment values, environment-driven styling | Not started |
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
-| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `List` | Partial: form controls exist with callback changes, not `Binding` yet |
-| Modifiers | `.font`, `.foregroundStyle`, `.background`, `.padding`, `.frame`, `.disabled` | Not started |
-| Styling | SwiftUI-like semantic styles with Windows rendering | Partial |
+| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads |
+| Modifiers | `.font`, `.foregroundStyle`, `.background`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)` |
+| Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled/disabled colors |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
 | Preview/testing | Console snapshots and examples instead of Xcode previews | Partial alternative |
 
@@ -546,7 +549,7 @@ app.run(window)
 | Window API | In Progress | 30% | `WinWindow`, size, title, show/close, events | `WinWindow` supports title, size, and content. Events remain planned. |
 | Protocol Contracts | In Progress | 25% | app runner, containers, text, titled/action controls, button contracts | Initial public protocols exist so custom controls and runtimes can interoperate. |
 | Controls | In Progress | 45% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinList` | `WinText`, form controls, `WinButton`, `WinSpacer`, and `WinDialog` exist. |
-| Layout Containers | In Progress | 20% | `WinStack`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack` conforms to `WinContainer` and uses direct placement. Real layout remains planned. |
+| Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
 | Styling | In Progress | 20% | control styles, theme tokens, fonts, colors | Text and button styles exist; full theme tokens remain planned. |
 | Interop Boundary | Planned | 0% | expose native handles safely when needed | Advanced users may need controlled access to HWND/HDC. |
@@ -576,7 +579,7 @@ app.run(window)
 | --- | --- | --- |
 | Text | Basic static text | No wrapping, selection, rich text, dynamic color, or accessibility metadata |
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
-| Layout | Basic stack positioning | No full measurement, alignment, padding, flexible sizing, resize handling, or scroll layout |
+| Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
 | Forms | Partial | `TextField`, `Toggle`, `Picker`, and `Slider` exist with callback and binding changes. No validation yet |
 | WebView | None | No WebView2 hosting, navigation API, JavaScript bridge, local asset loading, or WebAssembly sample |
@@ -584,7 +587,7 @@ app.run(window)
 | Images | None | No bitmap loading, scaling, or icon rendering |
 | Menus | None | No menu bar, context menus, toolbar commands, or accelerators |
 | Accessibility | None | No labels, roles, focus traversal, or assistive technology metadata |
-| Theming | Partial | No dark mode, high contrast, semantic token system, hover/pressed/disabled palette, or user themes |
+| Theming | Partial | No dark mode, high contrast, semantic token system, hover palette, or user themes; disabled palette is early and control-specific |
 | Testing | Partial / blocked | Build works; XCTest currently blocked on this local ARM64 Windows snapshot |
 
 ## Near-Term Backlog
@@ -592,11 +595,10 @@ app.run(window)
 1. Add hover tracking for owner-drawn buttons.
 2. Add disabled button support.
 3. Continue splitting Win32 layout and native control hosting into smaller files as the backend grows.
-4. Introduce `Padding` and `Frame` modifiers.
+4. Add hover tracking for owner-drawn controls.
 5. Add a simple layout node tree.
 6. Add native reconciliation for invalidated state-dependent views.
 7. Prototype `WebView` / `WinWebView` with WebView2.
 8. Add a WebAssembly sample page loaded inside WebView2.
-9. Add a tiny state primitive and rerender sample.
-10. Add console snapshot verification.
-11. Add screenshots to the README.
+9. Add console snapshot verification.
+10. Add screenshots to the README.

@@ -200,6 +200,36 @@ VStack(spacing: 14) {
 
 Current limitation: layout is basic direct placement. A real measure/place layout engine is planned.
 
+## Layout Modifiers
+
+`padding` adds uniform inset around a view.
+
+```swift
+VStack(spacing: 14) {
+    Text("SwiftWinUI", style: .title)
+    Text("Native Windows, Swift-shaped.")
+}
+.padding(12)
+```
+
+`frame(width:height:)` proposes a fixed size to its content.
+
+```swift
+TextField("Project name", text: $projectName)
+    .frame(width: 340)
+```
+
+Current implementation: both modifiers are backed by `SwiftWinLegacy` containers. `frame(width:height:)` is a fixed-size hint used by native control creation; it does not yet implement SwiftUI's full min/max/alignment behavior.
+
+`disabled` disables interactive controls inside a view.
+
+```swift
+Button("Disabled") {}
+    .disabled()
+```
+
+Windows note for Apple developers: disabled state maps to `EnableWindow` on the native child `HWND`. Owner-drawn SwiftWin controls also paint a disabled appearance when Windows reports `ODS_DISABLED`.
+
 ## Spacer
 
 `Spacer` inserts fixed spacing in the current stack.

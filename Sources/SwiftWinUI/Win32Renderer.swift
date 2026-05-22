@@ -14,7 +14,7 @@ public final class Win32Renderer: Renderer {
     // `stackPath` is a construction stack, not a layout stack. It tracks the
     // current parent `WinStack` while the declarative tree is rendered into
     // imperative legacy objects.
-    private var stackPath: [WinStack] = []
+    private var containerPath: [WinContainer] = []
 
     /// Creates a Windows renderer.
     public init() {}
@@ -33,7 +33,7 @@ public final class Win32Renderer: Renderer {
     /// Starts an imperative `WinWindow` for the current declarative scene.
     public func beginWindow(_ descriptor: WindowDescriptor) {
         window = WinWindow(title: descriptor.title, width: descriptor.width, height: descriptor.height)
-        stackPath.removeAll()
+        containerPath.removeAll()
     }
 
     /// Runs the generated `SwiftWinLegacy` window.
@@ -47,16 +47,58 @@ public final class Win32Renderer: Renderer {
 
     /// Begins collecting children into a `WinStack`.
     public func beginStack(axis: StackAxis, spacing: Double) {
-        stackPath.append(WinStack(axis: axis.winAxis, spacing: spacing))
+        containerPath.append(WinStack(axis: axis.winAxis, spacing: spacing))
     }
 
     /// Closes the current `WinStack` and appends it to its parent/window.
     public func endStack() {
-        guard let stack = stackPath.popLast() else {
+        guard let stack = containerPath.popLast() else {
             return
         }
 
         add(stack)
+    }
+
+    /// Begins collecting children into a `WinPadding` container.
+    public func beginPadding(_ amount: Double) {
+        containerPath.append(WinPadding(amount: amount))
+    }
+
+    /// Closes the current `WinPadding` and appends it to its parent/window.
+    public func endPadding() {
+        guard let padding = containerPath.popLast() else {
+            return
+        }
+
+        add(padding)
+    }
+
+    /// Begins collecting children into a `WinFrame` container.
+    public func beginFrame(width: Double?, height: Double?) {
+        containerPath.append(WinFrame(width: width, height: height))
+    }
+
+    /// Closes the current `WinFrame` and appends it to its parent/window.
+    public func endFrame() {
+        guard let frame = containerPath.popLast() else {
+            return
+        }
+
+        add(frame)
+    }
+
+    /// Begins collecting children into a `WinDisabled` container.
+    public func beginDisabled(_ isDisabled: Bool) {
+        containerPath.append(WinDisabled(isDisabled: isDisabled))
+    }
+
+    /// Closes the current `WinDisabled` scope and appends it to its parent/window.
+    public func endDisabled() {
+        guard let disabled = containerPath.popLast() else {
+            return
+        }
+
+        add(disabled)
     }
 
     /// Adapts SwiftWinUI text to `WinText`.
@@ -101,10 +143,10 @@ public final class Win32Renderer: Renderer {
 
     // Implementation note:
     // Top-level content becomes `window.content`; nested content is appended to
-    // the current legacy stack. This keeps SwiftWinUI's renderer stateless from
-    // the native runtime's perspective.
+    // the current legacy container. This keeps SwiftWinUI's renderer stateless
+    // from the native runtime's perspective.
     private func add(_ element: WinElement) {
-        if let parent = stackPath.last {
+        if let parent = containerPath.last {
             parent.add(element)
         } else {
             window?.content = element

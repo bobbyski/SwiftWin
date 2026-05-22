@@ -10,7 +10,9 @@ root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 
 let projectName = WinTextField("Project name", text: "SwiftWin")
-root.add(projectName)
+let projectFrame = WinFrame(width: 340, height: nil)
+projectFrame.add(projectName)
+root.add(projectFrame)
 
 let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
 root.add(includeDiagnostics)
@@ -19,7 +21,9 @@ let theme = WinPicker("Theme", options: ["System", "Light", "Dark"], selectedInd
 root.add(theme)
 
 let scale = WinSlider("Scale", value: 50, range: 0...100)
-root.add(scale)
+let scaleFrame = WinFrame(width: 340, height: nil)
+scaleFrame.add(scale)
+root.add(scaleFrame)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
@@ -43,6 +47,9 @@ buttons.add(WinButton("Settings") {
         message: "SwiftWinUI can wrap this imperative layer as it grows."
     )
 })
+let disabledButton = WinDisabled(isDisabled: true)
+disabledButton.add(WinButton("Disabled") {})
+buttons.add(disabledButton)
 
 root.add(buttons)
 root.add(WinSpacer())

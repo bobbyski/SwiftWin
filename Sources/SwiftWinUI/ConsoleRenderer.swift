@@ -31,6 +31,39 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints a padding node.
+    public func beginPadding(_ amount: Double) {
+        write("Padding(\(amount))")
+        indent += 1
+    }
+
+    /// Ends the current padding node.
+    public func endPadding() {
+        indent -= 1
+    }
+
+    /// Prints a frame node.
+    public func beginFrame(width: Double?, height: Double?) {
+        write("Frame(width: \(optionalDescription(width)), height: \(optionalDescription(height)))")
+        indent += 1
+    }
+
+    /// Ends the current frame node.
+    public func endFrame() {
+        indent -= 1
+    }
+
+    /// Prints a disabled-state node.
+    public func beginDisabled(_ isDisabled: Bool) {
+        write("Disabled(\(isDisabled))")
+        indent += 1
+    }
+
+    /// Ends the current disabled-state node.
+    public func endDisabled() {
+        indent -= 1
+    }
+
     /// Prints a text node.
     public func text(_ value: String, style: TextStyle) {
         write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight))")
@@ -76,5 +109,14 @@ public final class ConsoleRenderer: Renderer {
     // console output without unstable whitespace or platform-specific detail.
     private func write(_ message: String) {
         print(String(repeating: "  ", count: indent) + message)
+    }
+
+    /// Formats optional numeric values deterministically.
+    private func optionalDescription(_ value: Double?) -> String {
+        guard let value else {
+            return "nil"
+        }
+
+        return "\(value)"
     }
 }

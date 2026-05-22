@@ -15,6 +15,7 @@ final class Win32ApplicationRunner {
 
     /// Creates native controls from a `WinWindow` and starts the message loop.
     func run(_ descriptor: WinWindow) {
+        Win32ActionRegistry.reset()
         instance = GetModuleHandleW(nil)
         configureProcessDPIAwareness()
         initializeCommonControls()
@@ -25,6 +26,7 @@ final class Win32ApplicationRunner {
 
         if let content = descriptor.content {
             render(content)
+            updateContentHeight()
         }
 
         guard let window else {
@@ -65,6 +67,18 @@ final class Win32ApplicationRunner {
             beginStack(axis: stack.axis, spacing: stack.spacing)
             stack.children.forEach(render)
             endStack()
+        case let padding as WinPadding:
+            beginPadding(padding.amount)
+            padding.children.forEach(render)
+            endPadding(padding.amount)
+        case let frame as WinFrame:
+            beginFrame(width: frame.width, height: frame.height)
+            frame.children.forEach(render)
+            endFrame(width: frame.width, height: frame.height)
+        case let disabled as WinDisabled:
+            beginDisabled(disabled.isDisabled)
+            disabled.children.forEach(render)
+            endDisabled()
         case let text as WinText:
             createText(text.value, style: text.style)
         case let text as WinDynamicText:
@@ -94,7 +108,7 @@ final class Win32ApplicationRunner {
     /// are created.
     private func beginStack(axis: WinAxis, spacing: Double) {
         let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
-        layoutStack.append(LayoutState(axis: axis, x: origin.x, y: origin.y, spacing: Int32(spacing)))
+        layoutStack.append(LayoutState(axis: axis, x: origin.x, y: origin.y, spacing: Int32(spacing), isDisabled: origin.isDisabled))
     }
 
     /// Pops a stack context and advances its parent by the consumed size.
@@ -103,9 +117,86 @@ final class Win32ApplicationRunner {
             return
         }
 
-        let consumedWidth = max(child.maxCrossAxis, child.x - child.originX)
-        let consumedHeight = max(child.maxCrossAxis, child.y - child.originY)
-        advance(width: consumedWidth, height: consumedHeight)
+        let size = consumedSize(of: child)
+        advance(width: size.width, height: size.height)
+    }
+
+    /// Pushes an inset layout context.
+    private func beginPadding(_ amount: Double) {
+        let inset = Int32(amount)
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        layoutStack.append(
+            LayoutState(
+                axis: origin.axis,
+                x: origin.x + inset,
+                y: origin.y + inset,
+                spacing: origin.spacing,
+                isDisabled: origin.isDisabled
+            )
+        )
+    }
+
+    /// Pops an inset layout context and advances the parent by padded size.
+    private func endPadding(_ amount: Double) {
+        guard layoutStack.count > 1, let child = layoutStack.popLast() else {
+            return
+        }
+
+        let inset = Int32(amount)
+        let size = consumedSize(of: child)
+        advance(width: size.width + inset * 2, height: size.height + inset * 2)
+    }
+
+    /// Pushes a fixed-size layout proposal.
+    private func beginFrame(width: Double?, height: Double?) {
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        layoutStack.append(
+            LayoutState(
+                axis: origin.axis,
+                x: origin.x,
+                y: origin.y,
+                spacing: origin.spacing,
+                proposedWidth: int32(width),
+                proposedHeight: int32(height),
+                isDisabled: origin.isDisabled
+            )
+        )
+    }
+
+    /// Pops a fixed-size proposal and advances the parent by the resolved size.
+    private func endFrame(width: Double?, height: Double?) {
+        guard layoutStack.count > 1, let child = layoutStack.popLast() else {
+            return
+        }
+
+        let size = consumedSize(of: child)
+        advance(width: int32(width) ?? size.width, height: int32(height) ?? size.height)
+    }
+
+    /// Pushes a disabled-state scope.
+    private func beginDisabled(_ isDisabled: Bool) {
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        layoutStack.append(
+            LayoutState(
+                axis: origin.axis,
+                x: origin.x,
+                y: origin.y,
+                spacing: origin.spacing,
+                proposedWidth: origin.proposedWidth,
+                proposedHeight: origin.proposedHeight,
+                isDisabled: origin.isDisabled || isDisabled
+            )
+        )
+    }
+
+    /// Pops a disabled-state scope and advances the parent by consumed size.
+    private func endDisabled() {
+        guard layoutStack.count > 1, let child = layoutStack.popLast() else {
+            return
+        }
+
+        let size = consumedSize(of: child)
+        advance(width: size.width, height: size.height)
     }
 
     /// Creates a native static text control.
@@ -115,8 +206,8 @@ final class Win32ApplicationRunner {
             className: "STATIC",
             title: value,
             style: WS_CHILD | WS_VISIBLE | SS_LEFT,
-            width: max(220, Int32(value.count * 9 + 32)),
-            height: style.size >= 20 ? 36 : 26,
+            width: proposedWidth(defaultingTo: max(220, Int32(value.count * 9 + 32))),
+            height: proposedHeight(defaultingTo: style.size >= 20 ? 36 : 26),
             action: nil
         ) {
             applyFont(style, to: control)
@@ -146,8 +237,8 @@ final class Win32ApplicationRunner {
             className: "BUTTON",
             title: title,
             style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
-            width: max(buttonStyle == .primary ? 136 : 116, Int32(title.count * 9 + 48)),
-            height: 40,
+            width: proposedWidth(defaultingTo: max(buttonStyle == .primary ? 136 : 116, Int32(title.count * 9 + 48))),
+            height: proposedHeight(defaultingTo: 40),
             action: action,
             button: ButtonRenderState(title: title, style: buttonStyle)
         ) {
@@ -161,8 +252,8 @@ final class Win32ApplicationRunner {
             className: "EDIT",
             title: field.value,
             style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL,
-            width: 280,
-            height: 32,
+            width: proposedWidth(defaultingTo: 280),
+            height: proposedHeight(defaultingTo: 32),
             action: nil,
             textField: field
         ) {
@@ -177,8 +268,8 @@ final class Win32ApplicationRunner {
             className: "BUTTON",
             title: toggle.title,
             style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
-            width: max(180, Int32(toggle.title.count * 9 + 44)),
-            height: 32,
+            width: proposedWidth(defaultingTo: max(180, Int32(toggle.title.count * 9 + 44))),
+            height: proposedHeight(defaultingTo: 32),
             action: nil,
             toggle: toggle
         ) {
@@ -204,8 +295,8 @@ final class Win32ApplicationRunner {
             className: "BUTTON",
             title: title,
             style: style | BS_OWNERDRAW,
-            width: max(96, Int32(title.count * 9 + 42)),
-            height: 32,
+            width: proposedWidth(defaultingTo: max(96, Int32(title.count * 9 + 42))),
+            height: proposedHeight(defaultingTo: 32),
             action: nil,
             pickerOption: PickerOptionState(picker: picker, index: index)
         ) {
@@ -256,8 +347,8 @@ final class Win32ApplicationRunner {
             className: "msctls_trackbar32",
             title: "",
             style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | TBS_AUTOTICKS,
-            width: 280,
-            height: 36,
+            width: proposedWidth(defaultingTo: 280),
+            height: proposedHeight(defaultingTo: 36),
             action: nil
         ) {
             let state = SliderRenderState(slider: slider, label: label)
@@ -333,6 +424,8 @@ final class Win32ApplicationRunner {
                     instance,
                     nil
                 )
+                applyDisabledState(to: control, layout: layout)
+                registerControlFrame(control, x: layout.x, y: layout.y, width: width, height: height)
                 registerControlState(
                     controlID: controlID,
                     control: control,
@@ -346,6 +439,16 @@ final class Win32ApplicationRunner {
                 return control
             }
         }
+    }
+
+    /// Stores the original unscrolled frame for a child control.
+    private func registerControlFrame(_ control: HWND?, x: Int32, y: Int32, width: Int32, height: Int32) {
+        guard let control else {
+            return
+        }
+
+        let frame = ControlFrame(control: control, x: x, y: y, width: width, height: height)
+        Win32ActionRegistry.controlFramesByHandle[UInt(bitPattern: control)] = frame
     }
 
     /// Registers Swift state associated with a Win32 child control ID.
@@ -468,6 +571,81 @@ final class Win32ApplicationRunner {
             _ = DispatchMessageW(&message)
         }
     }
+
+    /// Applies the current layout disabled state to a native child window.
+    private func applyDisabledState(to control: HWND?, layout: LayoutState) {
+        guard layout.isDisabled else {
+            return
+        }
+
+        _ = EnableWindow(control, 0)
+    }
+
+    /// Returns the current frame width proposal, if one exists.
+    private func proposedWidth(defaultingTo fallback: Int32) -> Int32 {
+        layoutStack.last?.proposedWidth ?? fallback
+    }
+
+    /// Returns the current frame height proposal, if one exists.
+    private func proposedHeight(defaultingTo fallback: Int32) -> Int32 {
+        layoutStack.last?.proposedHeight ?? fallback
+    }
+
+    /// Converts optional `Double` dimensions to Win32 integer coordinates.
+    private func int32(_ value: Double?) -> Int32? {
+        guard let value else {
+            return nil
+        }
+
+        return Int32(value)
+    }
+
+    /// Updates the scrollable content height after the initial render pass.
+    private func updateContentHeight() {
+        guard let root = layoutStack.last else {
+            return
+        }
+
+        let size = consumedSize(of: root)
+        Win32ActionRegistry.scrollState.contentHeight = root.originY + size.height + 34
+    }
+
+    /// Returns the size consumed by a completed direct-placement context.
+    ///
+    /// Implementation note:
+    /// `maxCrossAxis` belongs to the axis perpendicular to advancement. Mixing
+    /// it into both width and height made a fixed-width frame consume vertical
+    /// space equal to its width, which created the large gaps seen in the demo.
+    private func consumedSize(of layout: LayoutState) -> LayoutSize {
+        switch layout.axis {
+        case .horizontal:
+            return LayoutSize(
+                width: consumedDistance(from: layout.originX, to: layout.x, spacing: layout.spacing),
+                height: layout.maxCrossAxis
+            )
+        case .vertical:
+            return LayoutSize(
+                width: layout.maxCrossAxis,
+                height: consumedDistance(from: layout.originY, to: layout.y, spacing: layout.spacing)
+            )
+        }
+    }
+
+    /// Returns an axis distance without the trailing spacing after the last child.
+    private func consumedDistance(from origin: Int32, to current: Int32, spacing: Int32) -> Int32 {
+        let distance = current - origin
+        guard distance > 0 else {
+            return 0
+        }
+
+        return max(0, distance - spacing)
+    }
+}
+
+/// Width and height consumed by a completed layout context.
+private struct LayoutSize {
+    var width: Int32
+    var height: Int32
 }
 
 /// Current direct-placement layout context.
@@ -479,14 +657,28 @@ private struct LayoutState {
     var y: Int32
     var spacing: Int32
     var maxCrossAxis: Int32 = 0
+    var proposedWidth: Int32?
+    var proposedHeight: Int32?
+    var isDisabled: Bool
 
-    init(axis: WinAxis, x: Int32, y: Int32, spacing: Int32) {
+    init(
+        axis: WinAxis,
+        x: Int32,
+        y: Int32,
+        spacing: Int32,
+        proposedWidth: Int32? = nil,
+        proposedHeight: Int32? = nil,
+        isDisabled: Bool = false
+    ) {
         self.axis = axis
         self.originX = x
         self.originY = y
         self.x = x
         self.y = y
         self.spacing = spacing
+        self.proposedWidth = proposedWidth
+        self.proposedHeight = proposedHeight
+        self.isDisabled = isDisabled
     }
 }
 #endif

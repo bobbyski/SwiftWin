@@ -98,6 +98,8 @@ let WM_COMMAND: UINT = 0x0111
 let WM_HSCROLL: UINT = 0x0114
 let WM_DRAWITEM: UINT = 0x002b
 let WM_CTLCOLORSTATIC: UINT = 0x0138
+let WM_SIZE: UINT = 0x0005
+let WM_MOUSEWHEEL: UINT = 0x020a
 let WM_DESTROY: UINT = 0x0002
 let EM_SETCUEBANNER: UINT = 0x1501
 let EN_CHANGE: UInt16 = 0x0300
@@ -112,6 +114,7 @@ let TBM_GETPOS: UINT = WM_USER
 let TBM_SETPOS: UINT = WM_USER + 5
 let TBM_SETRANGE: UINT = WM_USER + 6
 let ODS_SELECTED: UINT = 0x0001
+let ODS_DISABLED: UINT = 0x0004
 let ODS_FOCUS: UINT = 0x0010
 let TRANSPARENT: Int32 = 1
 let PS_SOLID: Int32 = 0
@@ -164,6 +167,12 @@ func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
 func UpdateWindow(_ window: HWND) -> BOOL
 @_silgen_name("InvalidateRect")
 func InvalidateRect(_ window: HWND?, _ rect: UnsafePointer<RECT>?, _ erase: BOOL) -> BOOL
+@_silgen_name("EnableWindow")
+func EnableWindow(_ window: HWND?, _ enable: BOOL) -> BOOL
+@_silgen_name("MoveWindow")
+func MoveWindow(_ window: HWND?, _ x: Int32, _ y: Int32, _ width: Int32, _ height: Int32, _ repaint: BOOL) -> BOOL
+@_silgen_name("GetClientRect")
+func GetClientRect(_ window: HWND?, _ rect: UnsafeMutablePointer<RECT>) -> BOOL
 @_silgen_name("SendMessageW")
 func SendMessageW(_ window: HWND, _ message: UINT, _ wParam: WPARAM, _ lParam: LPARAM) -> LRESULT
 @_silgen_name("CreateFontW")

@@ -20,9 +20,11 @@ struct DemoContent: View {
             Text("SwiftWinUI", style: .title)
             Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
             TextField("Project name", text: $projectName)
+                .frame(width: 340)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
             Picker("Theme", options: themes, selectedIndex: $themeIndex)
             Slider("Scale", value: $scale, range: 0...100)
+                .frame(width: 340)
             Text("Live scale preview: \(scale)", style: .caption)
             HStack(spacing: 10) {
                 Button("Create Window", style: .primary) {
@@ -39,10 +41,13 @@ struct DemoContent: View {
                         message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
                     )
                 }
+                Button("Disabled") {}
+                    .disabled()
             }
             Spacer()
             Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
         }
+        .padding(4)
     }
 
     /// Builds the current form summary for button actions.

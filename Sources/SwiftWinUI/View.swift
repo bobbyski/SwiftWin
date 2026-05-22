@@ -77,6 +77,18 @@ public protocol Renderer: AnyObject {
     func beginStack(axis: StackAxis, spacing: Double)
     /// Ends the current stack layout container.
     func endStack()
+    /// Begins a uniform padding container.
+    func beginPadding(_ amount: Double)
+    /// Ends the current padding container.
+    func endPadding()
+    /// Begins a fixed-size layout proposal.
+    func beginFrame(width: Double?, height: Double?)
+    /// Ends the current fixed-size layout proposal.
+    func endFrame()
+    /// Begins a disabled-state scope.
+    func beginDisabled(_ isDisabled: Bool)
+    /// Ends the current disabled-state scope.
+    func endDisabled()
     /// Renders static text.
     func text(_ value: String, style: TextStyle)
     /// Renders text that can be re-evaluated after state changes.

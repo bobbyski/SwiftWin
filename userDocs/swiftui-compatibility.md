@@ -29,7 +29,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Not implemented |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)` |
 | `TextField` | Partial |
 | `Toggle` | Partial |
 | `List` | Not implemented |
@@ -62,6 +62,39 @@ Text("Live scale preview: \(scale)", style: .caption)
 Full native reconciliation is still planned. Layout changes, conditional view
 changes, and arbitrary control replacement still need the future rebuild/diff
 pass.
+
+## Layout Modifiers
+
+SwiftWinUI now includes early compatibility forms for `.padding(_:)` and
+`.frame(width:height:)`.
+
+```swift
+TextField("Project name", text: $projectName)
+    .frame(width: 340)
+
+VStack(spacing: 14) {
+    Text("SwiftWinUI")
+}
+.padding(12)
+```
+
+The current `.frame(width:height:)` implementation is intentionally narrow: it
+acts as a fixed-size native layout proposal. SwiftUI's richer frame overloads,
+alignment behavior, ideal sizes, and min/max constraints are still planned.
+
+## Disabled State
+
+`.disabled(_:)` exists for interactive controls.
+
+```swift
+Button("Disabled") {}
+    .disabled()
+```
+
+The current Windows backend applies native HWND disabled state with
+`EnableWindow` and gives owner-drawn controls disabled colors. Dynamic disabled
+conditions that depend on changing state will need the future native
+reconciliation pass before they can fully match SwiftUI.
 
 ## Design Rules
 

@@ -22,6 +22,21 @@ final class ConsoleLegacyRenderer {
             indent += 1
             stack.children.forEach(render)
             indent -= 1
+        case let padding as WinPadding:
+            write("WinPadding(amount: \(padding.amount))")
+            indent += 1
+            padding.children.forEach(render)
+            indent -= 1
+        case let frame as WinFrame:
+            write("WinFrame(width: \(optionalDescription(frame.width)), height: \(optionalDescription(frame.height)))")
+            indent += 1
+            frame.children.forEach(render)
+            indent -= 1
+        case let disabled as WinDisabled:
+            write("WinDisabled(isDisabled: \(disabled.isDisabled))")
+            indent += 1
+            disabled.children.forEach(render)
+            indent -= 1
         case let text as WinText:
             write("WinText(\"\(text.value)\", size: \(text.style.size), weight: \(text.style.weight))")
         case let text as WinDynamicText:
@@ -46,5 +61,14 @@ final class ConsoleLegacyRenderer {
     /// Writes an indented diagnostic line.
     private func write(_ value: String) {
         print(String(repeating: "  ", count: indent) + value)
+    }
+
+    /// Formats optional numeric values deterministically.
+    private func optionalDescription(_ value: Double?) -> String {
+        guard let value else {
+            return "nil"
+        }
+
+        return "\(value)"
     }
 }
