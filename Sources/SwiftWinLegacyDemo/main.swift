@@ -9,13 +9,16 @@ let root = WinStack(axis: .vertical, spacing: 14)
 root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 
+let projectName = WinTextField("Project name", text: "SwiftWin")
+root.add(projectName)
+
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     // Visible native feedback is important for GUI-launched processes, where
     // `print` output is easy to miss.
     WinDialog.show(
         title: "Create Window",
-        message: "This action came from the traditional SwiftWinLegacy API."
+        message: "Project name: \(projectName.value)"
     )
 })
 buttons.add(WinButton("Settings") {

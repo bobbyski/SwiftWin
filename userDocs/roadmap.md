@@ -11,6 +11,7 @@ Current status:
 - Basic `App` and `WindowGroup`
 - Basic `View` and `ViewBuilder`
 - `Text`, `Button`, `Spacer`, `VStack`, `HStack`
+- `TextField` with callback-based changes
 - Native Win32 renderer
 - Console renderer
 - Owner-drawn primary and secondary buttons
@@ -18,6 +19,7 @@ Current status:
 
 Next work:
 
+- Add `Binding` support for `TextField`
 - Add modifiers such as `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`
 - Add state primitives such as `@State` and `Binding`
 - Add a real layout engine
@@ -83,7 +85,7 @@ swift build
 
 Planned:
 
-- split the current monolithic Win32 runtime into smaller protocol-backed files
+- keep splitting Win32 layout and native control hosting into smaller protocol-backed files as the backend grows
 - console snapshot tests
 - layout tests
 - native smoke tests

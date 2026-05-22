@@ -37,6 +37,8 @@ public protocol Renderer: AnyObject {
     func text(_ value: String, style: TextStyle)
     /// Renders a button and stores its action for native event dispatch.
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
+    /// Renders a single-line editable text field.
+    func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?)
     /// Renders a spacer.
     func spacer()
 }

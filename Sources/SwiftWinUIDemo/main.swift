@@ -1,5 +1,13 @@
 import SwiftWinUI
 
+/// Tiny reference state used until SwiftWinUI has `@State` and `Binding`.
+///
+/// This keeps the demo honest: `TextField` changes flow from the native edit
+/// control into Swift, and the button reads the latest value.
+final class DemoFormState {
+    var projectName = "SwiftWin"
+}
+
 /// Declarative demo app for the SwiftUI-compatible layer.
 ///
 /// The Windows renderer adapts this view tree into `SwiftWinLegacy` imperative
@@ -7,17 +15,22 @@ import SwiftWinUI
 /// `SwiftWinLegacyDemo`.
 struct DemoApp: App {
     var body: some Scene {
+        let form = DemoFormState()
+
         WindowGroup("SwiftWinUI Demo") {
             VStack(spacing: 14) {
                 Text("SwiftWinUI", style: .title)
                 Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
+                TextField("Project name", text: form.projectName) { value in
+                    form.projectName = value
+                }
                 HStack(spacing: 10) {
                     Button("Create Window", style: .primary) {
                         // Use a native dialog rather than `print` so the action
                         // is visible when launched as a GUI app.
                         Dialog.show(
                             title: "Create Window",
-                            message: "Button actions are wired through Win32 command routing."
+                            message: "Project name: \(form.projectName)"
                         )
                     }
                     Button("Settings") {

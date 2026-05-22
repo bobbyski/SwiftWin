@@ -75,6 +75,18 @@ Available button styles:
 
 Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling.
 
+## TextField
+
+`TextField` renders a single-line editable text control.
+
+```swift
+TextField("Project name", text: "SwiftWin") { value in
+    print("Project name changed to \(value)")
+}
+```
+
+Current implementation: this is the first Milestone 2 form control. It uses an initial text value and an `onChange` callback. A SwiftUI-compatible `Binding` initializer is planned once the state system exists.
+
 ## Stacks
 
 `VStack` and `HStack` place child views vertically or horizontally.
@@ -133,8 +145,9 @@ The traditional layer now exposes focused protocols for extension points:
 - `WinApplicationRunning`
 - `WinContainer`
 - `WinTextDisplaying`
+- `WinEditableText`
 - `WinTitledControl`
 - `WinActionControl`
 - `WinButtonDisplaying`
 
-These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, and `WinButton` implementations.
+These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, `WinTextField`, and `WinButton` implementations.

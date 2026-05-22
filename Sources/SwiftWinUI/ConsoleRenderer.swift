@@ -41,6 +41,11 @@ public final class ConsoleRenderer: Renderer {
         write("Button(\"\(title)\", style: \(style))")
     }
 
+    /// Prints a text-field node.
+    public func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?) {
+        write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")
+    }
+
     /// Prints a spacer node.
     public func spacer() {
         write("Spacer()")

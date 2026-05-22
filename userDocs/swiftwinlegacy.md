@@ -13,11 +13,13 @@ Implemented:
 - `WinApplicationRunning`
 - `WinContainer`
 - `WinTextDisplaying`
+- `WinEditableText`
 - `WinTitledControl`
 - `WinActionControl`
 - `WinButtonDisplaying`
 - `WinStack`
 - `WinText`
+- `WinTextField`
 - `WinButton`
 - `WinSpacer`
 - `WinDialog`
@@ -29,7 +31,7 @@ The first milestone is complete: `SwiftWinLegacyDemo` reproduces the current Swi
 
 `SwiftWinLegacy` should stay traditional and explicit, but it should also be protocol-oriented where that keeps the API safer and easier to extend.
 
-Current public protocols cover app runners, containers, text elements, titled controls, action controls, and button-like controls. The concrete classes are the default implementations, not the only possible implementations.
+Current public protocols cover app runners, containers, text elements, editable text, titled controls, action controls, and button-like controls. The concrete classes are the default implementations, not the only possible implementations.
 
 Implementation functions should stay small. The current Win32 runtime is still intentionally compact for the prototype, but the plan is to split it into protocol contracts, controls, layout, event routing, Win32 declarations, and paint/resource management as the framework grows.
 
@@ -43,10 +45,12 @@ let root = WinStack(axis: .vertical, spacing: 14)
 
 root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
+let projectName = WinTextField("Project name", text: "SwiftWin")
+root.add(projectName)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
-    WinDialog.show(title: "Create Window", message: "Clicked.")
+    WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value)")
 })
 buttons.add(WinButton("Settings") {
     WinDialog.show(title: "Settings", message: "Settings clicked.")
@@ -74,6 +78,7 @@ swift build
 The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls into imperative `SwiftWinLegacy` objects:
 
 - `Text` -> `WinText`
+- `TextField` -> `WinTextField`
 - `Button` -> `WinButton`
 - `VStack` / `HStack` -> `WinStack`
 - `Spacer` -> `WinSpacer`

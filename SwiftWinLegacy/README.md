@@ -24,10 +24,12 @@ let root = WinStack(axis: .vertical, spacing: 14)
 
 root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
+let projectName = WinTextField("Project name", text: "SwiftWin")
+root.add(projectName)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
-    WinDialog.show(title: "Create Window", message: "Clicked.")
+    WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value)")
 })
 buttons.add(WinButton("Settings") {
     WinDialog.show(title: "Settings", message: "Settings clicked.")

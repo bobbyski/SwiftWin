@@ -58,6 +58,11 @@ public final class Win32Renderer: Renderer {
         add(WinButton(title, style: style.winButtonStyle, action: action))
     }
 
+    /// Adapts SwiftWinUI text fields to `WinTextField`.
+    public func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?) {
+        add(WinTextField(prompt, text: text, onChange: onChange))
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())

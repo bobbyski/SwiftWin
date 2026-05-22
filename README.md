@@ -17,8 +17,9 @@ Functions should stay as small as reasonably practical. When an implementation s
 ## Features
 
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
-- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `Button`, and `Spacer`
-- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinButton`, `WinSpacer`, and `WinDialog`
+- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `Button`, and `Spacer`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinButton`, `WinSpacer`, and `WinDialog`
+- Early form input with `TextField` / `WinTextField`
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
@@ -101,6 +102,7 @@ struct DemoApp: App {
             VStack(spacing: 14) {
                 Text("SwiftWinUI", style: .title)
                 Text("A Swift-first framework for Windows desktop apps.")
+                TextField("Project name", text: "SwiftWin")
 
                 HStack(spacing: 10) {
                     Button("Create Window", style: .primary) {
@@ -157,13 +159,16 @@ SwiftWinUI
   Package.swift
   Sources
     SwiftWinLegacy
-      SwiftWinLegacy.swift   # Traditional imperative API and native runtime
+      Core                  # application/window types and protocols
+      Controls              # traditional controls such as WinText and WinButton
+      Platform/Win32        # native Win32 runtime, declarations, message handling
+      Rendering             # diagnostic console renderer
     SwiftWinLegacyDemo
       main.swift             # Traditional API demo
     SwiftWinUI
       Application.swift      # App, Scene, WindowGroup, runtime entry point
       View.swift             # View protocol, renderer protocol, result builder
-      Controls.swift         # Text, Button, stacks, spacer, styles
+      Controls              # declarative controls such as Text and Button
       Dialog.swift           # Cross-platform dialog facade
       ConsoleRenderer.swift  # Diagnostic tree renderer
       Win32Renderer.swift    # Native Windows renderer

@@ -1,0 +1,72 @@
+/// Marker protocol for imperative UI elements.
+///
+/// The first version uses class-based elements because the traditional API is
+/// expected to gain identity, mutation, and event hooks over time.
+public protocol WinElement: AnyObject {}
+
+/// Protocol for objects that can run a traditional SwiftWin window.
+///
+/// Keeping this as a protocol lets tests, future hosted runtimes, or alternate
+/// app shells provide their own runner without changing `WinApplication` users.
+public protocol WinApplicationRunning: AnyObject {
+    /// Runs a window until the backing runtime exits.
+    func run(_ window: WinWindow)
+}
+
+/// Protocol for elements that own an ordered list of child elements.
+///
+/// Containers expose their children read-only to callers while still providing
+/// an explicit mutation method. This keeps the public API simple and leaves
+/// room for future validation when layout rules become more complex.
+public protocol WinContainer: WinElement {
+    /// Ordered child elements.
+    var children: [WinElement] { get }
+    /// Appends a child element.
+    func add(_ element: WinElement)
+}
+
+/// Protocol for elements that display mutable text.
+///
+/// Custom controls can conform to this when they want to participate in shared
+/// text styling, accessibility, or future data binding code.
+public protocol WinTextDisplaying: WinElement {
+    /// Displayed text.
+    var value: String { get set }
+    /// Text style used by the native runtime.
+    var style: WinTextStyle { get set }
+}
+
+/// Protocol for editable text controls.
+///
+/// This is the first Milestone 2 form contract. It gives the imperative layer a
+/// typed way to observe native text changes before the declarative layer grows
+/// full `Binding` support.
+public protocol WinEditableText: WinElement {
+    /// Prompt shown when the control is empty, where the platform supports it.
+    var prompt: String { get set }
+    /// Current text value.
+    var value: String { get set }
+    /// Closure invoked after native editing changes the value.
+    var onChange: ((String) -> Void)? { get set }
+}
+
+/// Protocol for controls with a visible title.
+public protocol WinTitledControl: WinElement {
+    /// Text shown by the control.
+    var title: String { get set }
+}
+
+/// Protocol for controls that invoke an action.
+public protocol WinActionControl: WinElement {
+    /// Closure invoked by native event routing.
+    var action: () -> Void { get set }
+}
+
+/// Protocol for button-like controls.
+///
+/// `WinButton` is the first implementation, but this keeps room for custom
+/// command buttons, toolbar buttons, or owner-provided button controls.
+public protocol WinButtonDisplaying: WinTitledControl, WinActionControl {
+    /// Visual role for the button.
+    var style: WinButtonStyle { get set }
+}
