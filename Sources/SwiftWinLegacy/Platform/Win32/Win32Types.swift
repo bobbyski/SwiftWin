@@ -77,6 +77,13 @@ struct INITCOMMONCONTROLSEX {
     var dwICC: DWORD
 }
 
+struct TRACKMOUSEEVENT {
+    var cbSize: DWORD
+    var dwFlags: DWORD
+    var hwndTrack: HWND?
+    var dwHoverTime: DWORD
+}
+
 let CS_VREDRAW: UINT = 0x0001
 let CS_HREDRAW: UINT = 0x0002
 let WS_CHILD: DWORD = 0x40000000
@@ -99,7 +106,9 @@ let WM_HSCROLL: UINT = 0x0114
 let WM_DRAWITEM: UINT = 0x002b
 let WM_CTLCOLORSTATIC: UINT = 0x0138
 let WM_SIZE: UINT = 0x0005
+let WM_MOUSEMOVE: UINT = 0x0200
 let WM_MOUSEWHEEL: UINT = 0x020a
+let WM_MOUSELEAVE: UINT = 0x02a3
 let WM_DESTROY: UINT = 0x0002
 let EM_SETCUEBANNER: UINT = 0x1501
 let EN_CHANGE: UInt16 = 0x0300
@@ -116,6 +125,7 @@ let TBM_SETRANGE: UINT = WM_USER + 6
 let ODS_SELECTED: UINT = 0x0001
 let ODS_DISABLED: UINT = 0x0004
 let ODS_FOCUS: UINT = 0x0010
+let ODS_HOTLIGHT: UINT = 0x0040
 let TRANSPARENT: Int32 = 1
 let PS_SOLID: Int32 = 0
 let FW_REGULAR: Int32 = 400
@@ -132,6 +142,9 @@ let DT_VCENTER: UINT = 0x00000004
 let DT_SINGLELINE: UINT = 0x00000020
 let MB_OK: UINT = 0x00000000
 let MB_ICONINFORMATION: UINT = 0x00000040
+let GWLP_WNDPROC: Int32 = -4
+let TME_LEAVE: DWORD = 0x00000002
+let HOVER_DEFAULT: DWORD = 0xffffffff
 
 /// Provides a temporary null-terminated UTF-16 pointer for Win32 APIs.
 func withWideString<Result>(_ value: String, _ body: (UnsafePointer<UInt16>) -> Result) -> Result {
@@ -173,6 +186,12 @@ func EnableWindow(_ window: HWND?, _ enable: BOOL) -> BOOL
 func MoveWindow(_ window: HWND?, _ x: Int32, _ y: Int32, _ width: Int32, _ height: Int32, _ repaint: BOOL) -> BOOL
 @_silgen_name("GetClientRect")
 func GetClientRect(_ window: HWND?, _ rect: UnsafeMutablePointer<RECT>) -> BOOL
+@_silgen_name("SetWindowLongPtrW")
+func SetWindowLongPtrW(_ window: HWND?, _ index: Int32, _ newValue: WNDPROC?) -> WNDPROC?
+@_silgen_name("CallWindowProcW")
+func CallWindowProcW(_ previous: WNDPROC?, _ window: HWND?, _ message: UINT, _ wParam: WPARAM, _ lParam: LPARAM) -> LRESULT
+@_silgen_name("TrackMouseEvent")
+func TrackMouseEvent(_ eventTrack: UnsafeMutablePointer<TRACKMOUSEEVENT>) -> BOOL
 @_silgen_name("SendMessageW")
 func SendMessageW(_ window: HWND, _ message: UINT, _ wParam: WPARAM, _ lParam: LPARAM) -> LRESULT
 @_silgen_name("CreateFontW")

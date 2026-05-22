@@ -73,7 +73,7 @@ Available button styles:
 - `.primary`
 - `.secondary`
 
-Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling.
+Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling. Owner-drawn buttons also support basic pressed, disabled, focused, and hover paint states when Windows reports those states to the draw handler.
 
 ## TextField
 
@@ -113,7 +113,7 @@ Binding form:
 Toggle("Include diagnostics", isOn: $includeDiagnostics)
 ```
 
-Current implementation: the Win32 backend owner-draws the toggle for a cleaner modern appearance.
+Current implementation: the Win32 backend owner-draws the toggle for a cleaner modern appearance. The toggle includes basic disabled and hover paint states.
 
 ## Picker
 
@@ -133,7 +133,7 @@ Binding form:
 Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: $themeIndex)
 ```
 
-Current implementation: the Win32 backend owner-draws picker options as pill-style segmented choices. A more SwiftUI-compatible generic picker with tags is planned.
+Current implementation: the Win32 backend owner-draws picker options as pill-style segmented choices. Picker options include basic selected, disabled, and hover paint states. A more SwiftUI-compatible generic picker with tags is planned.
 
 ## Slider
 

@@ -435,10 +435,28 @@ final class Win32ApplicationRunner {
                     toggle: toggle,
                     pickerOption: pickerOption
                 )
+                installHoverTrackingIfNeeded(
+                    control: control,
+                    isOwnerDrawn: button != nil || toggle != nil || pickerOption != nil
+                )
                 advance(width: width, height: height)
                 return control
             }
         }
+    }
+
+    /// Installs child-control mouse tracking for owner-drawn controls.
+    ///
+    /// Implementation note:
+    /// Some Win32 owner-draw paths do not reliably set `ODS_HOTLIGHT`, so hover
+    /// is tracked by subclassing the child HWND and invalidating on
+    /// `WM_MOUSEMOVE` / `WM_MOUSELEAVE`.
+    private func installHoverTrackingIfNeeded(control: HWND?, isOwnerDrawn: Bool) {
+        guard isOwnerDrawn else {
+            return
+        }
+
+        installHoverTracking(for: control)
     }
 
     /// Stores the original unscrolled frame for a child control.

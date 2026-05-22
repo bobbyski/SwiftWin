@@ -13,7 +13,8 @@ func drawButton(_ item: DRAWITEMSTRUCT) {
     let isPressed = (item.itemState & ODS_SELECTED) != 0
     let isFocused = (item.itemState & ODS_FOCUS) != 0
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
-    let palette = buttonPalette(for: button.style, isPressed: isPressed, isDisabled: isDisabled)
+    let isHovered = isHot(item)
+    let palette = buttonPalette(for: button.style, isPressed: isPressed, isHovered: isHovered, isDisabled: isDisabled)
     paintButtonBackground(item.rcItem, in: deviceContext, palette: palette, isPressed: isPressed, isFocused: isFocused)
     paintButtonTitle(button.title, in: item.rcItem, deviceContext: deviceContext, palette: palette, isPressed: isPressed)
 }
@@ -73,15 +74,16 @@ private func drawToggle(_ item: DRAWITEMSTRUCT) {
     }
 
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
-    paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn, isDisabled: isDisabled)
+    let isHovered = isHot(item)
+    paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn, isHovered: isHovered, isDisabled: isDisabled)
     paintToggleTitle(toggle.title, in: item.rcItem, deviceContext: deviceContext, isDisabled: isDisabled)
 }
 
 /// Paints the custom checkbox square.
-private func paintToggleBox(in rect: RECT, deviceContext: HDC, isOn: Bool, isDisabled: Bool) {
+private func paintToggleBox(in rect: RECT, deviceContext: HDC, isOn: Bool, isHovered: Bool, isDisabled: Bool) {
     let box = RECT(left: rect.left + 1, top: rect.top + 6, right: rect.left + 21, bottom: rect.top + 26)
-    let fill = CreateSolidBrush(toggleFill(isOn: isOn, isDisabled: isDisabled))
-    let border = CreatePen(PS_SOLID, 1, toggleBorder(isOn: isOn, isDisabled: isDisabled))
+    let fill = CreateSolidBrush(toggleFill(isOn: isOn, isHovered: isHovered, isDisabled: isDisabled))
+    let border = CreatePen(PS_SOLID, isHovered && !isDisabled ? 2 : 1, toggleBorder(isOn: isOn, isHovered: isHovered, isDisabled: isDisabled))
     let oldBrush = SelectObject(deviceContext, fill)
     let oldPen = SelectObject(deviceContext, border)
 
@@ -130,14 +132,15 @@ private func drawPickerOption(_ item: DRAWITEMSTRUCT) {
 
     let isSelected = option.index == option.picker.selectedIndex
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
-    paintPickerOptionBackground(item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isDisabled: isDisabled)
+    let isHovered = isHot(item)
+    paintPickerOptionBackground(item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled)
     paintPickerOptionTitle(option.picker.options[option.index], in: item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isDisabled: isDisabled)
 }
 
 /// Paints a pill-style picker option background.
-private func paintPickerOptionBackground(_ rect: RECT, deviceContext: HDC, isSelected: Bool, isDisabled: Bool) {
-    let fill = CreateSolidBrush(pickerFill(isSelected: isSelected, isDisabled: isDisabled))
-    let border = CreatePen(PS_SOLID, 1, pickerBorder(isSelected: isSelected, isDisabled: isDisabled))
+private func paintPickerOptionBackground(_ rect: RECT, deviceContext: HDC, isSelected: Bool, isHovered: Bool, isDisabled: Bool) {
+    let fill = CreateSolidBrush(pickerFill(isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled))
+    let border = CreatePen(PS_SOLID, isHovered && !isDisabled ? 2 : 1, pickerBorder(isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled))
     let oldBrush = SelectObject(deviceContext, fill)
     let oldPen = SelectObject(deviceContext, border)
 
@@ -193,50 +196,94 @@ private func paintButtonTitle(
 }
 
 /// Returns owner-draw colors for the current button state.
-private func buttonPalette(for style: WinButtonStyle, isPressed: Bool, isDisabled: Bool) -> ButtonPalette {
+private func buttonPalette(for style: WinButtonStyle, isPressed: Bool, isHovered: Bool, isDisabled: Bool) -> ButtonPalette {
     if isDisabled {
         return ButtonPalette(fill: 0x00efebe8, border: 0x00d9d2cd, text: 0x008f8a86)
     }
 
     switch style {
     case .primary:
-        return ButtonPalette(fill: isPressed ? 0x00c8521d : 0x00eb6325, border: isPressed ? 0x00b84818 : 0x00d95b20, text: 0x00ffffff)
+        return ButtonPalette(
+            fill: primaryButtonFill(isPressed: isPressed, isHovered: isHovered),
+            border: isPressed ? 0x00b84818 : 0x00d95b20,
+            text: 0x00ffffff
+        )
     case .secondary:
-        return ButtonPalette(fill: isPressed ? 0x00f0ecea : 0x00ffffff, border: 0x00ddd4cf, text: 0x00271811)
+        return ButtonPalette(
+            fill: secondaryButtonFill(isPressed: isPressed, isHovered: isHovered),
+            border: isHovered ? 0x00c8bdb7 : 0x00ddd4cf,
+            text: 0x00271811
+        )
     }
 }
 
+/// Returns the primary button fill color for interaction state.
+private func primaryButtonFill(isPressed: Bool, isHovered: Bool) -> DWORD {
+    if isPressed {
+        return 0x00c8521d
+    }
+    if isHovered {
+        return 0x00f06f31
+    }
+
+    return 0x00eb6325
+}
+
+/// Returns the secondary button fill color for interaction state.
+private func secondaryButtonFill(isPressed: Bool, isHovered: Bool) -> DWORD {
+    if isPressed {
+        return 0x00f0ecea
+    }
+    if isHovered {
+        return 0x00faf6f3
+    }
+
+    return 0x00ffffff
+}
+
 /// Returns the custom checkbox fill color.
-private func toggleFill(isOn: Bool, isDisabled: Bool) -> DWORD {
+private func toggleFill(isOn: Bool, isHovered: Bool, isDisabled: Bool) -> DWORD {
     if isDisabled {
         return isOn ? 0x00d9d2cd : 0x00f5f1ee
+    }
+    if isHovered && !isOn {
+        return 0x00faf6f3
     }
 
     return isOn ? 0x00eb6325 : 0x00ffffff
 }
 
 /// Returns the custom checkbox border color.
-private func toggleBorder(isOn: Bool, isDisabled: Bool) -> DWORD {
+private func toggleBorder(isOn: Bool, isHovered: Bool, isDisabled: Bool) -> DWORD {
     if isDisabled {
         return 0x00c8c0ba
+    }
+    if isHovered {
+        return isOn ? 0x00b84818 : 0x00eb6325
     }
 
     return isOn ? 0x00d95b20 : 0x00cfc7c2
 }
 
 /// Returns the segmented picker fill color.
-private func pickerFill(isSelected: Bool, isDisabled: Bool) -> DWORD {
+private func pickerFill(isSelected: Bool, isHovered: Bool, isDisabled: Bool) -> DWORD {
     if isDisabled {
         return isSelected ? 0x00e8e1dd : 0x00f5f1ee
+    }
+    if isHovered && !isSelected {
+        return 0x00faf6f3
     }
 
     return isSelected ? 0x00f7e6dc : 0x00ffffff
 }
 
 /// Returns the segmented picker border color.
-private func pickerBorder(isSelected: Bool, isDisabled: Bool) -> DWORD {
+private func pickerBorder(isSelected: Bool, isHovered: Bool, isDisabled: Bool) -> DWORD {
     if isDisabled {
         return 0x00d9d2cd
+    }
+    if isHovered {
+        return 0x00eb6325
     }
 
     return isSelected ? 0x00eb6325 : 0x00ddd4cf
@@ -249,6 +296,11 @@ private func pickerText(isSelected: Bool, isDisabled: Bool) -> DWORD {
     }
 
     return isSelected ? 0x00b84818 : 0x00271811
+}
+
+/// Returns whether an owner-drawn item should paint hover state.
+private func isHot(_ item: DRAWITEMSTRUCT) -> Bool {
+    (item.itemState & ODS_HOTLIGHT) != 0 || Win32ActionRegistry.hoveredControlIDs.contains(item.CtlID)
 }
 
 /// Owner-draw color palette.

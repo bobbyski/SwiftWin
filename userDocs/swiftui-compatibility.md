@@ -96,6 +96,15 @@ The current Windows backend applies native HWND disabled state with
 conditions that depend on changing state will need the future native
 reconciliation pass before they can fully match SwiftUI.
 
+## Hover State
+
+Owner-drawn Win32 controls now react to native hot-tracking paint state when
+Windows includes `ODS_HOTLIGHT` in `DRAWITEMSTRUCT.itemState`.
+
+This is not yet a SwiftUI `.onHover` API. A full hover API will require
+explicit child-window tracking or subclassing so Swift closures can receive
+enter/exit events.
+
 ## Design Rules
 
 - Prefer SwiftUI names over new names.

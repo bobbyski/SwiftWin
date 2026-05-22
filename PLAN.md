@@ -8,7 +8,7 @@ The strategic goal is maximum practical SwiftUI compatibility. SwiftWinUI should
 
 The core engineering style is small-function, protocol-oriented Swift. Public behavior should be captured in focused protocols wherever that improves type safety, interoperability, testability, or future custom implementations. Concrete classes should be default implementations of those contracts, and large implementation areas should be split before they become difficult to reason about.
 
-Overall planned-code progress: [####------] 37%
+Overall planned-code progress: [####------] 38%
 
 The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
 
@@ -24,7 +24,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
 | 5: SwiftUI Control Coverage | In Progress | 45% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Button`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 25% | stack positioning, spacing, padding, fixed frame hints, basic child advancement | Current layout is direct placement with early modifier containers. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
-| 7: Styling And Theming | In Progress | 38% | text styles, button styles, background brush, owner-drawn button/toggle/picker paint, disabled colors | Primary/secondary buttons, toggles, and picker options now have custom drawing and disabled colors. Needs color tokens, hover state, focus rings, theme switching, and modern surfaces. |
+| 7: Styling And Theming | In Progress | 42% | text styles, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, and native hot-tracking hover paint. Needs color tokens, richer focus rings, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 49% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, and early layout modifiers. Needs API reference, design docs, screenshots, and sample apps. |
@@ -447,7 +447,7 @@ Remaining:
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
 | Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads |
 | Modifiers | `.font`, `.foregroundStyle`, `.background`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)` |
-| Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled/disabled colors |
+| Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
 | Preview/testing | Console snapshots and examples instead of Xcode previews | Partial alternative |
 
@@ -587,18 +587,16 @@ app.run(window)
 | Images | None | No bitmap loading, scaling, or icon rendering |
 | Menus | None | No menu bar, context menus, toolbar commands, or accelerators |
 | Accessibility | None | No labels, roles, focus traversal, or assistive technology metadata |
-| Theming | Partial | No dark mode, high contrast, semantic token system, hover palette, or user themes; disabled palette is early and control-specific |
+| Theming | Partial | No dark mode, high contrast, semantic token system, or user themes; disabled and hover palettes are early and control-specific |
 | Testing | Partial / blocked | Build works; XCTest currently blocked on this local ARM64 Windows snapshot |
 
 ## Near-Term Backlog
 
-1. Add hover tracking for owner-drawn buttons.
-2. Add disabled button support.
-3. Continue splitting Win32 layout and native control hosting into smaller files as the backend grows.
-4. Add hover tracking for owner-drawn controls.
-5. Add a simple layout node tree.
-6. Add native reconciliation for invalidated state-dependent views.
-7. Prototype `WebView` / `WinWebView` with WebView2.
-8. Add a WebAssembly sample page loaded inside WebView2.
-9. Add console snapshot verification.
-10. Add screenshots to the README.
+1. Add explicit hover tracking and a future SwiftUI-compatible `.onHover` path.
+2. Continue splitting Win32 layout and native control hosting into smaller files as the backend grows.
+3. Add a simple layout node tree.
+4. Add native reconciliation for invalidated state-dependent views.
+5. Prototype `WebView` / `WinWebView` with WebView2.
+6. Add a WebAssembly sample page loaded inside WebView2.
+7. Add console snapshot verification.
+8. Add screenshots to the README.

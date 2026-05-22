@@ -17,6 +17,8 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
     nonisolated(unsafe) static var controlFramesByHandle: [UInt: ControlFrame] = [:]
+    nonisolated(unsafe) static var originalControlProceduresByHandle: [UInt: WNDPROC] = [:]
+    nonisolated(unsafe) static var hoveredControlIDs: Set<UInt32> = []
     nonisolated(unsafe) static var scrollState = WindowScrollState()
 
     /// Clears per-window state before a new demo window is rendered.
@@ -31,6 +33,8 @@ enum Win32ActionRegistry {
         pickerOptionControls.removeAll()
         slidersByHandle.removeAll()
         controlFramesByHandle.removeAll()
+        originalControlProceduresByHandle.removeAll()
+        hoveredControlIDs.removeAll()
         scrollState = WindowScrollState()
     }
 }
