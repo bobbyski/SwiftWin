@@ -8,11 +8,23 @@ public protocol App {
 }
 
 public extension App {
-    static func main(renderer: Renderer = ConsoleRenderer()) {
+    static func main() {
+        main(renderer: defaultRenderer())
+    }
+
+    static func main(renderer: Renderer) {
         let app = Self()
         let runtime = ApplicationRuntime(renderer: renderer)
         runtime.run(app.body)
     }
+}
+
+private func defaultRenderer() -> Renderer {
+    #if os(Windows)
+    Win32Renderer()
+    #else
+    ConsoleRenderer()
+    #endif
 }
 
 public protocol Scene {

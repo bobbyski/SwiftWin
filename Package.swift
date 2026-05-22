@@ -19,7 +19,11 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftWinUI"
+            name: "SwiftWinUI",
+            linkerSettings: [
+                .linkedLibrary("kernel32", .when(platforms: [.windows])),
+                .linkedLibrary("user32", .when(platforms: [.windows]))
+            ]
         ),
         .executableTarget(
             name: "SwiftWinUIDemo",

@@ -36,7 +36,15 @@ Run the demo app:
 .\.build\aarch64-unknown-windows-msvc\debug\SwiftWinUIDemo.exe
 ```
 
-Expected output:
+On Windows this opens a native Win32 window with the demo controls. The process stays running until you close the window.
+
+To inspect the declarative UI tree in the console instead, call the app with `ConsoleRenderer`:
+
+```swift
+DemoApp.main(renderer: ConsoleRenderer())
+```
+
+That diagnostic renderer prints output like this:
 
 ```text
 Window(title: SwiftWinUI Demo, size: 960x640)
