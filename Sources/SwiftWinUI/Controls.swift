@@ -12,7 +12,7 @@ public struct Text: View {
     }
 }
 
-public struct TextStyle: Sendable, Equatable {
+public struct TextStyle: Sendable, Hashable {
     public var size: Double
     public var weight: FontWeight
 
@@ -26,7 +26,7 @@ public struct TextStyle: Sendable, Equatable {
     }
 }
 
-public enum FontWeight: Sendable, Equatable {
+public enum FontWeight: Sendable, Hashable {
     case regular
     case semibold
     case bold

@@ -4,11 +4,13 @@ public final class Win32Renderer: Renderer {
     private var window: HWND?
     private var layoutStack: [LayoutState] = []
     private var nextControlID: UInt16 = 100
+    private var fonts: [TextStyle: HFONT] = [:]
 
     public init() {}
 
     public func beginWindow(_ descriptor: WindowDescriptor) {
         instance = GetModuleHandleW(nil)
+        Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
         registerWindowClass()
 
         withWideString("SwiftWinUIWindow") { className in
@@ -30,7 +32,7 @@ public final class Win32Renderer: Renderer {
             }
         }
 
-        layoutStack = [LayoutState(axis: .vertical, x: 24, y: 24, spacing: 8)]
+        layoutStack = [LayoutState(axis: .vertical, x: 32, y: 32, spacing: 10)]
     }
 
     public func endWindow() {
@@ -59,29 +61,33 @@ public final class Win32Renderer: Renderer {
     }
 
     public func text(_ value: String, style: TextStyle) {
-        createControl(
+        if let control = createControl(
             className: "STATIC",
             title: value,
-            style: WS_CHILD | WS_VISIBLE,
-            width: max(160, Int32(value.count * 8 + 24)),
-            height: style.size >= 20 ? 32 : 24,
+            style: WS_CHILD | WS_VISIBLE | SS_LEFT,
+            width: max(220, Int32(value.count * 9 + 32)),
+            height: style.size >= 20 ? 36 : 26,
             action: nil
-        )
+        ) {
+            applyFont(style, to: control)
+        }
     }
 
     public func button(_ title: String, action: @escaping () -> Void) {
-        createControl(
+        if let control = createControl(
             className: "BUTTON",
             title: title,
-            style: WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-            width: max(96, Int32(title.count * 8 + 36)),
-            height: 32,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+            width: max(116, Int32(title.count * 9 + 44)),
+            height: 36,
             action: action
-        )
+        ) {
+            applyFont(.body, to: control)
+        }
     }
 
     public func spacer() {
-        advance(width: 16, height: 16)
+        advance(width: 20, height: 20)
     }
 
     private func registerWindowClass() {
@@ -95,7 +101,7 @@ public final class Win32Renderer: Renderer {
                 hInstance: instance,
                 hIcon: nil,
                 hCursor: nil,
-                hbrBackground: HBRUSH(bitPattern: Int(COLOR_WINDOW + 1)),
+                hbrBackground: Win32PaintResources.backgroundBrush,
                 lpszMenuName: nil,
                 lpszClassName: className,
                 hIconSm: nil
@@ -112,9 +118,9 @@ public final class Win32Renderer: Renderer {
         width: Int32,
         height: Int32,
         action: (() -> Void)?
-    ) {
+    ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
-            return
+            return nil
         }
 
         let controlID = nextControlID
@@ -124,9 +130,9 @@ public final class Win32Renderer: Renderer {
             Win32ActionRegistry.actions[controlID] = action
         }
 
-        withWideString(className) { controlClass in
+        return withWideString(className) { controlClass in
             withWideString(title) { controlTitle in
-                _ = CreateWindowExW(
+                let control = CreateWindowExW(
                     0,
                     controlClass,
                     controlTitle,
@@ -140,10 +146,49 @@ public final class Win32Renderer: Renderer {
                     instance,
                     nil
                 )
+                advance(width: width, height: height)
+                return control
             }
         }
+    }
 
-        advance(width: width, height: height)
+    private func applyFont(_ style: TextStyle, to control: HWND) {
+        let font = fonts[style] ?? createFont(for: style)
+        fonts[style] = font
+        _ = SendMessageW(control, WM_SETFONT, WPARAM(UInt(bitPattern: font)), 1)
+    }
+
+    private func createFont(for style: TextStyle) -> HFONT {
+        let height = -Int32(style.size * 1.35)
+        let weight: Int32
+
+        switch style.weight {
+        case .regular:
+            weight = FW_REGULAR
+        case .semibold:
+            weight = FW_SEMIBOLD
+        case .bold:
+            weight = FW_BOLD
+        }
+
+        return withWideString("Segoe UI") { faceName in
+            CreateFontW(
+                height,
+                0,
+                0,
+                0,
+                weight,
+                0,
+                0,
+                0,
+                DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS,
+                CLIP_DEFAULT_PRECIS,
+                CLEARTYPE_QUALITY,
+                DEFAULT_PITCH | FF_DONTCARE,
+                faceName
+            )
+        }
     }
 
     private func advance(width: Int32, height: Int32) {
@@ -185,6 +230,10 @@ private enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
 }
 
+private enum Win32PaintResources {
+    nonisolated(unsafe) static var backgroundBrush: HBRUSH?
+}
+
 private func swiftWinUIWindowProc(
     hwnd: HWND?,
     message: UINT,
@@ -196,6 +245,10 @@ private func swiftWinUIWindowProc(
         let controlID = UInt16(wParam & 0xffff)
         Win32ActionRegistry.actions[controlID]?()
         return 0
+    case WM_CTLCOLORSTATIC:
+        _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
+        _ = SetTextColor(HDC(bitPattern: wParam), 0x00271811)
+        return LRESULT(Int(bitPattern: Win32PaintResources.backgroundBrush))
     case WM_DESTROY:
         PostQuitMessage(0)
         return 0
@@ -226,6 +279,8 @@ private typealias HINSTANCE = UnsafeMutableRawPointer
 private typealias HICON = UnsafeMutableRawPointer
 private typealias HCURSOR = UnsafeMutableRawPointer
 private typealias HBRUSH = UnsafeMutableRawPointer
+private typealias HFONT = UnsafeMutableRawPointer
+private typealias HDC = UnsafeMutableRawPointer
 private typealias HMENU = UnsafeMutableRawPointer
 private typealias WNDPROC = @convention(c) (HWND?, UINT, WPARAM, LPARAM) -> LRESULT
 
@@ -262,13 +317,26 @@ private let CS_VREDRAW: UINT = 0x0001
 private let CS_HREDRAW: UINT = 0x0002
 private let WS_CHILD: DWORD = 0x40000000
 private let WS_VISIBLE: DWORD = 0x10000000
+private let WS_TABSTOP: DWORD = 0x00010000
 private let WS_OVERLAPPEDWINDOW: DWORD = 0x00cf0000
 private let BS_PUSHBUTTON: DWORD = 0x00000000
-private let COLOR_WINDOW: UInt32 = 5
+private let SS_LEFT: DWORD = 0x00000000
 private let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 private let SW_SHOW: Int32 = 5
+private let WM_SETFONT: UINT = 0x0030
 private let WM_COMMAND: UINT = 0x0111
+private let WM_CTLCOLORSTATIC: UINT = 0x0138
 private let WM_DESTROY: UINT = 0x0002
+private let TRANSPARENT: Int32 = 1
+private let FW_REGULAR: Int32 = 400
+private let FW_SEMIBOLD: Int32 = 600
+private let FW_BOLD: Int32 = 700
+private let DEFAULT_CHARSET: DWORD = 1
+private let OUT_DEFAULT_PRECIS: DWORD = 0
+private let CLIP_DEFAULT_PRECIS: DWORD = 0
+private let CLEARTYPE_QUALITY: DWORD = 5
+private let DEFAULT_PITCH: DWORD = 0
+private let FF_DONTCARE: DWORD = 0
 
 @_silgen_name("GetModuleHandleW")
 private func GetModuleHandleW(_ moduleName: UnsafePointer<UInt16>?) -> HINSTANCE?
@@ -297,6 +365,41 @@ private func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
 
 @_silgen_name("UpdateWindow")
 private func UpdateWindow(_ window: HWND) -> BOOL
+
+@_silgen_name("SendMessageW")
+private func SendMessageW(
+    _ window: HWND,
+    _ message: UINT,
+    _ wParam: WPARAM,
+    _ lParam: LPARAM
+) -> LRESULT
+
+@_silgen_name("CreateFontW")
+private func CreateFontW(
+    _ height: Int32,
+    _ width: Int32,
+    _ escapement: Int32,
+    _ orientation: Int32,
+    _ weight: Int32,
+    _ italic: DWORD,
+    _ underline: DWORD,
+    _ strikeOut: DWORD,
+    _ charSet: DWORD,
+    _ outputPrecision: DWORD,
+    _ clipPrecision: DWORD,
+    _ quality: DWORD,
+    _ pitchAndFamily: DWORD,
+    _ faceName: UnsafePointer<UInt16>
+) -> HFONT
+
+@_silgen_name("CreateSolidBrush")
+private func CreateSolidBrush(_ color: DWORD) -> HBRUSH?
+
+@_silgen_name("SetBkMode")
+private func SetBkMode(_ deviceContext: HDC?, _ backgroundMode: Int32) -> Int32
+
+@_silgen_name("SetTextColor")
+private func SetTextColor(_ deviceContext: HDC?, _ color: DWORD) -> DWORD
 
 @_silgen_name("GetMessageW")
 private func GetMessageW(

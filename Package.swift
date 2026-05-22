@@ -21,6 +21,7 @@ let package = Package(
         .target(
             name: "SwiftWinUI",
             linkerSettings: [
+                .linkedLibrary("gdi32", .when(platforms: [.windows])),
                 .linkedLibrary("kernel32", .when(platforms: [.windows])),
                 .linkedLibrary("user32", .when(platforms: [.windows]))
             ]
