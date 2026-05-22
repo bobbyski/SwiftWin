@@ -16,6 +16,7 @@ final class Win32ApplicationRunner {
     /// Creates native controls from a `WinWindow` and starts the message loop.
     func run(_ descriptor: WinWindow) {
         instance = GetModuleHandleW(nil)
+        configureProcessDPIAwareness()
         initializeCommonControls()
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
         registerWindowClass()
@@ -220,6 +221,24 @@ final class Win32ApplicationRunner {
             dwICC: ICC_BAR_CLASSES
         )
         _ = InitCommonControlsEx(&controls)
+    }
+
+    /// Requests crisp, modern DPI behavior for the current process.
+    ///
+    /// Windows oddity for Apple developers:
+    /// Win32 processes are not automatically per-monitor DPI aware. Without
+    /// opting in, Windows may scale the app as a bitmap on high-DPI displays,
+    /// which makes otherwise fine controls look soft or dated.
+    private func configureProcessDPIAwareness() {
+        let context = dpiAwarenessContextPerMonitorV2()
+        if SetProcessDpiAwarenessContext(context) == 0 {
+            _ = SetProcessDPIAware()
+        }
+    }
+
+    /// Returns the Win32 sentinel handle for per-monitor DPI v2 awareness.
+    private func dpiAwarenessContextPerMonitorV2() -> HANDLE? {
+        HANDLE(bitPattern: -4)
     }
 
     /// Creates a native horizontal range control.

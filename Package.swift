@@ -2,6 +2,17 @@
 
 import PackageDescription
 
+let windowsVisualStyleManifest: [LinkerSetting] = [
+    // Windows oddity:
+    // Stock controls use the classic renderer unless the executable opts into
+    // Common Controls v6 through an application manifest. This linker directive
+    // embeds that dependency without requiring a separate .rc file yet.
+    .unsafeFlags([
+        "-Xlinker",
+        "/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'"
+    ], .when(platforms: [.windows]))
+]
+
 let package = Package(
     name: "SwiftWinUI",
     platforms: [
@@ -41,11 +52,13 @@ let package = Package(
         ),
         .executableTarget(
             name: "SwiftWinLegacyDemo",
-            dependencies: ["SwiftWinLegacy"]
+            dependencies: ["SwiftWinLegacy"],
+            linkerSettings: windowsVisualStyleManifest
         ),
         .executableTarget(
             name: "SwiftWinUIDemo",
-            dependencies: ["SwiftWinUI"]
+            dependencies: ["SwiftWinUI"],
+            linkerSettings: windowsVisualStyleManifest
         ),
         .testTarget(
             name: "SwiftWinUITests",

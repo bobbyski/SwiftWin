@@ -20,6 +20,7 @@ typealias HFONT = UnsafeMutableRawPointer
 typealias HDC = UnsafeMutableRawPointer
 typealias HGDIOBJ = UnsafeMutableRawPointer
 typealias HPEN = UnsafeMutableRawPointer
+typealias HANDLE = UnsafeMutableRawPointer
 typealias HMENU = UnsafeMutableRawPointer
 typealias WNDPROC = @convention(c) (HWND?, UINT, WPARAM, LPARAM) -> LRESULT
 
@@ -149,6 +150,10 @@ func makeLong(low: Int, high: Int) -> LPARAM {
 func GetModuleHandleW(_ moduleName: UnsafePointer<UInt16>?) -> HINSTANCE?
 @_silgen_name("InitCommonControlsEx")
 func InitCommonControlsEx(_ controls: UnsafeMutablePointer<INITCOMMONCONTROLSEX>) -> BOOL
+@_silgen_name("SetProcessDpiAwarenessContext")
+func SetProcessDpiAwarenessContext(_ value: HANDLE?) -> BOOL
+@_silgen_name("SetProcessDPIAware")
+func SetProcessDPIAware() -> BOOL
 @_silgen_name("RegisterClassExW")
 func RegisterClassExW(_ windowClass: UnsafePointer<WNDCLASSEXW>) -> UInt16
 @_silgen_name("CreateWindowExW")
