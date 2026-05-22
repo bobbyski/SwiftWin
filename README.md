@@ -17,9 +17,9 @@ Functions should stay as small as reasonably practical. When an implementation s
 ## Features
 
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
-- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `Button`, and `Spacer`
-- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinButton`, `WinSpacer`, and `WinDialog`
-- Early form input with `TextField` / `WinTextField`
+- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Button`, and `Spacer`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinButton`, `WinSpacer`, and `WinDialog`
+- Early form input with `TextField`, `Toggle`, `Picker`, and `Slider`
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
@@ -103,6 +103,9 @@ struct DemoApp: App {
                 Text("SwiftWinUI", style: .title)
                 Text("A Swift-first framework for Windows desktop apps.")
                 TextField("Project name", text: "SwiftWin")
+                Toggle("Include diagnostics", isOn: true)
+                Picker("Theme", options: ["System", "Light", "Dark"])
+                Slider("Scale", value: 50, range: 0...100)
 
                 HStack(spacing: 10) {
                     Button("Create Window", style: .primary) {

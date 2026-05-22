@@ -46,6 +46,21 @@ public final class ConsoleRenderer: Renderer {
         write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")
     }
 
+    /// Prints a toggle node.
+    public func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?) {
+        write("Toggle(\"\(title)\", isOn: \(isOn))")
+    }
+
+    /// Prints a picker node.
+    public func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?) {
+        write("Picker(\"\(title)\", selectedIndex: \(selectedIndex), options: \(options))")
+    }
+
+    /// Prints a slider node.
+    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?) {
+        write("Slider(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound))")
+    }
+
     /// Prints a spacer node.
     public func spacer() {
         write("Spacer()")

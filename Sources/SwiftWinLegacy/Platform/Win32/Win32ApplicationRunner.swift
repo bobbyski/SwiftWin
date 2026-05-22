@@ -16,6 +16,7 @@ final class Win32ApplicationRunner {
     /// Creates native controls from a `WinWindow` and starts the message loop.
     func run(_ descriptor: WinWindow) {
         instance = GetModuleHandleW(nil)
+        initializeCommonControls()
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
         registerWindowClass()
         createWindow(descriptor)
@@ -69,6 +70,12 @@ final class Win32ApplicationRunner {
             createButton(button.title, style: button.style, action: button.action)
         case let textField as WinTextField:
             createTextField(textField)
+        case let toggle as WinToggle:
+            createToggle(toggle)
+        case let picker as WinPicker:
+            createPicker(picker)
+        case let slider as WinSlider:
+            createSlider(slider)
         case is WinSpacer:
             advance(width: 20, height: 20)
         default:
@@ -99,7 +106,8 @@ final class Win32ApplicationRunner {
     }
 
     /// Creates a native static text control.
-    private func createText(_ value: String, style: WinTextStyle) {
+    @discardableResult
+    private func createText(_ value: String, style: WinTextStyle) -> HWND? {
         if let control = createControl(
             className: "STATIC",
             title: value,
@@ -109,7 +117,10 @@ final class Win32ApplicationRunner {
             action: nil
         ) {
             applyFont(style, to: control)
+            return control
         }
+
+        return nil
     }
 
     /// Creates an owner-drawn native button.
@@ -148,6 +159,92 @@ final class Win32ApplicationRunner {
         }
     }
 
+    /// Creates a native checkbox control.
+    private func createToggle(_ toggle: WinToggle) {
+        if let control = createControl(
+            className: "BUTTON",
+            title: toggle.title,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+            width: max(180, Int32(toggle.title.count * 9 + 44)),
+            height: 28,
+            action: nil,
+            toggle: toggle
+        ) {
+            applyFont(.body, to: control)
+            _ = SendMessageW(control, BM_SETCHECK, toggle.isOn ? BST_CHECKED : BST_UNCHECKED, 0)
+        }
+    }
+
+    /// Creates a radio-button segmented picker.
+    private func createPicker(_ picker: WinPicker) {
+        createText(picker.title, style: .caption)
+        beginStack(axis: .horizontal, spacing: 8)
+        for index in picker.options.indices {
+            createPickerOption(picker, index: index)
+        }
+        endStack()
+    }
+
+    /// Creates one radio button for a picker option.
+    private func createPickerOption(_ picker: WinPicker, index: Int) {
+        let title = picker.options[index]
+        let style = pickerOptionStyle(index: index)
+        if let control = createControl(
+            className: "BUTTON",
+            title: title,
+            style: style,
+            width: max(92, Int32(title.count * 9 + 36)),
+            height: 28,
+            action: nil,
+            pickerOption: PickerOptionState(picker: picker, index: index)
+        ) {
+            applyFont(.body, to: control)
+            let checked = index == picker.selectedIndex ? BST_CHECKED : BST_UNCHECKED
+            _ = SendMessageW(control, BM_SETCHECK, checked, 0)
+        }
+    }
+
+    /// Returns radio-button style flags for a picker option.
+    private func pickerOptionStyle(index: Int) -> DWORD {
+        var style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON
+        if index == 0 {
+            style |= WS_GROUP
+        }
+        return style
+    }
+
+    /// Initializes modern common-control classes used by the backend.
+    private func initializeCommonControls() {
+        var controls = INITCOMMONCONTROLSEX(
+            dwSize: DWORD(MemoryLayout<INITCOMMONCONTROLSEX>.size),
+            dwICC: ICC_BAR_CLASSES
+        )
+        _ = InitCommonControlsEx(&controls)
+    }
+
+    /// Creates a native horizontal range control.
+    private func createSlider(_ slider: WinSlider) {
+        let label = createText(sliderDisplayText(slider), style: .caption)
+        if let label, let control = createControl(
+            className: "msctls_trackbar32",
+            title: "",
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | TBS_AUTOTICKS,
+            width: 280,
+            height: 36,
+            action: nil
+        ) {
+            let state = SliderRenderState(slider: slider, label: label)
+            Win32ActionRegistry.slidersByHandle[UInt(bitPattern: control)] = state
+            _ = SendMessageW(control, TBM_SETRANGE, 1, makeLong(low: slider.minimum, high: slider.maximum))
+            _ = SendMessageW(control, TBM_SETPOS, 1, LPARAM(slider.value))
+        }
+    }
+
+    /// Formats the native value label for a slider.
+    private func sliderDisplayText(_ slider: WinSlider) -> String {
+        "\(slider.title): \(slider.value)"
+    }
+
     /// Registers the window class used by SwiftWinLegacy windows.
     private func registerWindowClass() {
         withWideString("SwiftWinLegacyWindow") { className in
@@ -183,7 +280,9 @@ final class Win32ApplicationRunner {
         height: Int32,
         action: (() -> Void)?,
         button: ButtonRenderState? = nil,
-        textField: WinTextField? = nil
+        textField: WinTextField? = nil,
+        toggle: WinToggle? = nil,
+        pickerOption: PickerOptionState? = nil
     ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
             return nil
@@ -191,7 +290,14 @@ final class Win32ApplicationRunner {
 
         let controlID = nextControlID
         nextControlID += 1
-        registerControlState(controlID: controlID, action: action, button: button, textField: textField)
+        registerControlState(
+            controlID: controlID,
+            action: action,
+            button: button,
+            textField: textField,
+            toggle: toggle,
+            pickerOption: pickerOption
+        )
 
         return withWideString(className) { controlClass in
             withWideString(title) { controlTitle in
@@ -220,7 +326,9 @@ final class Win32ApplicationRunner {
         controlID: UInt16,
         action: (() -> Void)?,
         button: ButtonRenderState?,
-        textField: WinTextField?
+        textField: WinTextField?,
+        toggle: WinToggle?,
+        pickerOption: PickerOptionState?
     ) {
         if let action {
             Win32ActionRegistry.actions[controlID] = action
@@ -230,6 +338,12 @@ final class Win32ApplicationRunner {
         }
         if let textField {
             Win32ActionRegistry.textFields[controlID] = textField
+        }
+        if let toggle {
+            Win32ActionRegistry.toggles[controlID] = toggle
+        }
+        if let pickerOption {
+            Win32ActionRegistry.pickerOptions[controlID] = pickerOption
         }
     }
 

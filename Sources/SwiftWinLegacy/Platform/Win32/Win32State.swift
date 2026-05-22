@@ -10,12 +10,27 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
+    nonisolated(unsafe) static var toggles: [UInt16: WinToggle] = [:]
+    nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
+    nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
 }
 
 /// Owner-draw metadata for a button.
 struct ButtonRenderState {
     var title: String
     var style: WinButtonStyle
+}
+
+/// Maps one radio button control ID to a picker option.
+struct PickerOptionState {
+    var picker: WinPicker
+    var index: Int
+}
+
+/// Native controls associated with a slider.
+struct SliderRenderState {
+    var slider: WinSlider
+    var label: HWND
 }
 
 /// Shared paint resources for the current Win32 prototype.

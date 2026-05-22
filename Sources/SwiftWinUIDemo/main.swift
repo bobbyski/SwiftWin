@@ -6,6 +6,22 @@ import SwiftWinUI
 /// control into Swift, and the button reads the latest value.
 final class DemoFormState {
     var projectName = "SwiftWin"
+    var includeDiagnostics = true
+    var themeIndex = 0
+    var scale = 50
+
+    var summary: String {
+        """
+        Project name: \(projectName)
+        Diagnostics: \(includeDiagnostics ? "on" : "off")
+        Theme: \(themeName)
+        Scale: \(scale)
+        """
+    }
+
+    private var themeName: String {
+        ["System", "Light", "Dark"][themeIndex]
+    }
 }
 
 /// Declarative demo app for the SwiftUI-compatible layer.
@@ -24,13 +40,22 @@ struct DemoApp: App {
                 TextField("Project name", text: form.projectName) { value in
                     form.projectName = value
                 }
+                Toggle("Include diagnostics", isOn: form.includeDiagnostics) { value in
+                    form.includeDiagnostics = value
+                }
+                Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: form.themeIndex) { index in
+                    form.themeIndex = index
+                }
+                Slider("Scale", value: form.scale, range: 0...100) { value in
+                    form.scale = value
+                }
                 HStack(spacing: 10) {
                     Button("Create Window", style: .primary) {
                         // Use a native dialog rather than `print` so the action
                         // is visible when launched as a GUI app.
                         Dialog.show(
                             title: "Create Window",
-                            message: "Project name: \(form.projectName)"
+                            message: form.summary
                         )
                     }
                     Button("Settings") {

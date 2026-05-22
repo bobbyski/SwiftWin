@@ -12,13 +12,27 @@ root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 let projectName = WinTextField("Project name", text: "SwiftWin")
 root.add(projectName)
 
+let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
+root.add(includeDiagnostics)
+
+let theme = WinPicker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0)
+root.add(theme)
+
+let scale = WinSlider("Scale", value: 50, range: 0...100)
+root.add(scale)
+
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     // Visible native feedback is important for GUI-launched processes, where
     // `print` output is easy to miss.
     WinDialog.show(
         title: "Create Window",
-        message: "Project name: \(projectName.value)"
+        message: """
+        Project name: \(projectName.value)
+        Diagnostics: \(includeDiagnostics.isOn ? "on" : "off")
+        Theme: \(["System", "Light", "Dark"][theme.selectedIndex])
+        Scale: \(scale.value)
+        """
     )
 })
 buttons.add(WinButton("Settings") {

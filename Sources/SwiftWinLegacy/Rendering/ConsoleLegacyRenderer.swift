@@ -28,6 +28,12 @@ final class ConsoleLegacyRenderer {
             write("WinButton(\"\(button.title)\", style: \(button.style))")
         case let textField as WinTextField:
             write("WinTextField(prompt: \"\(textField.prompt)\", value: \"\(textField.value)\")")
+        case let toggle as WinToggle:
+            write("WinToggle(\"\(toggle.title)\", isOn: \(toggle.isOn))")
+        case let picker as WinPicker:
+            write("WinPicker(\"\(picker.title)\", selectedIndex: \(picker.selectedIndex), options: \(picker.options))")
+        case let slider as WinSlider:
+            write("WinSlider(\"\(slider.title)\", value: \(slider.value), range: \(slider.minimum)...\(slider.maximum))")
         case is WinSpacer:
             write("WinSpacer()")
         default:

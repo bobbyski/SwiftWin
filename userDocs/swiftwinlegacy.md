@@ -20,6 +20,9 @@ Implemented:
 - `WinStack`
 - `WinText`
 - `WinTextField`
+- `WinToggle`
+- `WinPicker`
+- `WinSlider`
 - `WinButton`
 - `WinSpacer`
 - `WinDialog`
@@ -47,10 +50,16 @@ root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 let projectName = WinTextField("Project name", text: "SwiftWin")
 root.add(projectName)
+let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
+root.add(includeDiagnostics)
+let theme = WinPicker("Theme", options: ["System", "Light", "Dark"])
+root.add(theme)
+let scale = WinSlider("Scale", value: 50, range: 0...100)
+root.add(scale)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
-    WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value)")
+    WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value), scale: \(scale.value)")
 })
 buttons.add(WinButton("Settings") {
     WinDialog.show(title: "Settings", message: "Settings clicked.")
@@ -79,6 +88,9 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 
 - `Text` -> `WinText`
 - `TextField` -> `WinTextField`
+- `Toggle` -> `WinToggle`
+- `Picker` -> `WinPicker`
+- `Slider` -> `WinSlider`
 - `Button` -> `WinButton`
 - `VStack` / `HStack` -> `WinStack`
 - `Spacer` -> `WinSpacer`

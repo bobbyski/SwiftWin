@@ -70,3 +70,39 @@ public protocol WinButtonDisplaying: WinTitledControl, WinActionControl {
     /// Visual role for the button.
     var style: WinButtonStyle { get set }
 }
+
+/// Protocol for controls that expose an on/off value.
+public protocol WinBooleanControl: WinElement {
+    /// Text shown next to the control.
+    var title: String { get set }
+    /// Current boolean value.
+    var isOn: Bool { get set }
+    /// Closure invoked after native editing changes the value.
+    var onChange: ((Bool) -> Void)? { get set }
+}
+
+/// Protocol for controls that select one option from a fixed list.
+public protocol WinSelectionControl: WinElement {
+    /// Label describing the selection.
+    var title: String { get set }
+    /// Available option labels.
+    var options: [String] { get set }
+    /// Current selected option index.
+    var selectedIndex: Int { get set }
+    /// Closure invoked after native editing changes the selected index.
+    var onChange: ((Int) -> Void)? { get set }
+}
+
+/// Protocol for controls that edit an integer value inside a range.
+public protocol WinRangeControl: WinElement {
+    /// Label describing the value.
+    var title: String { get set }
+    /// Current value.
+    var value: Int { get set }
+    /// Minimum allowed value.
+    var minimum: Int { get set }
+    /// Maximum allowed value.
+    var maximum: Int { get set }
+    /// Closure invoked after native editing changes the value.
+    var onChange: ((Int) -> Void)? { get set }
+}

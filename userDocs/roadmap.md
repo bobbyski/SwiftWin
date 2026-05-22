@@ -11,7 +11,7 @@ Current status:
 - Basic `App` and `WindowGroup`
 - Basic `View` and `ViewBuilder`
 - `Text`, `Button`, `Spacer`, `VStack`, `HStack`
-- `TextField` with callback-based changes
+- `TextField`, `Toggle`, `Picker`, and `Slider` with callback-based changes
 - Native Win32 renderer
 - Console renderer
 - Owner-drawn primary and secondary buttons
@@ -19,7 +19,7 @@ Current status:
 
 Next work:
 
-- Add `Binding` support for `TextField`
+- Add `Binding` support for form controls
 - Add modifiers such as `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`
 - Add state primitives such as `@State` and `Binding`
 - Add a real layout engine

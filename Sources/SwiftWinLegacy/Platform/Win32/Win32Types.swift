@@ -71,25 +71,45 @@ struct WNDCLASSEXW {
     var hIconSm: HICON?
 }
 
+struct INITCOMMONCONTROLSEX {
+    var dwSize: DWORD
+    var dwICC: DWORD
+}
+
 let CS_VREDRAW: UINT = 0x0001
 let CS_HREDRAW: UINT = 0x0002
 let WS_CHILD: DWORD = 0x40000000
 let WS_VISIBLE: DWORD = 0x10000000
 let WS_TABSTOP: DWORD = 0x00010000
+let WS_GROUP: DWORD = 0x00020000
 let WS_BORDER: DWORD = 0x00800000
 let WS_OVERLAPPEDWINDOW: DWORD = 0x00cf0000
 let BS_OWNERDRAW: DWORD = 0x0000000b
+let BS_AUTOCHECKBOX: DWORD = 0x00000003
+let BS_AUTORADIOBUTTON: DWORD = 0x00000009
 let ES_AUTOHSCROLL: DWORD = 0x00000080
 let SS_LEFT: DWORD = 0x00000000
+let ICC_BAR_CLASSES: DWORD = 0x00000004
 let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 let SW_SHOW: Int32 = 5
 let WM_SETFONT: UINT = 0x0030
 let WM_COMMAND: UINT = 0x0111
+let WM_HSCROLL: UINT = 0x0114
 let WM_DRAWITEM: UINT = 0x002b
 let WM_CTLCOLORSTATIC: UINT = 0x0138
 let WM_DESTROY: UINT = 0x0002
 let EM_SETCUEBANNER: UINT = 0x1501
 let EN_CHANGE: UInt16 = 0x0300
+let BN_CLICKED: UInt16 = 0
+let BM_GETCHECK: UINT = 0x00f0
+let BM_SETCHECK: UINT = 0x00f1
+let BST_UNCHECKED: WPARAM = 0
+let BST_CHECKED: WPARAM = 1
+let TBS_AUTOTICKS: DWORD = 0x00000001
+let WM_USER: UINT = 0x0400
+let TBM_GETPOS: UINT = WM_USER
+let TBM_SETPOS: UINT = WM_USER + 5
+let TBM_SETRANGE: UINT = WM_USER + 6
 let ODS_SELECTED: UINT = 0x0001
 let ODS_FOCUS: UINT = 0x0010
 let TRANSPARENT: Int32 = 1
@@ -118,8 +138,17 @@ func withWideString<Result>(_ value: String, _ body: (UnsafePointer<UInt16>) -> 
     }
 }
 
+/// Packs two signed 16-bit values into a Win32 `LPARAM`.
+func makeLong(low: Int, high: Int) -> LPARAM {
+    let lowWord = UInt32(UInt16(bitPattern: Int16(clamping: low)))
+    let highWord = UInt32(UInt16(bitPattern: Int16(clamping: high))) << 16
+    return LPARAM(lowWord | highWord)
+}
+
 @_silgen_name("GetModuleHandleW")
 func GetModuleHandleW(_ moduleName: UnsafePointer<UInt16>?) -> HINSTANCE?
+@_silgen_name("InitCommonControlsEx")
+func InitCommonControlsEx(_ controls: UnsafeMutablePointer<INITCOMMONCONTROLSEX>) -> BOOL
 @_silgen_name("RegisterClassExW")
 func RegisterClassExW(_ windowClass: UnsafePointer<WNDCLASSEXW>) -> UInt16
 @_silgen_name("CreateWindowExW")
@@ -152,6 +181,8 @@ func DrawTextW(_ deviceContext: HDC, _ text: UnsafePointer<UInt16>, _ count: Int
 func GetWindowTextLengthW(_ window: HWND) -> Int32
 @_silgen_name("GetWindowTextW")
 func GetWindowTextW(_ window: HWND, _ text: UnsafeMutablePointer<UInt16>?, _ maximumCount: Int32) -> Int32
+@_silgen_name("SetWindowTextW")
+func SetWindowTextW(_ window: HWND, _ text: UnsafePointer<UInt16>) -> BOOL
 @_silgen_name("GetMessageW")
 func GetMessageW(_ message: UnsafeMutablePointer<MSG>, _ window: HWND?, _ minimumMessage: UINT, _ maximumMessage: UINT) -> BOOL
 @_silgen_name("TranslateMessage")

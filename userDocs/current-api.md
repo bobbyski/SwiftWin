@@ -87,6 +87,42 @@ TextField("Project name", text: "SwiftWin") { value in
 
 Current implementation: this is the first Milestone 2 form control. It uses an initial text value and an `onChange` callback. A SwiftUI-compatible `Binding` initializer is planned once the state system exists.
 
+## Toggle
+
+`Toggle` renders a checkbox-style boolean control.
+
+```swift
+Toggle("Include diagnostics", isOn: true) { value in
+    print("Diagnostics: \(value)")
+}
+```
+
+Current implementation: this uses an initial boolean value and an `onChange` callback. A `Binding` initializer is planned.
+
+## Picker
+
+`Picker` renders a segmented selection control.
+
+```swift
+Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0) { index in
+    print("Selected index: \(index)")
+}
+```
+
+Current implementation: the Win32 backend renders picker options as radio buttons. A more SwiftUI-compatible generic picker with tags is planned after the state layer exists.
+
+## Slider
+
+`Slider` renders an integer range control.
+
+```swift
+Slider("Scale", value: 50, range: 0...100) { value in
+    print("Scale: \(value)")
+}
+```
+
+Current implementation: the Win32 backend uses a horizontal scrollbar as the native range control. This avoids a common-controls dependency during the first Milestone 2 pass.
+
 ## Stacks
 
 `VStack` and `HStack` place child views vertically or horizontally.

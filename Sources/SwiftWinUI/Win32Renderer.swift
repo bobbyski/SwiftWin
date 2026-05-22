@@ -63,6 +63,21 @@ public final class Win32Renderer: Renderer {
         add(WinTextField(prompt, text: text, onChange: onChange))
     }
 
+    /// Adapts SwiftWinUI toggles to `WinToggle`.
+    public func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?) {
+        add(WinToggle(title, isOn: isOn, onChange: onChange))
+    }
+
+    /// Adapts SwiftWinUI pickers to `WinPicker`.
+    public func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?) {
+        add(WinPicker(title, options: options, selectedIndex: selectedIndex, onChange: onChange))
+    }
+
+    /// Adapts SwiftWinUI sliders to `WinSlider`.
+    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?) {
+        add(WinSlider(title, value: value, range: range, onChange: onChange))
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())

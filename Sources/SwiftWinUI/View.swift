@@ -39,6 +39,12 @@ public protocol Renderer: AnyObject {
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
     func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?)
+    /// Renders a boolean toggle.
+    func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?)
+    /// Renders a segmented picker.
+    func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?)
+    /// Renders an integer slider.
+    func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?)
     /// Renders a spacer.
     func spacer()
 }
