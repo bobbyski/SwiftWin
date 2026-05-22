@@ -1,6 +1,7 @@
 /// Boolean toggle in the declarative SwiftWinUI layer.
 ///
-/// This uses callback-based changes until SwiftUI-compatible `Binding` exists.
+/// The binding initializer is the preferred SwiftUI-compatible surface; the
+/// callback initializer remains useful for traditional event-style code.
 public struct Toggle: View {
     private let title: String
     private let isOn: Bool
@@ -15,6 +16,15 @@ public struct Toggle: View {
         self.title = title
         self.isOn = isOn
         self.onChange = onChange
+    }
+
+    /// Creates a toggle bound to mutable state.
+    public init(_ title: String, isOn: Binding<Bool>) {
+        self.title = title
+        self.isOn = isOn.wrappedValue
+        self.onChange = { value in
+            isOn.wrappedValue = value
+        }
     }
 
     /// Emits a semantic toggle operation to the renderer.

@@ -1,6 +1,7 @@
 /// Integer range slider in the declarative SwiftWinUI layer.
 ///
-/// This uses callback-based changes until SwiftUI-compatible `Binding` exists.
+/// The binding initializer is the preferred SwiftUI-compatible surface; the
+/// callback initializer remains available for direct event handling.
 public struct Slider: View {
     private let title: String
     private let value: Int
@@ -18,6 +19,20 @@ public struct Slider: View {
         self.value = value
         self.range = range
         self.onChange = onChange
+    }
+
+    /// Creates a slider bound to mutable integer state.
+    public init(
+        _ title: String,
+        value: Binding<Int>,
+        range: ClosedRange<Int> = 0...100
+    ) {
+        self.title = title
+        self.value = value.wrappedValue
+        self.range = range
+        self.onChange = { newValue in
+            value.wrappedValue = newValue
+        }
     }
 
     /// Emits a semantic slider operation to the renderer.

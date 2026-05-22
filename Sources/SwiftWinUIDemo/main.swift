@@ -1,16 +1,13 @@
 import SwiftWinUI
 
-/// Tiny reference state used until SwiftWinUI has `@State` and `Binding`.
-///
-/// This keeps the demo honest: `TextField` changes flow from the native edit
-/// control into Swift, and the button reads the latest value.
-final class DemoFormState {
-    var projectName = "SwiftWin"
-    var includeDiagnostics = true
-    var themeIndex = 0
-    var scale = 50
+/// Declarative demo content that exercises early `@State` and `Binding`.
+struct DemoContent: View {
+    @State private var projectName = "SwiftWin"
+    @State private var includeDiagnostics = true
+    @State private var themeIndex = 0
+    @State private var scale = 50
 
-    var summary: String {
+    private var summary: String {
         """
         Project name: \(projectName)
         Diagnostics: \(includeDiagnostics ? "on" : "off")
@@ -22,6 +19,37 @@ final class DemoFormState {
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
     }
+
+    /// Renders the state-backed form.
+    func render(into context: RenderContext) {
+        VStack(spacing: 14) {
+            Text("SwiftWinUI", style: .title)
+            Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
+            TextField("Project name", text: $projectName)
+            Toggle("Include diagnostics", isOn: $includeDiagnostics)
+            Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: $themeIndex)
+            Slider("Scale", value: $scale, range: 0...100)
+            HStack(spacing: 10) {
+                Button("Create Window", style: .primary) {
+                    // Use a native dialog rather than `print` so the action
+                    // is visible when launched as a GUI app.
+                    Dialog.show(
+                        title: "Create Window",
+                        message: summary
+                    )
+                }
+                Button("Settings") {
+                    Dialog.show(
+                        title: "Settings",
+                        message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
+                    )
+                }
+            }
+            Spacer()
+            Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
+        }
+        .render(into: context)
+    }
 }
 
 /// Declarative demo app for the SwiftUI-compatible layer.
@@ -31,45 +59,8 @@ final class DemoFormState {
 /// `SwiftWinLegacyDemo`.
 struct DemoApp: App {
     var body: some Scene {
-        let form = DemoFormState()
-
         WindowGroup("SwiftWinUI Demo") {
-            VStack(spacing: 14) {
-                Text("SwiftWinUI", style: .title)
-                Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
-                TextField("Project name", text: form.projectName) { value in
-                    form.projectName = value
-                }
-                Toggle("Include diagnostics", isOn: form.includeDiagnostics) { value in
-                    form.includeDiagnostics = value
-                }
-                Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: form.themeIndex) { index in
-                    form.themeIndex = index
-                }
-                Slider("Scale", value: form.scale, range: 0...100) { value in
-                    form.scale = value
-                }
-                HStack(spacing: 10) {
-                    Button("Create Window", style: .primary) {
-                        // Use a native dialog rather than `print` so the action
-                        // is visible when launched as a GUI app.
-                        Dialog.show(
-                            title: "Create Window",
-                            message: form.summary
-                        )
-                    }
-                    Button("Settings") {
-                        // This is intentionally aspirational: settings controls
-                        // and state are the next pieces of the framework.
-                        Dialog.show(
-                            title: "Settings",
-                            message: "Next stop: real settings controls, state, and a layout engine with taste."
-                        )
-                    }
-                }
-                Spacer()
-                Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
-            }
+            DemoContent()
         }
     }
 }

@@ -22,6 +22,20 @@ public struct Picker: View {
         self.onChange = onChange
     }
 
+    /// Creates a picker bound to mutable selection state.
+    public init(
+        _ title: String,
+        options: [String],
+        selectedIndex: Binding<Int>
+    ) {
+        self.title = title
+        self.options = options
+        self.selectedIndex = selectedIndex.wrappedValue
+        self.onChange = { index in
+            selectedIndex.wrappedValue = index
+        }
+    }
+
     /// Emits a semantic picker operation to the renderer.
     public func render(into context: RenderContext) {
         context.renderer.picker(title, options: options, selectedIndex: selectedIndex, onChange: onChange)
