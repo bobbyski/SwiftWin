@@ -5,6 +5,7 @@
 /// shape emitted by views.
 public final class ConsoleRenderer: Renderer {
     private var indent = 0
+    private var fontStack: [TextStyle] = []
 
     /// Creates a console renderer.
     public init() {}
@@ -62,6 +63,26 @@ public final class ConsoleRenderer: Renderer {
     /// Ends the current disabled-state node.
     public func endDisabled() {
         indent -= 1
+    }
+
+    /// Prints a font node.
+    public func beginFont(_ style: TextStyle) {
+        write("Font(size: \(style.size), weight: \(style.weight))")
+        fontStack.append(style)
+        indent += 1
+    }
+
+    /// Ends the current font node.
+    public func endFont() {
+        if !fontStack.isEmpty {
+            fontStack.removeLast()
+        }
+        indent -= 1
+    }
+
+    /// Resolves explicit text style or current font scope.
+    public func resolveTextStyle(_ style: TextStyle?) -> TextStyle {
+        style ?? fontStack.last ?? .body
     }
 
     /// Prints a text node.

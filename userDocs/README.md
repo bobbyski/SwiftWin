@@ -11,6 +11,7 @@ SwiftWinUI is an experimental SwiftUI-compatible framework for building native W
 - [Traditional SwiftWinLegacy API](swiftwinlegacy.md)
 - [Design Principles](design-principles.md)
 - [SwiftUI Compatibility Goal](swiftui-compatibility.md)
+- [SwiftUI And Windows Control Comparison](../SWWIFTUI_COMPARISON.md)
 - [Windows Notes For Apple Developers](windows-for-apple-developers.md)
 - [WebView And WebAssembly](webview-and-webassembly.md)
 - [Roadmap](roadmap.md)

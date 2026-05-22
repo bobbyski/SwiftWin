@@ -89,6 +89,12 @@ public protocol Renderer: AnyObject {
     func beginDisabled(_ isDisabled: Bool)
     /// Ends the current disabled-state scope.
     func endDisabled()
+    /// Begins a text font scope.
+    func beginFont(_ style: TextStyle)
+    /// Ends the current text font scope.
+    func endFont()
+    /// Resolves an explicit or inherited text style.
+    func resolveTextStyle(_ style: TextStyle?) -> TextStyle
     /// Renders static text.
     func text(_ value: String, style: TextStyle)
     /// Renders text that can be re-evaluated after state changes.
@@ -114,6 +120,17 @@ public extension Renderer {
     /// Default dynamic text implementation for renderers without invalidation.
     func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
         text(value(), style: style)
+    }
+
+    /// Default font scope for renderers that do not track inherited text style.
+    func beginFont(_ style: TextStyle) {}
+
+    /// Ends a default font scope.
+    func endFont() {}
+
+    /// Resolves text style with `.body` as the baseline.
+    func resolveTextStyle(_ style: TextStyle?) -> TextStyle {
+        style ?? .body
     }
 }
 

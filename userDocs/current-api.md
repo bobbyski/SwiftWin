@@ -44,6 +44,18 @@ Text("Title", style: .title)
 Text("Caption", style: .caption)
 ```
 
+`font` applies a text style to descendant text, which is the preferred SwiftUI-compatible spelling for inherited typography:
+
+```swift
+VStack(spacing: 8) {
+    Text("Large section title")
+    Text("Supporting copy")
+}
+.font(.title)
+```
+
+An explicit `Text(..., style:)` still wins over an inherited font modifier.
+
 Available text styles:
 
 - `.title`
@@ -229,6 +241,18 @@ Button("Disabled") {}
 ```
 
 Windows note for Apple developers: disabled state maps to `EnableWindow` on the native child `HWND`. Owner-drawn SwiftWin controls also paint a disabled appearance when Windows reports `ODS_DISABLED`.
+
+`font` applies an inherited `TextStyle` to descendant text.
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.font(.body)
+```
+
+Current implementation: this supports SwiftWinUI's semantic text styles. It is not yet a full SwiftUI `Font` model with custom families, dynamic type, or weight/design modifiers.
 
 ## Spacer
 

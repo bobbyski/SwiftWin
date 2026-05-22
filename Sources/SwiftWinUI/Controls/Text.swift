@@ -4,17 +4,17 @@
 /// `SwiftWinLegacy.WinText` on Windows.
 public struct Text: View {
     private let value: () -> String
-    private let style: TextStyle
+    private let style: TextStyle?
 
     /// Creates static text.
-    public init(_ value: @autoclosure @escaping () -> String, style: TextStyle = .body) {
+    public init(_ value: @autoclosure @escaping () -> String, style: TextStyle? = nil) {
         self.value = value
         self.style = style
     }
 
     /// Emits a semantic text operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.dynamicText(value, style: style)
+        context.renderer.dynamicText(value, style: context.renderer.resolveTextStyle(style))
     }
 }
 
@@ -51,3 +51,6 @@ public enum FontWeight: Sendable, Hashable {
     /// Strong emphasis.
     case bold
 }
+
+/// SwiftUI-compatible name for text style values used by `.font(...)`.
+public typealias Font = TextStyle

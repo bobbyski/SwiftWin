@@ -29,7 +29,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)` |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)` |
 | `TextField` | Partial |
 | `Toggle` | Partial |
 | `List` | Not implemented |
@@ -96,14 +96,31 @@ The current Windows backend applies native HWND disabled state with
 conditions that depend on changing state will need the future native
 reconciliation pass before they can fully match SwiftUI.
 
+## Font Modifier
+
+`.font(_:)` exists as an inherited text-style modifier.
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.font(.title)
+```
+
+This currently maps to SwiftWinUI's semantic `TextStyle` values. Explicit
+`Text(..., style:)` values override the inherited modifier. Custom font
+families, design variants, dynamic type, and weight composition are still
+planned compatibility work.
+
 ## Hover State
 
-Owner-drawn Win32 controls now react to native hot-tracking paint state when
-Windows includes `ODS_HOTLIGHT` in `DRAWITEMSTRUCT.itemState`.
+Owner-drawn Win32 controls now react to explicit child-window hover tracking
+and native hot-tracking paint state when Windows includes `ODS_HOTLIGHT` in
+`DRAWITEMSTRUCT.itemState`.
 
 This is not yet a SwiftUI `.onHover` API. A full hover API will require
-explicit child-window tracking or subclassing so Swift closures can receive
-enter/exit events.
+public Swift closure hooks so app code can receive enter/exit events.
 
 ## Design Rules
 

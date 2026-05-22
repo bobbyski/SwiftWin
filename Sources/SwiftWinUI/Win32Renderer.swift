@@ -9,6 +9,7 @@ import SwiftWinLegacy
 /// native window/runtime path.
 public final class Win32Renderer: Renderer {
     private var window: WinWindow?
+    private var fontStack: [TextStyle] = []
 
     // Implementation note:
     // `stackPath` is a construction stack, not a layout stack. It tracks the
@@ -34,6 +35,7 @@ public final class Win32Renderer: Renderer {
     public func beginWindow(_ descriptor: WindowDescriptor) {
         window = WinWindow(title: descriptor.title, width: descriptor.width, height: descriptor.height)
         containerPath.removeAll()
+        fontStack.removeAll()
     }
 
     /// Runs the generated `SwiftWinLegacy` window.
@@ -99,6 +101,23 @@ public final class Win32Renderer: Renderer {
         }
 
         add(disabled)
+    }
+
+    /// Begins an inherited text style scope.
+    public func beginFont(_ style: TextStyle) {
+        fontStack.append(style)
+    }
+
+    /// Ends the current inherited text style scope.
+    public func endFont() {
+        if !fontStack.isEmpty {
+            fontStack.removeLast()
+        }
+    }
+
+    /// Resolves explicit text style or the nearest inherited font style.
+    public func resolveTextStyle(_ style: TextStyle?) -> TextStyle {
+        style ?? fontStack.last ?? .body
     }
 
     /// Adapts SwiftWinUI text to `WinText`.

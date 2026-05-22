@@ -19,6 +19,7 @@ struct DemoContent: View {
         VStack(spacing: 14) {
             Text("SwiftWinUI", style: .title)
             Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
+                .font(.body)
             TextField("Project name", text: $projectName)
                 .frame(width: 340)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
