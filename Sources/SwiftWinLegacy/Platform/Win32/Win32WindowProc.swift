@@ -77,7 +77,7 @@ private func handleDrawItem(lParam: LPARAM) -> LRESULT {
         return 0
     }
 
-    drawButton(drawItem)
+    drawOwnerDrawnControl(drawItem)
     return 1
 }
 
@@ -102,11 +102,9 @@ private func updateToggle(controlID: UInt16, control: HWND) -> Bool {
         return false
     }
 
-    let isOn = SendMessageW(control, BM_GETCHECK, 0, 0) == BST_CHECKED
-    if isOn != toggle.isOn {
-        toggle.isOn = isOn
-        toggle.onChange?(isOn)
-    }
+    toggle.isOn.toggle()
+    _ = InvalidateRect(control, nil, 1)
+    toggle.onChange?(toggle.isOn)
 
     return true
 }
@@ -119,10 +117,21 @@ private func updatePicker(controlID: UInt16) -> Bool {
 
     if option.index != option.picker.selectedIndex {
         option.picker.selectedIndex = option.index
+        invalidatePickerOptions(for: option.picker)
         option.picker.onChange?(option.index)
     }
 
     return true
+}
+
+/// Redraws all native option buttons for a picker.
+private func invalidatePickerOptions(for picker: WinPicker) {
+    for (controlID, option) in Win32ActionRegistry.pickerOptions where option.picker === picker {
+        guard let control = Win32ActionRegistry.pickerOptionControls[controlID] else {
+            continue
+        }
+        _ = InvalidateRect(control, nil, 1)
+    }
 }
 
 /// Stores a slider value and mirrors it back to the native controls.

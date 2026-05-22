@@ -162,6 +162,8 @@ func CreateWindowExW(_ extendedStyle: DWORD, _ className: UnsafePointer<UInt16>,
 func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
 @_silgen_name("UpdateWindow")
 func UpdateWindow(_ window: HWND) -> BOOL
+@_silgen_name("InvalidateRect")
+func InvalidateRect(_ window: HWND?, _ rect: UnsafePointer<RECT>?, _ erase: BOOL) -> BOOL
 @_silgen_name("SendMessageW")
 func SendMessageW(_ window: HWND, _ message: UINT, _ wParam: WPARAM, _ lParam: LPARAM) -> LRESULT
 @_silgen_name("CreateFontW")
@@ -180,6 +182,10 @@ func SelectObject(_ deviceContext: HDC, _ object: HGDIOBJ?) -> HGDIOBJ?
 func DeleteObject(_ object: HGDIOBJ?) -> BOOL
 @_silgen_name("RoundRect")
 func RoundRect(_ deviceContext: HDC, _ left: Int32, _ top: Int32, _ right: Int32, _ bottom: Int32, _ width: Int32, _ height: Int32) -> BOOL
+@_silgen_name("MoveToEx")
+func MoveToEx(_ deviceContext: HDC, _ x: Int32, _ y: Int32, _ previousPoint: UnsafeMutablePointer<POINT>?) -> BOOL
+@_silgen_name("LineTo")
+func LineTo(_ deviceContext: HDC, _ x: Int32, _ y: Int32) -> BOOL
 @_silgen_name("DrawTextW")
 func DrawTextW(_ deviceContext: HDC, _ text: UnsafePointer<UInt16>, _ count: Int32, _ rect: UnsafeMutablePointer<RECT>, _ format: UINT) -> Int32
 @_silgen_name("GetWindowTextLengthW")

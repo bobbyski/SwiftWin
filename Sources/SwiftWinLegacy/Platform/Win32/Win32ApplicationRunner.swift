@@ -165,14 +165,13 @@ final class Win32ApplicationRunner {
         if let control = createControl(
             className: "BUTTON",
             title: toggle.title,
-            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
             width: max(180, Int32(toggle.title.count * 9 + 44)),
-            height: 28,
+            height: 32,
             action: nil,
             toggle: toggle
         ) {
             applyFont(.body, to: control)
-            _ = SendMessageW(control, BM_SETCHECK, toggle.isOn ? BST_CHECKED : BST_UNCHECKED, 0)
         }
     }
 
@@ -193,15 +192,13 @@ final class Win32ApplicationRunner {
         if let control = createControl(
             className: "BUTTON",
             title: title,
-            style: style,
-            width: max(92, Int32(title.count * 9 + 36)),
-            height: 28,
+            style: style | BS_OWNERDRAW,
+            width: max(96, Int32(title.count * 9 + 42)),
+            height: 32,
             action: nil,
             pickerOption: PickerOptionState(picker: picker, index: index)
         ) {
             applyFont(.body, to: control)
-            let checked = index == picker.selectedIndex ? BST_CHECKED : BST_UNCHECKED
-            _ = SendMessageW(control, BM_SETCHECK, checked, 0)
         }
     }
 
@@ -309,15 +306,6 @@ final class Win32ApplicationRunner {
 
         let controlID = nextControlID
         nextControlID += 1
-        registerControlState(
-            controlID: controlID,
-            action: action,
-            button: button,
-            textField: textField,
-            toggle: toggle,
-            pickerOption: pickerOption
-        )
-
         return withWideString(className) { controlClass in
             withWideString(title) { controlTitle in
                 let control = CreateWindowExW(
@@ -334,6 +322,15 @@ final class Win32ApplicationRunner {
                     instance,
                     nil
                 )
+                registerControlState(
+                    controlID: controlID,
+                    control: control,
+                    action: action,
+                    button: button,
+                    textField: textField,
+                    toggle: toggle,
+                    pickerOption: pickerOption
+                )
                 advance(width: width, height: height)
                 return control
             }
@@ -343,6 +340,7 @@ final class Win32ApplicationRunner {
     /// Registers Swift state associated with a Win32 child control ID.
     private func registerControlState(
         controlID: UInt16,
+        control: HWND?,
         action: (() -> Void)?,
         button: ButtonRenderState?,
         textField: WinTextField?,
@@ -360,9 +358,11 @@ final class Win32ApplicationRunner {
         }
         if let toggle {
             Win32ActionRegistry.toggles[controlID] = toggle
+            Win32ActionRegistry.toggleControls[controlID] = control
         }
         if let pickerOption {
             Win32ActionRegistry.pickerOptions[controlID] = pickerOption
+            Win32ActionRegistry.pickerOptionControls[controlID] = control
         }
     }
 

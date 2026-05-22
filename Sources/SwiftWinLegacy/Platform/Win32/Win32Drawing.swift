@@ -17,6 +17,23 @@ func drawButton(_ item: DRAWITEMSTRUCT) {
     paintButtonTitle(button.title, in: item.rcItem, deviceContext: deviceContext, palette: palette, isPressed: isPressed)
 }
 
+/// Routes an owner-drawn control to its specific painter.
+func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
+    if Win32ActionRegistry.buttons[item.CtlID] != nil {
+        drawButton(item)
+        return
+    }
+
+    if Win32ActionRegistry.toggles[UInt16(item.CtlID)] != nil {
+        drawToggle(item)
+        return
+    }
+
+    if Win32ActionRegistry.pickerOptions[UInt16(item.CtlID)] != nil {
+        drawPickerOption(item)
+    }
+}
+
 /// Paints the rounded button surface.
 private func paintButtonBackground(
     _ rect: RECT,
@@ -45,6 +62,101 @@ private func paintButtonBackground(
     restore(object: oldPen, into: deviceContext)
     _ = DeleteObject(fillBrush)
     _ = DeleteObject(borderPen)
+}
+
+/// Paints an owner-drawn checkbox row.
+private func drawToggle(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let toggle = Win32ActionRegistry.toggles[UInt16(item.CtlID)] else {
+        return
+    }
+
+    paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn)
+    paintToggleTitle(toggle.title, in: item.rcItem, deviceContext: deviceContext)
+}
+
+/// Paints the custom checkbox square.
+private func paintToggleBox(in rect: RECT, deviceContext: HDC, isOn: Bool) {
+    let box = RECT(left: rect.left + 1, top: rect.top + 6, right: rect.left + 21, bottom: rect.top + 26)
+    let fill = CreateSolidBrush(isOn ? 0x00eb6325 : 0x00ffffff)
+    let border = CreatePen(PS_SOLID, 1, isOn ? 0x00d95b20 : 0x00cfc7c2)
+    let oldBrush = SelectObject(deviceContext, fill)
+    let oldPen = SelectObject(deviceContext, border)
+
+    _ = RoundRect(deviceContext, box.left, box.top, box.right, box.bottom, 5, 5)
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(fill)
+    _ = DeleteObject(border)
+
+    if isOn {
+        paintCheckmark(in: box, deviceContext: deviceContext)
+    }
+}
+
+/// Paints a compact check mark.
+private func paintCheckmark(in rect: RECT, deviceContext: HDC) {
+    let pen = CreatePen(PS_SOLID, 2, 0x00ffffff)
+    let oldPen = SelectObject(deviceContext, pen)
+    _ = MoveToEx(deviceContext, rect.left + 5, rect.top + 10, nil)
+    _ = LineTo(deviceContext, rect.left + 9, rect.top + 14)
+    _ = LineTo(deviceContext, rect.left + 15, rect.top + 6)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(pen)
+}
+
+/// Paints the text portion of a toggle row.
+private func paintToggleTitle(_ title: String, in rect: RECT, deviceContext: HDC) {
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, 0x00271811)
+
+    var textRect = rect
+    textRect.left += 30
+    textRect.right -= 4
+
+    withWideString(title) { title in
+        _ = DrawTextW(deviceContext, title, -1, &textRect, DT_VCENTER | DT_SINGLELINE)
+    }
+}
+
+/// Paints an owner-drawn segmented picker option.
+private func drawPickerOption(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let option = Win32ActionRegistry.pickerOptions[UInt16(item.CtlID)] else {
+        return
+    }
+
+    let isSelected = option.index == option.picker.selectedIndex
+    paintPickerOptionBackground(item.rcItem, deviceContext: deviceContext, isSelected: isSelected)
+    paintPickerOptionTitle(option.picker.options[option.index], in: item.rcItem, deviceContext: deviceContext, isSelected: isSelected)
+}
+
+/// Paints a pill-style picker option background.
+private func paintPickerOptionBackground(_ rect: RECT, deviceContext: HDC, isSelected: Bool) {
+    let fill = CreateSolidBrush(isSelected ? 0x00f7e6dc : 0x00ffffff)
+    let border = CreatePen(PS_SOLID, 1, isSelected ? 0x00eb6325 : 0x00ddd4cf)
+    let oldBrush = SelectObject(deviceContext, fill)
+    let oldPen = SelectObject(deviceContext, border)
+
+    _ = RoundRect(deviceContext, rect.left, rect.top + 1, rect.right - 1, rect.bottom - 1, 12, 12)
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(fill)
+    _ = DeleteObject(border)
+}
+
+/// Paints picker option text.
+private func paintPickerOptionTitle(_ title: String, in rect: RECT, deviceContext: HDC, isSelected: Bool) {
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, isSelected ? 0x00b84818 : 0x00271811)
+
+    var textRect = rect
+    textRect.left += 12
+    textRect.right -= 12
+
+    withWideString(title) { title in
+        _ = DrawTextW(deviceContext, title, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE)
+    }
 }
 
 /// Restores a previously selected GDI object.

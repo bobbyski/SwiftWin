@@ -11,7 +11,9 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
     nonisolated(unsafe) static var toggles: [UInt16: WinToggle] = [:]
+    nonisolated(unsafe) static var toggleControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
+    nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
 }
 
