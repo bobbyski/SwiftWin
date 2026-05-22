@@ -67,6 +67,8 @@ public struct RenderContext {
 /// should describe intent here; native details belong in renderer
 /// implementations or the `SwiftWinLegacy` runtime.
 public protocol Renderer: AnyObject {
+    /// Called when declarative state changes and a future render pass is needed.
+    func invalidate()
     /// Begins rendering a window.
     func beginWindow(_ descriptor: WindowDescriptor)
     /// Ends rendering a window and usually starts/shows it.
@@ -89,6 +91,11 @@ public protocol Renderer: AnyObject {
     func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?)
     /// Renders a spacer.
     func spacer()
+}
+
+public extension Renderer {
+    /// Default invalidation hook for renderers that do not yet support rebuilds.
+    func invalidate() {}
 }
 
 /// Axis for stack layout.

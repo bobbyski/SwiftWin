@@ -19,6 +19,15 @@ public final class Win32Renderer: Renderer {
     /// Creates a Windows renderer.
     public init() {}
 
+    /// Records that a declarative state mutation occurred.
+    ///
+    /// Implementation note:
+    /// The Win32 backend cannot safely rebuild the native tree yet because
+    /// controls are currently emitted directly into child HWNDs. This hook is
+    /// intentionally present now so the next renderer iteration has a single
+    /// place to schedule diffing/reconciliation.
+    public func invalidate() {}
+
     /// Starts an imperative `WinWindow` for the current declarative scene.
     public func beginWindow(_ descriptor: WindowDescriptor) {
         window = WinWindow(title: descriptor.title, width: descriptor.width, height: descriptor.height)

@@ -26,15 +26,33 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Button` | Partial |
 | `VStack` / `HStack` | Partial |
 | `Spacer` | Partial |
-| `@State` | Not implemented |
-| `Binding` | Not implemented |
+| `@State` | Partial |
+| `Binding` | Partial |
 | `Environment` | Not implemented |
 | Modifiers | Not implemented |
-| `TextField` | Not implemented |
-| `Toggle` | Not implemented |
+| `TextField` | Partial |
+| `Toggle` | Partial |
 | `List` | Not implemented |
 | `Image` | Not implemented |
 | `WebView` | Planned |
+
+## State And Invalidation
+
+`State` and `Binding` now exist and can be used by the first form controls.
+
+```swift
+@State private var projectName = "SwiftWin"
+@State private var scale = 50
+
+TextField("Project name", text: $projectName)
+Slider("Scale", value: $scale, range: 0...100)
+```
+
+State writes also notify a renderer invalidation hook. The current Win32
+renderer intentionally treats that hook as a no-op until the framework has a
+native reconciliation or diffing layer. Control-owned values and button actions
+see updated state today; arbitrary dependent views still need the future
+rebuild pass.
 
 ## Design Rules
 

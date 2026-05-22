@@ -85,7 +85,15 @@ TextField("Project name", text: "SwiftWin") { value in
 }
 ```
 
-Current implementation: this is the first Milestone 2 form control. It uses an initial text value and an `onChange` callback. A SwiftUI-compatible `Binding` initializer is planned once the state system exists.
+Use the binding initializer for SwiftUI-style state flow:
+
+```swift
+@State private var projectName = "SwiftWin"
+
+TextField("Project name", text: $projectName)
+```
+
+Current implementation: native edits update the bound value. Full automatic view rerendering is still planned.
 
 ## Toggle
 
@@ -97,7 +105,15 @@ Toggle("Include diagnostics", isOn: true) { value in
 }
 ```
 
-Current implementation: this uses an initial boolean value and an `onChange` callback. A `Binding` initializer is planned.
+Binding form:
+
+```swift
+@State private var includeDiagnostics = true
+
+Toggle("Include diagnostics", isOn: $includeDiagnostics)
+```
+
+Current implementation: the Win32 backend owner-draws the toggle for a cleaner modern appearance.
 
 ## Picker
 
@@ -109,7 +125,15 @@ Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0) { index 
 }
 ```
 
-Current implementation: the Win32 backend renders picker options as radio buttons. A more SwiftUI-compatible generic picker with tags is planned after the state layer exists.
+Binding form:
+
+```swift
+@State private var themeIndex = 0
+
+Picker("Theme", options: ["System", "Light", "Dark"], selectedIndex: $themeIndex)
+```
+
+Current implementation: the Win32 backend owner-draws picker options as pill-style segmented choices. A more SwiftUI-compatible generic picker with tags is planned.
 
 ## Slider
 
@@ -121,7 +145,32 @@ Slider("Scale", value: 50, range: 0...100) { value in
 }
 ```
 
-Current implementation: the Win32 backend uses a horizontal scrollbar as the native range control. This avoids a common-controls dependency during the first Milestone 2 pass.
+Binding form:
+
+```swift
+@State private var scale = 50
+
+Slider("Scale", value: $scale, range: 0...100)
+```
+
+Current implementation: the Win32 backend uses a Common Controls trackbar and updates its visible value label as the slider moves.
+
+## State And Binding
+
+`@State` stores local mutable state for declarative views, and `Binding` connects controls to that state.
+
+```swift
+struct DemoContent: View {
+    @State private var projectName = "SwiftWin"
+
+    @ViewBuilder
+    var body: some View {
+        TextField("Project name", text: $projectName)
+    }
+}
+```
+
+Current limitation: state writes schedule renderer invalidation, but the Win32 renderer does not yet reconcile or rebuild arbitrary dependent views. Buttons and control callbacks read updated state today.
 
 ## Stacks
 

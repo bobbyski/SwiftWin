@@ -148,6 +148,10 @@ public final class ApplicationRuntime {
 
     /// Renders and runs a scene.
     public func run<S: Scene>(_ scene: S) {
+        StateInvalidation.install { [weak renderer] in
+            renderer?.invalidate()
+        }
         scene.render(into: RenderContext(renderer: renderer))
+        StateInvalidation.install(nil)
     }
 }

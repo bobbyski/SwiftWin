@@ -40,6 +40,26 @@ public struct Binding<Value> {
     }
 }
 
+/// Coordinates state-change invalidation for the current render pass.
+///
+/// Implementation decision:
+/// SwiftUI keeps state storage outside transient view values and schedules a
+/// body rebuild when state changes. This prototype starts with the scheduling
+/// hook only; later renderer work can attach a real diff/rebuild operation.
+public enum StateInvalidation {
+    nonisolated(unsafe) private static var handler: (() -> Void)?
+
+    /// Installs the invalidation handler for the current application runtime.
+    public static func install(_ newHandler: (() -> Void)?) {
+        handler = newHandler
+    }
+
+    /// Schedules work after a state mutation.
+    static func invalidate() {
+        handler?()
+    }
+}
+
 /// Local mutable view state for the declarative SwiftWinUI layer.
 ///
 /// This is the first compatibility step toward SwiftUI's `@State`. It stores
@@ -78,7 +98,11 @@ public struct State<Value> {
 /// Keeping this class private preserves the public value-type surface while
 /// allowing closures stored by native controls to mutate the underlying value.
 private final class StateStorage<Value> {
-    var value: Value
+    var value: Value {
+        didSet {
+            StateInvalidation.invalidate()
+        }
+    }
 
     init(_ value: Value) {
         self.value = value
