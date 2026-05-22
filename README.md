@@ -18,6 +18,10 @@ SwiftWinUI renders the declarative view tree through backend renderers. The curr
 - Native Windows dialogs through `Dialog.show(...)`
 - Renderer boundary designed for future Win32, WinUI, or Direct2D backends
 
+## User Documentation
+
+User-facing documentation lives in [userDocs](userDocs/README.md).
+
 ## Compatibility Goal
 
 SwiftWinUI should prefer SwiftUI-compatible surface area over custom API design.
@@ -156,6 +160,21 @@ This keeps app code stable while the native backend evolves. The Win32 renderer 
 - Windows SDK and MSVC linker tools available to SwiftPM
 
 The project has been exercised with an ARM64 Windows Swift snapshot. If `swift` is not visible in a fresh shell, open a developer shell or make sure the Swift toolchain `usr\bin` directory is on `PATH`.
+
+## Windows Notes For Apple Developers
+
+If you come from macOS or iOS development, these Windows concepts are worth keeping in mind:
+
+- `HWND` is the native window/control handle. Many Windows controls are child windows, not just lightweight views.
+- The message loop is explicit. Events arrive as messages such as `WM_COMMAND`, `WM_DRAWITEM`, and `WM_DESTROY`.
+- Win32 drawing often uses GDI handles such as `HDC`, `HBRUSH`, `HPEN`, and `HFONT`. These are resources that must eventually be managed carefully.
+- Dynamic libraries are linked by name, such as `user32`, `gdi32`, `kernel32`, and `uxtheme`.
+- Web views use Microsoft Edge WebView2, not `WKWebView`. WebView2 is Chromium/Blink-based and supports modern browser content including WebAssembly.
+- Many modern Windows APIs use COM interfaces. WebView2 in particular is COM-heavy, so Swift may need a C/C++ shim or carefully declared COM bindings.
+- DPI behavior is not automatic in the same way AppKit/UIKit developers might expect. Windows apps need deliberate DPI awareness and scaling.
+- Runtime distribution matters. WebView2 can use an Evergreen Runtime installed on the machine or a Fixed Version Runtime bundled with the app.
+- Controls may look different depending on OS version, theme, high contrast settings, and whether they are native, themed, or owner-drawn.
+- File paths, process launching, and shell behavior differ sharply between PowerShell, Developer Command Prompt, and app-launched processes.
 
 ## Tests
 
