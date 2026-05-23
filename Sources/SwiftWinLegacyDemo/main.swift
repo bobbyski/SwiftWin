@@ -126,8 +126,8 @@ private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
 ///
 /// Implementation note:
 /// Traditional code owns the control objects directly. Mutating each control
-/// followed by `refresh()` mirrors those values into native HWND peers and then
-/// updates dependent dynamic text/progress views.
+/// followed by a batched refresh mirrors those values into native HWND peers
+/// and then updates dependent dynamic text/progress views once.
 private func resetForm(
     projectName: WinTextField,
     includeDiagnostics: WinToggle,
@@ -141,9 +141,11 @@ private func resetForm(
     scale.value = 50
     quantity.value = 2
 
-    projectName.refresh()
-    includeDiagnostics.refresh()
-    theme.refresh()
-    scale.refresh()
-    quantity.refresh()
+    WinControlInvalidation.refresh([
+        projectName,
+        includeDiagnostics,
+        theme,
+        scale,
+        quantity,
+    ])
 }

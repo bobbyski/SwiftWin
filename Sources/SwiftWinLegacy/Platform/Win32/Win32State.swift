@@ -85,10 +85,20 @@ public enum WinDynamicTextInvalidation {
 /// peers are stored there. A future per-window runtime object should own these
 /// lookups instead of process-global state.
 public enum WinControlInvalidation {
+    /// Refreshes several controls and invalidates dependent UI once.
+    public static func refresh(_ controls: [WinRefreshableControl]) {
+        #if os(Windows)
+        for control in controls {
+            refreshNativePeer(control)
+        }
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
     /// Refreshes a text field from its current Swift value.
     public static func refresh(_ textField: WinTextField) {
         #if os(Windows)
-        refreshTextField(textField)
+        refreshNativePeer(textField)
         WinDynamicTextInvalidation.invalidateAll()
         #endif
     }
@@ -96,7 +106,7 @@ public enum WinControlInvalidation {
     /// Refreshes a toggle from its current Swift value.
     public static func refresh(_ toggle: WinToggle) {
         #if os(Windows)
-        refreshToggle(toggle)
+        refreshNativePeer(toggle)
         WinDynamicTextInvalidation.invalidateAll()
         #endif
     }
@@ -104,7 +114,7 @@ public enum WinControlInvalidation {
     /// Refreshes a picker from its current Swift selection.
     public static func refresh(_ picker: WinPicker) {
         #if os(Windows)
-        refreshPicker(picker)
+        refreshNativePeer(picker)
         WinDynamicTextInvalidation.invalidateAll()
         #endif
     }
@@ -112,7 +122,7 @@ public enum WinControlInvalidation {
     /// Refreshes a slider from its current Swift value.
     public static func refresh(_ slider: WinSlider) {
         #if os(Windows)
-        refreshSlider(slider)
+        refreshNativePeer(slider)
         WinDynamicTextInvalidation.invalidateAll()
         #endif
     }
@@ -120,9 +130,27 @@ public enum WinControlInvalidation {
     /// Refreshes a stepper from its current Swift value.
     public static func refresh(_ stepper: WinStepper) {
         #if os(Windows)
-        refreshStepper(stepper)
+        refreshNativePeer(stepper)
         WinDynamicTextInvalidation.invalidateAll()
         #endif
+    }
+}
+
+/// Mirrors one refreshable control into its active native peer.
+private func refreshNativePeer(_ control: WinRefreshableControl) {
+    switch control {
+    case let textField as WinTextField:
+        refreshTextField(textField)
+    case let toggle as WinToggle:
+        refreshToggle(toggle)
+    case let picker as WinPicker:
+        refreshPicker(picker)
+    case let slider as WinSlider:
+        refreshSlider(slider)
+    case let stepper as WinStepper:
+        refreshStepper(stepper)
+    default:
+        break
     }
 }
 

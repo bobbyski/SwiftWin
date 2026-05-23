@@ -108,9 +108,9 @@ This is the intended simultaneous development model unless a future architectura
 
 ## Refreshing Controls
 
-Traditional apps can mutate control objects directly. For controls backed by
-native HWND peers, call `refresh()` after a code-driven change to mirror the new
-Swift value into the live window and update dependent dynamic text/progress:
+Traditional apps can mutate control objects directly. For one control backed by
+a native HWND peer, call `refresh()` after a code-driven change to mirror the
+new Swift value into the live window and update dependent dynamic text/progress:
 
 ```swift
 projectName.value = "SwiftWin"
@@ -119,11 +119,20 @@ theme.selectedIndex = 0
 scale.value = 50
 quantity.value = 2
 
-projectName.refresh()
-includeDiagnostics.refresh()
-theme.refresh()
 scale.refresh()
-quantity.refresh()
+```
+
+When changing several controls together, prefer a batched refresh so dependent
+dynamic text and progress views update once:
+
+```swift
+WinControlInvalidation.refresh([
+    projectName,
+    includeDiagnostics,
+    theme,
+    scale,
+    quantity,
+])
 ```
 
 Current refreshable controls are `WinTextField`, `WinToggle`, `WinPicker`,
