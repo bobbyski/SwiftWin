@@ -9,6 +9,7 @@
 enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
+    nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
     nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
     nonisolated(unsafe) static var progressViews: [UInt: ProgressRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
@@ -31,6 +32,7 @@ enum Win32ActionRegistry {
     static func reset() {
         actions.removeAll()
         buttons.removeAll()
+        stepperValues.removeAll()
         dynamicTexts.removeAll()
         progressViews.removeAll()
         textFields.removeAll()
@@ -100,6 +102,19 @@ func progressPosition(for progressView: WinProgressView) -> Int {
 struct ButtonRenderState {
     var title: String
     var style: WinButtonStyle
+    var segmentRole: SegmentedControlRole? = nil
+}
+
+/// Owner-draw metadata for an integrated stepper value segment.
+struct StepperValueRenderState {
+    var stepper: WinStepper
+}
+
+/// Position of a segment inside a cohesive multi-part control.
+enum SegmentedControlRole {
+    case leading
+    case center
+    case trailing
 }
 
 /// Maps one radio button control ID to a picker option.

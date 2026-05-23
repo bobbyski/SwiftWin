@@ -26,7 +26,11 @@ func drawButton(_ item: DRAWITEMSTRUCT) {
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
     let palette = buttonPalette(for: button.style, isPressed: isPressed, isHovered: isHovered, isDisabled: isDisabled)
-    paintButtonBackground(item.rcItem, in: deviceContext, palette: palette, isPressed: isPressed, isFocused: isFocused)
+    if let role = button.segmentRole {
+        paintSegmentBackground(item.rcItem, in: deviceContext, role: role, palette: palette, isPressed: isPressed, isFocused: isFocused)
+    } else {
+        paintButtonBackground(item.rcItem, in: deviceContext, palette: palette, isPressed: isPressed, isFocused: isFocused)
+    }
     paintButtonTitle(button.title, in: item.rcItem, deviceContext: deviceContext, palette: palette, isPressed: isPressed)
 }
 
@@ -34,6 +38,11 @@ func drawButton(_ item: DRAWITEMSTRUCT) {
 func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
     if Win32ActionRegistry.buttons[item.CtlID] != nil {
         drawButton(item)
+        return
+    }
+
+    if Win32ActionRegistry.stepperValues[item.CtlID] != nil {
+        drawStepperValue(item)
         return
     }
 
@@ -60,6 +69,18 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
     if Win32ActionRegistry.separators[item.CtlID] != nil {
         drawSeparator(item)
     }
+}
+
+/// Paints the value segment in an integrated stepper.
+private func drawStepperValue(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let value = Win32ActionRegistry.stepperValues[item.CtlID] else {
+        return
+    }
+
+    let palette = ButtonPalette(fill: 0x00ffffff, border: 0x00ddd4cf, text: 0x00271811)
+    paintSegmentBackground(item.rcItem, in: deviceContext, role: .center, palette: palette, isPressed: false, isFocused: false)
+    paintSegmentText("\(value.stepper.value)", in: item.rcItem, deviceContext: deviceContext, color: palette.text)
 }
 
 /// Paints a noninteractive background panel.
@@ -178,6 +199,49 @@ private func paintButtonBackground(
     restore(object: oldPen, into: deviceContext)
     _ = DeleteObject(fillBrush)
     _ = DeleteObject(borderPen)
+}
+
+/// Paints one segment of an integrated multi-part control.
+private func paintSegmentBackground(
+    _ rect: RECT,
+    in deviceContext: HDC,
+    role: SegmentedControlRole,
+    palette: ButtonPalette,
+    isPressed: Bool,
+    isFocused: Bool
+) {
+    let fillBrush = CreateSolidBrush(palette.fill)
+    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, palette.border)
+    let oldBrush = SelectObject(deviceContext, fillBrush)
+    let oldPen = SelectObject(deviceContext, borderPen)
+    let offset: Int32 = isPressed ? 1 : 0
+    let rect = insetSegmentRect(rect, role: role, offset: offset)
+
+    switch role {
+    case .leading:
+        _ = RoundRect(deviceContext, rect.left, rect.top, rect.right + 8, rect.bottom, 10, 10)
+    case .center:
+        _ = Rectangle(deviceContext, rect.left - 1, rect.top, rect.right + 1, rect.bottom)
+    case .trailing:
+        _ = RoundRect(deviceContext, rect.left - 8, rect.top, rect.right, rect.bottom, 10, 10)
+    }
+
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(fillBrush)
+    _ = DeleteObject(borderPen)
+}
+
+/// Adjusts segment drawing bounds while keeping borders visually connected.
+private func insetSegmentRect(_ rect: RECT, role: SegmentedControlRole, offset: Int32) -> RECT {
+    switch role {
+    case .leading:
+        return RECT(left: rect.left + offset, top: rect.top + offset, right: rect.right + 1 + offset, bottom: rect.bottom - 1 + offset)
+    case .center:
+        return RECT(left: rect.left + offset, top: rect.top + offset, right: rect.right + offset, bottom: rect.bottom - 1 + offset)
+    case .trailing:
+        return RECT(left: rect.left - 1 + offset, top: rect.top + offset, right: rect.right - 1 + offset, bottom: rect.bottom - 1 + offset)
+    }
 }
 
 /// Paints an owner-drawn checkbox row.
@@ -303,6 +367,20 @@ private func paintButtonTitle(
     textRect.right -= 12 - offset
     textRect.top += offset
     textRect.bottom += offset
+
+    withWideString(title) { title in
+        _ = DrawTextW(deviceContext, title, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE)
+    }
+}
+
+/// Paints centered text for non-button segments.
+private func paintSegmentText(_ title: String, in rect: RECT, deviceContext: HDC, color: DWORD) {
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, color)
+
+    var textRect = rect
+    textRect.left += 8
+    textRect.right -= 8
 
     withWideString(title) { title in
         _ = DrawTextW(deviceContext, title, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE)

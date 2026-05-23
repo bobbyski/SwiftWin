@@ -133,8 +133,28 @@ private func applyScrollOffset(_ requestedOffset: Int32, window: HWND?) {
     let offset = clampedScrollOffset(requestedOffset, window: window)
     Win32ActionRegistry.scrollState.offset = offset
 
+    invalidateScrolledWindow(window)
     for frame in Win32ActionRegistry.controlFramesByHandle.values {
         _ = MoveWindow(frame.control, frame.x, frame.y - offset, frame.width, frame.height, 1)
+    }
+    invalidateScrolledWindow(window)
+    updateScrolledWindow(window)
+}
+
+/// Invalidates the full client area before and after child HWND scrolling.
+///
+/// Windows note:
+/// Moving child controls does not automatically erase every old pixel they
+/// occupied. A full invalidation is a blunt but reliable prototype fix until a
+/// real `ScrollView` owns clipping and painting.
+private func invalidateScrolledWindow(_ window: HWND?) {
+    _ = InvalidateRect(window, nil, 1)
+}
+
+/// Flushes the repaint requested by `invalidateScrolledWindow`.
+private func updateScrolledWindow(_ window: HWND?) {
+    if let window {
+        _ = UpdateWindow(window)
     }
 }
 

@@ -218,6 +218,8 @@ func SelectObject(_ deviceContext: HDC, _ object: HGDIOBJ?) -> HGDIOBJ?
 func DeleteObject(_ object: HGDIOBJ?) -> BOOL
 @_silgen_name("RoundRect")
 func RoundRect(_ deviceContext: HDC, _ left: Int32, _ top: Int32, _ right: Int32, _ bottom: Int32, _ width: Int32, _ height: Int32) -> BOOL
+@_silgen_name("Rectangle")
+func Rectangle(_ deviceContext: HDC, _ left: Int32, _ top: Int32, _ right: Int32, _ bottom: Int32) -> BOOL
 @_silgen_name("MoveToEx")
 func MoveToEx(_ deviceContext: HDC, _ x: Int32, _ y: Int32, _ previousPoint: UnsafeMutablePointer<POINT>?) -> BOOL
 @_silgen_name("LineTo")

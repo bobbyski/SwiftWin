@@ -56,6 +56,7 @@ Status: In Progress
 - Add a WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`.
 - Add disabled, hover, focused, and pressed states for controls.
+- Add a modern segmented-control visual treatment for integrated controls such as `Stepper` so `- | value | +` feels like one cohesive control rather than separate Win32 boxes.
 - Stabilize native resource ownership for fonts, brushes, pens, and window handles.
 
 ### Milestone 3: App-Quality Windows UI
@@ -391,6 +392,7 @@ Remaining:
 
 - Theme object with semantic colors.
 - Disabled, hover, active, focused, and default states.
+- Segmented-control drawing for `Picker`, integrated `Stepper`, and future compact multi-action controls.
 - Modern panel/surface styling.
 - App-wide typography scale.
 - Dark mode.
@@ -551,7 +553,7 @@ app.run(window)
 | Controls | In Progress | 54% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
 | Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
-| Styling | In Progress | 36% | control styles, theme tokens, fonts, colors | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid rounded `.background`, rounded `.border`, and button styles exist; full theme tokens remain planned. |
+| Styling | In Progress | 36% | control styles, theme tokens, fonts, colors, segmented-control drawing | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid rounded `.background`, rounded `.border`, and button styles exist; full theme tokens and cohesive segmented controls remain planned. |
 | Interop Boundary | Planned | 0% | expose native handles safely when needed | Advanced users may need controlled access to HWND/HDC. |
 
 ### Phase II Design Principles

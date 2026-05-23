@@ -480,9 +480,23 @@ final class Win32ApplicationRunner {
 
         var valueLabel: HWND?
         beginStack(axis: .horizontal, spacing: 0)
-        createStepperButton("-", stepper: stepper, delta: -stepper.step, label: { valueLabel }, displaysValueOnly: true)
+        createStepperButton(
+            "-",
+            stepper: stepper,
+            delta: -stepper.step,
+            label: { valueLabel },
+            displaysValueOnly: true,
+            segmentRole: .leading
+        )
         valueLabel = createStepperValueLabel(stepper)
-        createStepperButton("+", stepper: stepper, delta: stepper.step, label: { valueLabel }, displaysValueOnly: true)
+        createStepperButton(
+            "+",
+            stepper: stepper,
+            delta: stepper.step,
+            label: { valueLabel },
+            displaysValueOnly: true,
+            segmentRole: .trailing
+        )
         endStack()
     }
 
@@ -491,13 +505,15 @@ final class Win32ApplicationRunner {
         let control = createControl(
             className: "STATIC",
             title: stepperValueText(stepper),
-            style: WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER,
+            style: WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
             width: 64,
             height: 34,
             action: nil,
             textForegroundStyle: .primary
         )
         if let control {
+            let controlID = UInt32(GetDlgCtrlID(control))
+            Win32ActionRegistry.stepperValues[controlID] = StepperValueRenderState(stepper: stepper)
             applyFont(.body, to: control)
         }
         return control
@@ -509,7 +525,8 @@ final class Win32ApplicationRunner {
         stepper: WinStepper,
         delta: Int,
         label: @escaping () -> HWND?,
-        displaysValueOnly: Bool
+        displaysValueOnly: Bool,
+        segmentRole: SegmentedControlRole? = nil
     ) {
         if let control = createControl(
             className: "BUTTON",
@@ -531,7 +548,7 @@ final class Win32ApplicationRunner {
                     displaysValueOnly: displaysValueOnly
                 )
             },
-            button: ButtonRenderState(title: title, style: .secondary)
+            button: ButtonRenderState(title: title, style: .secondary, segmentRole: segmentRole)
         ) {
             applyFont(.body, to: control)
         }
