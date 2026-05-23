@@ -6,13 +6,16 @@ public final class WinBorder: WinContainer {
     public var color: WinForegroundStyle
     /// Border line width in platform pixels.
     public var width: Double
+    /// Corner radius in platform pixels.
+    public var cornerRadius: Double
     /// Ordered child elements.
     public private(set) var children: [WinElement] = []
 
     /// Creates a border container.
-    public init(color: WinForegroundStyle, width: Double = 1) {
+    public init(color: WinForegroundStyle, width: Double = 1, cornerRadius: Double = 0) {
         self.color = color
         self.width = width
+        self.cornerRadius = cornerRadius
     }
 
     /// Appends a child element.

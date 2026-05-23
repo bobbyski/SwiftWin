@@ -109,6 +109,12 @@ public protocol Renderer: AnyObject {
     func beginBorder(_ color: Color, width: Double)
     /// Ends the current solid border scope.
     func endBorder()
+    /// Begins a corner-radius scope for compatible decoration modifiers.
+    func beginCornerRadius(_ radius: Double)
+    /// Ends the current corner-radius scope.
+    func endCornerRadius()
+    /// Resolves the current inherited corner radius.
+    func resolveCornerRadius() -> Double
     /// Renders static text.
     func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders text that can be re-evaluated after state changes.
@@ -169,6 +175,17 @@ public extension Renderer {
 
     /// Ends a default border scope.
     func endBorder() {}
+
+    /// Default corner-radius scope for renderers that do not support clipping.
+    func beginCornerRadius(_ radius: Double) {}
+
+    /// Ends a default corner-radius scope.
+    func endCornerRadius() {}
+
+    /// Resolves no inherited corner radius.
+    func resolveCornerRadius() -> Double {
+        0
+    }
 }
 
 /// Axis for stack layout.

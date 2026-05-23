@@ -129,6 +129,7 @@ let ODS_FOCUS: UINT = 0x0010
 let ODS_HOTLIGHT: UINT = 0x0040
 let TRANSPARENT: Int32 = 1
 let PS_SOLID: Int32 = 0
+let NULL_BRUSH: Int32 = 5
 let FW_REGULAR: Int32 = 400
 let FW_SEMIBOLD: Int32 = 600
 let FW_BOLD: Int32 = 700
@@ -199,6 +200,8 @@ func SendMessageW(_ window: HWND, _ message: UINT, _ wParam: WPARAM, _ lParam: L
 func CreateFontW(_ height: Int32, _ width: Int32, _ escapement: Int32, _ orientation: Int32, _ weight: Int32, _ italic: DWORD, _ underline: DWORD, _ strikeOut: DWORD, _ charSet: DWORD, _ outputPrecision: DWORD, _ clipPrecision: DWORD, _ quality: DWORD, _ pitchAndFamily: DWORD, _ faceName: UnsafePointer<UInt16>) -> HFONT
 @_silgen_name("CreateSolidBrush")
 func CreateSolidBrush(_ color: DWORD) -> HBRUSH?
+@_silgen_name("GetStockObject")
+func GetStockObject(_ object: Int32) -> HGDIOBJ?
 @_silgen_name("SetBkMode")
 func SetBkMode(_ deviceContext: HDC?, _ backgroundMode: Int32) -> Int32
 @_silgen_name("SetTextColor")

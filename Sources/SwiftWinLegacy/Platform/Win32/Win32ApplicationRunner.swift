@@ -78,11 +78,11 @@ final class Win32ApplicationRunner {
             frame.children.forEach(render)
             endFrame(width: frame.width, height: frame.height)
         case let background as WinBackground:
-            beginBackground(color: background.color)
+            beginBackground(color: background.color, cornerRadius: background.cornerRadius)
             background.children.forEach(render)
             endBackground()
         case let border as WinBorder:
-            beginBorder(color: border.color, width: border.width)
+            beginBorder(color: border.color, width: border.width, cornerRadius: border.cornerRadius)
             border.children.forEach(render)
             endBorder()
         case let disabled as WinDisabled:
@@ -184,9 +184,9 @@ final class Win32ApplicationRunner {
     }
 
     /// Pushes a background panel layout context.
-    private func beginBackground(color: WinForegroundStyle) {
+    private func beginBackground(color: WinForegroundStyle, cornerRadius: Double) {
         let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
-        let panel = createBackgroundPanel(color: color, x: origin.x, y: origin.y)
+        let panel = createBackgroundPanel(color: color, cornerRadius: cornerRadius, x: origin.x, y: origin.y)
         backgroundStack.append(BackgroundLayoutState(control: panel, x: origin.x, y: origin.y))
         layoutStack.append(origin)
     }
@@ -205,14 +205,15 @@ final class Win32ApplicationRunner {
     }
 
     /// Pushes a border layout context.
-    private func beginBorder(color: WinForegroundStyle, width: Double) {
+    private func beginBorder(color: WinForegroundStyle, width: Double, cornerRadius: Double) {
         let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
         borderStack.append(
             BorderLayoutState(
                 x: origin.x,
                 y: origin.y,
                 color: color,
-                width: max(1, Int32(width))
+                width: max(1, Int32(width)),
+                cornerRadius: max(0, Int32(cornerRadius))
             )
         )
         layoutStack.append(origin)
@@ -540,7 +541,7 @@ final class Win32ApplicationRunner {
     /// The panel is created before its child controls, so later child HWNDs sit
     /// above it in z-order. It is resized after the children reveal their
     /// consumed layout size.
-    private func createBackgroundPanel(color: WinForegroundStyle, x: Int32, y: Int32) -> HWND? {
+    private func createBackgroundPanel(color: WinForegroundStyle, cornerRadius: Double, x: Int32, y: Int32) -> HWND? {
         guard let window else {
             return nil
         }
@@ -553,7 +554,7 @@ final class Win32ApplicationRunner {
                     0,
                     controlClass,
                     controlTitle,
-                    WS_CHILD | WS_VISIBLE,
+                    WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
                     x,
                     y,
                     1,
@@ -564,8 +565,10 @@ final class Win32ApplicationRunner {
                     nil
                 )
                 if let control {
-                    let brush = CreateSolidBrush(color.win32Color)
-                    Win32ActionRegistry.staticBackgroundBrushesByHandle[UInt(bitPattern: control)] = brush
+                    Win32ActionRegistry.backgrounds[UInt32(controlID)] = BackgroundRenderState(
+                        color: color,
+                        cornerRadius: max(0, Int32(cornerRadius))
+                    )
                     registerControlFrame(control, x: x, y: y, width: 1, height: 1)
                 }
                 return control
@@ -619,7 +622,11 @@ final class Win32ApplicationRunner {
             }
         }
 
-        Win32ActionRegistry.borders[UInt32(controlID)] = BorderRenderState(color: border.color, width: border.width)
+        Win32ActionRegistry.borders[UInt32(controlID)] = BorderRenderState(
+            color: border.color,
+            width: border.width,
+            cornerRadius: border.cornerRadius
+        )
         registerControlFrame(control, x: border.x, y: border.y, width: resolvedWidth, height: resolvedHeight)
         _ = EnableWindow(control, 0)
     }
@@ -838,6 +845,7 @@ private struct BorderLayoutState {
     var y: Int32
     var color: WinForegroundStyle
     var width: Int32
+    var cornerRadius: Int32
 }
 
 /// Current direct-placement layout context.

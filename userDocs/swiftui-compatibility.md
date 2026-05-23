@@ -29,7 +29,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)` rectangular borders |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | `TextField` | Partial |
 | `Toggle` | Partial |
 | `List` | Not implemented |
@@ -159,10 +159,26 @@ VStack(spacing: 8) {
 .padding(12)
 .background(Color(red: 239, green: 246, blue: 255))
 .border(Color(red: 191, green: 219, blue: 254), width: 1)
+.cornerRadius(10)
 ```
 
 This is not yet a full SwiftUI overlay or shape-stroke system. Rounded borders,
 shape styles, clipping, and exact modifier-order paint behavior remain planned.
+
+## Corner Radius Modifier
+
+`.cornerRadius(_:)` exists for SwiftWin decoration panels.
+
+```swift
+Text("Rounded panel")
+    .padding(12)
+    .background(Color(red: 239, green: 246, blue: 255))
+    .border(Color(red: 191, green: 219, blue: 254), width: 1)
+    .cornerRadius(10)
+```
+
+The current implementation rounds background and border drawing. It does not
+clip descendant controls, so it is not yet equivalent to SwiftUI clipping.
 
 ## Hover State
 

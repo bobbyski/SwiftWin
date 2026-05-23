@@ -7,6 +7,7 @@ public final class ConsoleRenderer: Renderer {
     private var indent = 0
     private var fontStack: [TextStyle] = []
     private var foregroundStyleStack: [ForegroundStyle] = []
+    private var cornerRadiusStack: [Double] = []
 
     /// Creates a console renderer.
     public init() {}
@@ -126,6 +127,26 @@ public final class ConsoleRenderer: Renderer {
     /// Ends the current border node.
     public func endBorder() {
         indent -= 1
+    }
+
+    /// Prints a corner-radius node.
+    public func beginCornerRadius(_ radius: Double) {
+        write("CornerRadius(\(radius))")
+        cornerRadiusStack.append(radius)
+        indent += 1
+    }
+
+    /// Ends the current corner-radius node.
+    public func endCornerRadius() {
+        if !cornerRadiusStack.isEmpty {
+            cornerRadiusStack.removeLast()
+        }
+        indent -= 1
+    }
+
+    /// Resolves the current corner radius.
+    public func resolveCornerRadius() -> Double {
+        cornerRadiusStack.last ?? 0
     }
 
     /// Prints a text node.

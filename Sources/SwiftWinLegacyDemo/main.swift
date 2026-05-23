@@ -5,8 +5,8 @@ import SwiftWinLegacy
 // UI directly, and that Phase I can wrap these same primitives.
 let window = WinWindow(title: "SwiftWinLegacy Demo", width: 960, height: 640)
 let root = WinStack(axis: .vertical, spacing: 14)
-let panel = WinBackground(color: WinForegroundStyle(red: 239, green: 246, blue: 255))
-let borderedPanel = WinBorder(color: WinForegroundStyle(red: 191, green: 219, blue: 254), width: 1)
+let panel = WinBackground(color: WinForegroundStyle(red: 239, green: 246, blue: 255), cornerRadius: 10)
+let borderedPanel = WinBorder(color: WinForegroundStyle(red: 191, green: 219, blue: 254), width: 1, cornerRadius: 10)
 let paddedRoot = WinPadding(amount: 12)
 
 root.add(WinText("SwiftWinLegacy", style: .title, foregroundStyle: .accent))

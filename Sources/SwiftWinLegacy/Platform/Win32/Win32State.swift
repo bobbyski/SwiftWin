@@ -16,6 +16,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
+    nonisolated(unsafe) static var backgrounds: [UInt32: BackgroundRenderState] = [:]
     nonisolated(unsafe) static var borders: [UInt32: BorderRenderState] = [:]
     nonisolated(unsafe) static var staticTextColorsByHandle: [UInt: DWORD] = [:]
     nonisolated(unsafe) static var staticBackgroundBrushesByHandle: [UInt: HBRUSH] = [:]
@@ -35,6 +36,7 @@ enum Win32ActionRegistry {
         pickerOptions.removeAll()
         pickerOptionControls.removeAll()
         slidersByHandle.removeAll()
+        backgrounds.removeAll()
         borders.removeAll()
         staticTextColorsByHandle.removeAll()
         staticBackgroundBrushesByHandle.removeAll()
@@ -88,10 +90,17 @@ struct SliderRenderState {
     var label: HWND
 }
 
+/// Owner-draw metadata for a background panel.
+struct BackgroundRenderState {
+    var color: WinForegroundStyle
+    var cornerRadius: Int32
+}
+
 /// Owner-draw metadata for a border panel.
 struct BorderRenderState {
     var color: WinForegroundStyle
     var width: Int32
+    var cornerRadius: Int32
 }
 
 /// Original position and size for a child HWND before scroll offset is applied.

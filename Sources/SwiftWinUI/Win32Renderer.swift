@@ -11,6 +11,7 @@ public final class Win32Renderer: Renderer {
     private var window: WinWindow?
     private var fontStack: [TextStyle] = []
     private var foregroundStyleStack: [ForegroundStyle] = []
+    private var cornerRadiusStack: [Double] = []
 
     // Implementation note:
     // `stackPath` is a construction stack, not a layout stack. It tracks the
@@ -38,6 +39,7 @@ public final class Win32Renderer: Renderer {
         containerPath.removeAll()
         fontStack.removeAll()
         foregroundStyleStack.removeAll()
+        cornerRadiusStack.removeAll()
     }
 
     /// Runs the generated `SwiftWinLegacy` window.
@@ -141,7 +143,7 @@ public final class Win32Renderer: Renderer {
 
     /// Begins a background container.
     public func beginBackground(_ style: Color) {
-        containerPath.append(WinBackground(color: style.winForegroundStyle))
+        containerPath.append(WinBackground(color: style.winForegroundStyle, cornerRadius: resolveCornerRadius()))
     }
 
     /// Closes the current background container and appends it to its parent/window.
@@ -155,7 +157,7 @@ public final class Win32Renderer: Renderer {
 
     /// Begins a border container.
     public func beginBorder(_ color: Color, width: Double) {
-        containerPath.append(WinBorder(color: color.winForegroundStyle, width: width))
+        containerPath.append(WinBorder(color: color.winForegroundStyle, width: width, cornerRadius: resolveCornerRadius()))
     }
 
     /// Closes the current border container and appends it to its parent/window.
@@ -165,6 +167,23 @@ public final class Win32Renderer: Renderer {
         }
 
         add(border)
+    }
+
+    /// Begins a corner-radius scope for compatible decoration containers.
+    public func beginCornerRadius(_ radius: Double) {
+        cornerRadiusStack.append(radius)
+    }
+
+    /// Ends the current corner-radius scope.
+    public func endCornerRadius() {
+        if !cornerRadiusStack.isEmpty {
+            cornerRadiusStack.removeLast()
+        }
+    }
+
+    /// Resolves the nearest inherited corner radius.
+    public func resolveCornerRadius() -> Double {
+        cornerRadiusStack.last ?? 0
     }
 
     /// Adapts SwiftWinUI text to `WinText`.

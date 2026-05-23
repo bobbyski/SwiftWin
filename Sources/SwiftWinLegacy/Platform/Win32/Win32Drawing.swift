@@ -47,9 +47,43 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
         return
     }
 
+    if Win32ActionRegistry.backgrounds[item.CtlID] != nil {
+        drawBackground(item)
+        return
+    }
+
     if Win32ActionRegistry.borders[item.CtlID] != nil {
         drawBorder(item)
     }
+}
+
+/// Paints a noninteractive background panel.
+private func drawBackground(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let background = Win32ActionRegistry.backgrounds[item.CtlID] else {
+        return
+    }
+
+    let brush = CreateSolidBrush(background.color.win32Color)
+    let pen = CreatePen(PS_SOLID, 1, background.color.win32Color)
+    let oldBrush = SelectObject(deviceContext, brush)
+    let oldPen = SelectObject(deviceContext, pen)
+    let diameter = cornerDiameter(background.cornerRadius)
+
+    _ = RoundRect(
+        deviceContext,
+        item.rcItem.left,
+        item.rcItem.top,
+        item.rcItem.right - 1,
+        item.rcItem.bottom - 1,
+        diameter,
+        diameter
+    )
+
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(brush)
+    _ = DeleteObject(pen)
 }
 
 /// Paints a noninteractive border panel.
@@ -60,17 +94,30 @@ private func drawBorder(_ item: DRAWITEMSTRUCT) {
     }
 
     let pen = CreatePen(PS_SOLID, border.width, border.color.win32Color)
+    let nullBrush = GetStockObject(NULL_BRUSH)
+    let oldBrush = SelectObject(deviceContext, nullBrush)
     let oldPen = SelectObject(deviceContext, pen)
-    let inset = max(0, border.width / 2)
+    let inset = max(0, border.width)
+    let diameter = cornerDiameter(border.cornerRadius)
 
-    _ = MoveToEx(deviceContext, item.rcItem.left + inset, item.rcItem.top + inset, nil)
-    _ = LineTo(deviceContext, item.rcItem.right - inset - 1, item.rcItem.top + inset)
-    _ = LineTo(deviceContext, item.rcItem.right - inset - 1, item.rcItem.bottom - inset - 1)
-    _ = LineTo(deviceContext, item.rcItem.left + inset, item.rcItem.bottom - inset - 1)
-    _ = LineTo(deviceContext, item.rcItem.left + inset, item.rcItem.top + inset)
+    _ = RoundRect(
+        deviceContext,
+        item.rcItem.left + inset / 2,
+        item.rcItem.top + inset / 2,
+        item.rcItem.right - inset,
+        item.rcItem.bottom - inset,
+        diameter,
+        diameter
+    )
 
+    restore(object: oldBrush, into: deviceContext)
     restore(object: oldPen, into: deviceContext)
     _ = DeleteObject(pen)
+}
+
+/// Converts radius to the diameter expected by `RoundRect`.
+private func cornerDiameter(_ radius: Int32) -> Int32 {
+    max(1, radius * 2)
 }
 
 /// Paints the rounded button surface.

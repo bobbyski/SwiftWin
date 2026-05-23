@@ -307,11 +307,22 @@ VStack(spacing: 12) {
 .padding(12)
 .background(Color(red: 239, green: 246, blue: 255))
 .border(Color(red: 191, green: 219, blue: 254), width: 1)
+.cornerRadius(10)
 ```
 
 Windows note for Apple developers: the current Win32 backend paints the border with a disabled owner-drawn child control created after the wrapped content. Creating it last keeps the border visible; disabling it keeps mouse input flowing to the actual controls below.
 
-Current implementation: this supports rectangular solid borders only. Rounded borders, shape strokes, overlays, clipping, and precise SwiftUI paint-order behavior remain planned.
+`cornerRadius` rounds compatible background and border decorations.
+
+```swift
+Text("Rounded panel")
+    .padding(12)
+    .background(Color(red: 239, green: 246, blue: 255))
+    .border(Color(red: 191, green: 219, blue: 254), width: 1)
+    .cornerRadius(10)
+```
+
+Current implementation: this rounds SwiftWin decoration panels; it does not clip child controls. Shape strokes, overlays, clipping, and precise SwiftUI paint-order behavior remain planned.
 
 ## Spacer
 
