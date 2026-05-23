@@ -225,6 +225,7 @@ private func set(sliderState: SliderRenderState, value: Int, control: HWND) {
     updateSliderLabel(sliderState.label, slider: slider)
     _ = SendMessageW(control, TBM_SETPOS, 1, LPARAM(clamped))
     slider.onChange?(clamped)
+    WinDynamicTextInvalidation.invalidateAll()
 }
 
 /// Updates the static text label owned by a slider.

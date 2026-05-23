@@ -103,6 +103,10 @@ final class Win32ApplicationRunner {
             createPicker(picker)
         case let slider as WinSlider:
             createSlider(slider)
+        case let progressView as WinProgressView:
+            createProgressView(progressView)
+        case let separator as WinSeparator:
+            createSeparator(separator)
         case is WinSpacer:
             advance(width: 20, height: 20)
         default:
@@ -310,6 +314,30 @@ final class Win32ApplicationRunner {
         }
     }
 
+    /// Creates an owner-drawn separator line.
+    private func createSeparator(_ separator: WinSeparator) {
+        let thickness = max(1, Int32(separator.thickness))
+        let defaultWidth = separator.axis == .horizontal ? 340 : thickness + 8
+        let defaultHeight = separator.axis == .horizontal ? thickness + 8 : 32
+        let controlID = nextControlID
+
+        if let control = createControl(
+            className: "STATIC",
+            title: "",
+            style: WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
+            width: proposedWidth(defaultingTo: defaultWidth),
+            height: proposedHeight(defaultingTo: defaultHeight),
+            action: nil
+        ) {
+            Win32ActionRegistry.separators[UInt32(controlID)] = SeparatorRenderState(
+                axis: separator.axis,
+                color: separator.color,
+                thickness: thickness
+            )
+            _ = EnableWindow(control, 0)
+        }
+    }
+
     /// Creates a native single-line edit control.
     private func createTextField(_ field: WinTextField) {
         if let control = createControl(
@@ -381,7 +409,7 @@ final class Win32ApplicationRunner {
     private func initializeCommonControls() {
         var controls = INITCOMMONCONTROLSEX(
             dwSize: DWORD(MemoryLayout<INITCOMMONCONTROLSEX>.size),
-            dwICC: ICC_BAR_CLASSES
+            dwICC: ICC_BAR_CLASSES | ICC_PROGRESS_CLASS
         )
         _ = InitCommonControlsEx(&controls)
     }
@@ -419,6 +447,29 @@ final class Win32ApplicationRunner {
             Win32ActionRegistry.slidersByHandle[UInt(bitPattern: control)] = state
             _ = SendMessageW(control, TBM_SETRANGE, 1, makeLong(low: slider.minimum, high: slider.maximum))
             _ = SendMessageW(control, TBM_SETPOS, 1, LPARAM(slider.value))
+        }
+    }
+
+    /// Creates a native determinate progress bar.
+    private func createProgressView(_ progressView: WinProgressView) {
+        if let title = progressView.title {
+            createText(title, style: .caption, foregroundStyle: .secondary)
+        }
+
+        if let control = createControl(
+            className: "msctls_progress32",
+            title: "",
+            style: WS_CHILD | WS_VISIBLE,
+            width: proposedWidth(defaultingTo: 280),
+            height: proposedHeight(defaultingTo: 18),
+            action: nil
+        ) {
+            Win32ActionRegistry.progressViews[UInt(bitPattern: control)] = ProgressRenderState(
+                progressView: progressView,
+                control: control
+            )
+            _ = SendMessageW(control, PBM_SETRANGE, 0, makeLong(low: 0, high: 1000))
+            _ = SendMessageW(control, PBM_SETPOS, WPARAM(progressPosition(for: progressView)), 0)
         }
     }
 

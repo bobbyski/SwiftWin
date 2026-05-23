@@ -129,8 +129,12 @@ public protocol Renderer: AnyObject {
     func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?)
     /// Renders an integer slider.
     func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?)
+    /// Renders a determinate progress indicator.
+    func progressView(_ title: String?, value: @escaping () -> Double, total: Double)
     /// Renders a spacer.
     func spacer()
+    /// Renders a separator line.
+    func divider()
 }
 
 public extension Renderer {
@@ -186,6 +190,12 @@ public extension Renderer {
     func resolveCornerRadius() -> Double {
         0
     }
+
+    /// Default divider for renderers that do not support separator lines.
+    func divider() {}
+
+    /// Default progress view for renderers without progress support.
+    func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {}
 }
 
 /// Axis for stack layout.

@@ -23,6 +23,7 @@ Implemented:
 - `WinToggle`
 - `WinPicker`
 - `WinSlider`
+- `WinProgressView`
 - `WinButton`
 - `WinSpacer`
 - `WinDialog`
@@ -56,6 +57,8 @@ let theme = WinPicker("Theme", options: ["System", "Light", "Dark"])
 root.add(theme)
 let scale = WinSlider("Scale", value: 50, range: 0...100)
 root.add(scale)
+let progress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
+root.add(progress)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
@@ -91,6 +94,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `Toggle` -> `WinToggle`
 - `Picker` -> `WinPicker`
 - `Slider` -> `WinSlider`
+- `ProgressView` -> `WinProgressView`
 - `Button` -> `WinButton`
 - `VStack` / `HStack` -> `WinStack`
 - `Spacer` -> `WinSpacer`

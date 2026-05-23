@@ -10,6 +10,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
+    nonisolated(unsafe) static var progressViews: [UInt: ProgressRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
     nonisolated(unsafe) static var toggles: [UInt16: WinToggle] = [:]
     nonisolated(unsafe) static var toggleControls: [UInt16: HWND] = [:]
@@ -18,6 +19,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
     nonisolated(unsafe) static var backgrounds: [UInt32: BackgroundRenderState] = [:]
     nonisolated(unsafe) static var borders: [UInt32: BorderRenderState] = [:]
+    nonisolated(unsafe) static var separators: [UInt32: SeparatorRenderState] = [:]
     nonisolated(unsafe) static var staticTextColorsByHandle: [UInt: DWORD] = [:]
     nonisolated(unsafe) static var staticBackgroundBrushesByHandle: [UInt: HBRUSH] = [:]
     nonisolated(unsafe) static var controlFramesByHandle: [UInt: ControlFrame] = [:]
@@ -30,6 +32,7 @@ enum Win32ActionRegistry {
         actions.removeAll()
         buttons.removeAll()
         dynamicTexts.removeAll()
+        progressViews.removeAll()
         textFields.removeAll()
         toggles.removeAll()
         toggleControls.removeAll()
@@ -38,6 +41,7 @@ enum Win32ActionRegistry {
         slidersByHandle.removeAll()
         backgrounds.removeAll()
         borders.removeAll()
+        separators.removeAll()
         staticTextColorsByHandle.removeAll()
         staticBackgroundBrushesByHandle.removeAll()
         controlFramesByHandle.removeAll()
@@ -61,6 +65,9 @@ public enum WinDynamicTextInvalidation {
         for state in Win32ActionRegistry.dynamicTexts.values {
             updateDynamicText(state)
         }
+        for state in Win32ActionRegistry.progressViews.values {
+            updateProgressView(state)
+        }
         #endif
     }
 }
@@ -70,6 +77,23 @@ private func updateDynamicText(_ state: DynamicTextRenderState) {
     withWideString(state.text.value) { value in
         _ = SetWindowTextW(state.control, value)
     }
+}
+
+/// Native control associated with a progress view.
+struct ProgressRenderState {
+    var progressView: WinProgressView
+    var control: HWND
+}
+
+/// Updates one progress bar HWND from its provider.
+private func updateProgressView(_ state: ProgressRenderState) {
+    _ = SendMessageW(state.control, PBM_SETPOS, WPARAM(progressPosition(for: state.progressView)), 0)
+}
+
+/// Converts a progress view value into a normalized progress-bar position.
+func progressPosition(for progressView: WinProgressView) -> Int {
+    let ratio = min(max(progressView.value / progressView.total, 0), 1)
+    return Int((ratio * 1000).rounded())
 }
 
 /// Owner-draw metadata for a button.
@@ -101,6 +125,13 @@ struct BorderRenderState {
     var color: WinForegroundStyle
     var width: Int32
     var cornerRadius: Int32
+}
+
+/// Owner-draw metadata for a separator line.
+struct SeparatorRenderState {
+    var axis: WinSeparatorAxis
+    var color: WinForegroundStyle
+    var thickness: Int32
 }
 
 /// Original position and size for a child HWND before scroll offset is applied.

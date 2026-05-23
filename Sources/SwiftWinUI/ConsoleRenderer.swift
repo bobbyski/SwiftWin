@@ -8,6 +8,7 @@ public final class ConsoleRenderer: Renderer {
     private var fontStack: [TextStyle] = []
     private var foregroundStyleStack: [ForegroundStyle] = []
     private var cornerRadiusStack: [Double] = []
+    private var stackAxisStack: [StackAxis] = []
 
     /// Creates a console renderer.
     public init() {}
@@ -26,11 +27,15 @@ public final class ConsoleRenderer: Renderer {
     /// Prints a stack node.
     public func beginStack(axis: StackAxis, spacing: Double) {
         write("\(axis == .vertical ? "VStack" : "HStack")(spacing: \(spacing))")
+        stackAxisStack.append(axis)
         indent += 1
     }
 
     /// Ends the current stack node.
     public func endStack() {
+        if !stackAxisStack.isEmpty {
+            stackAxisStack.removeLast()
+        }
         indent -= 1
     }
 
@@ -184,9 +189,20 @@ public final class ConsoleRenderer: Renderer {
         write("Slider(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound))")
     }
 
+    /// Prints a progress-view node.
+    public func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {
+        write("ProgressView(title: \(optionalDescription(title)), value: \(value()), total: \(total))")
+    }
+
     /// Prints a spacer node.
     public func spacer() {
         write("Spacer()")
+    }
+
+    /// Prints a divider node.
+    public func divider() {
+        let orientation = stackAxisStack.last == .horizontal ? "vertical" : "horizontal"
+        write("Divider(axis: \(orientation))")
     }
 
     // Implementation note:
@@ -203,6 +219,15 @@ public final class ConsoleRenderer: Renderer {
         }
 
         return "\(value)"
+    }
+
+    /// Formats optional strings deterministically.
+    private func optionalDescription(_ value: String?) -> String {
+        guard let value else {
+            return "nil"
+        }
+
+        return "\"\(value)\""
     }
 
     /// Formats foreground colors deterministically for snapshots.

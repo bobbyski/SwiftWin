@@ -29,6 +29,9 @@ struct DemoContent: View {
             Slider("Scale", value: $scale, range: 0...100)
                 .frame(width: 340)
             Text("Live scale preview: \(scale)", style: .caption)
+            ProgressView("Scale progress", value: scale, total: 100)
+                .frame(width: 340)
+            Divider()
             HStack(spacing: 10) {
                 Button("Create Window", style: .primary) {
                     // Use a native dialog rather than `print` so the action

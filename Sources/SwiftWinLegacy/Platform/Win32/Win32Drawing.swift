@@ -54,6 +54,11 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
 
     if Win32ActionRegistry.borders[item.CtlID] != nil {
         drawBorder(item)
+        return
+    }
+
+    if Win32ActionRegistry.separators[item.CtlID] != nil {
+        drawSeparator(item)
     }
 }
 
@@ -111,6 +116,31 @@ private func drawBorder(_ item: DRAWITEMSTRUCT) {
     )
 
     restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(pen)
+}
+
+/// Paints a separator line.
+private func drawSeparator(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let separator = Win32ActionRegistry.separators[item.CtlID] else {
+        return
+    }
+
+    let pen = CreatePen(PS_SOLID, separator.thickness, separator.color.win32Color)
+    let oldPen = SelectObject(deviceContext, pen)
+
+    switch separator.axis {
+    case .horizontal:
+        let y = item.rcItem.top + max(1, (item.rcItem.bottom - item.rcItem.top) / 2)
+        _ = MoveToEx(deviceContext, item.rcItem.left, y, nil)
+        _ = LineTo(deviceContext, item.rcItem.right, y)
+    case .vertical:
+        let x = item.rcItem.left + max(1, (item.rcItem.right - item.rcItem.left) / 2)
+        _ = MoveToEx(deviceContext, x, item.rcItem.top, nil)
+        _ = LineTo(deviceContext, x, item.rcItem.bottom)
+    }
+
     restore(object: oldPen, into: deviceContext)
     _ = DeleteObject(pen)
 }

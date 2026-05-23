@@ -26,12 +26,16 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Button` | Partial |
 | `VStack` / `HStack` | Partial |
 | `Spacer` | Partial |
+| `Divider` | Partial |
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
 | Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | `TextField` | Partial |
 | `Toggle` | Partial |
+| `Picker` | Partial |
+| `Slider` | Partial |
+| `ProgressView` | Partial: determinate progress only |
 | `List` | Not implemented |
 | `Image` | Not implemented |
 | `WebView` | Planned |
@@ -57,6 +61,7 @@ labels can update after state changes.
 
 Slider("Scale", value: $scale, range: 0...100)
 Text("Live scale preview: \(scale)", style: .caption)
+ProgressView("Scale progress", value: scale, total: 100)
 ```
 
 Full native reconciliation is still planned. Layout changes, conditional view

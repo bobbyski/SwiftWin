@@ -12,6 +12,7 @@ public final class Win32Renderer: Renderer {
     private var fontStack: [TextStyle] = []
     private var foregroundStyleStack: [ForegroundStyle] = []
     private var cornerRadiusStack: [Double] = []
+    private var stackAxisStack: [StackAxis] = []
 
     // Implementation note:
     // `stackPath` is a construction stack, not a layout stack. It tracks the
@@ -40,6 +41,7 @@ public final class Win32Renderer: Renderer {
         fontStack.removeAll()
         foregroundStyleStack.removeAll()
         cornerRadiusStack.removeAll()
+        stackAxisStack.removeAll()
     }
 
     /// Runs the generated `SwiftWinLegacy` window.
@@ -53,11 +55,15 @@ public final class Win32Renderer: Renderer {
 
     /// Begins collecting children into a `WinStack`.
     public func beginStack(axis: StackAxis, spacing: Double) {
+        stackAxisStack.append(axis)
         containerPath.append(WinStack(axis: axis.winAxis, spacing: spacing))
     }
 
     /// Closes the current `WinStack` and appends it to its parent/window.
     public func endStack() {
+        if !stackAxisStack.isEmpty {
+            stackAxisStack.removeLast()
+        }
         guard let stack = containerPath.popLast() else {
             return
         }
@@ -221,9 +227,19 @@ public final class Win32Renderer: Renderer {
         add(WinSlider(title, value: value, range: range, onChange: onChange))
     }
 
+    /// Adapts SwiftWinUI progress to `WinProgressView`.
+    public func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {
+        add(WinProgressView(title, value: value, total: total))
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())
+    }
+
+    /// Adapts SwiftWinUI divider to `WinSeparator`.
+    public func divider() {
+        add(WinSeparator(axis: currentSeparatorAxis(), color: .secondary, thickness: 1))
     }
 
     // Implementation note:
@@ -236,6 +252,13 @@ public final class Win32Renderer: Renderer {
         } else {
             window?.content = element
         }
+    }
+}
+
+/// Resolves divider orientation from the surrounding stack.
+private extension Win32Renderer {
+    func currentSeparatorAxis() -> WinSeparatorAxis {
+        stackAxisStack.last == .horizontal ? .vertical : .horizontal
     }
 }
 

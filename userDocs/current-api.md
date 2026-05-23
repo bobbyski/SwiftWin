@@ -184,6 +184,40 @@ Slider("Scale", value: $scale, range: 0...100)
 
 Current implementation: the Win32 backend uses a Common Controls trackbar and updates its visible value label as the slider moves.
 
+## ProgressView
+
+`ProgressView` renders determinate progress.
+
+```swift
+@State private var scale = 50
+
+Slider("Scale", value: $scale, range: 0...100)
+ProgressView("Scale progress", value: scale, total: 100)
+```
+
+The traditional API exposes the same concept as `WinProgressView`:
+
+```swift
+let scale = WinSlider("Scale", value: 50, range: 0...100)
+let progress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
+```
+
+Current implementation: the Win32 backend uses the Common Controls progress bar. Progress values refresh through the same narrow invalidation bridge used by dynamic text, so progress can follow slider-backed state. Indeterminate progress, ring-style progress, and SwiftUI progress styles are planned.
+
+## Divider
+
+`Divider` renders a separator line.
+
+```swift
+VStack(spacing: 12) {
+    Text("Details", style: .caption)
+    Divider()
+    Text("More content")
+}
+```
+
+Current implementation: the renderer chooses a horizontal separator in vertical stacks and a vertical separator in horizontal stacks. The traditional API exposes this as `WinSeparator(axis:)`.
+
 ## State And Binding
 
 `@State` stores local mutable state for declarative views, and `Binding` connects controls to that state.

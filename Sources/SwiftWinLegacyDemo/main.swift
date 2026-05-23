@@ -27,6 +27,11 @@ let scale = WinSlider("Scale", value: 50, range: 0...100)
 let scaleFrame = WinFrame(width: 340, height: nil)
 scaleFrame.add(scale)
 root.add(scaleFrame)
+let scaleProgress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
+let scaleProgressFrame = WinFrame(width: 340, height: nil)
+scaleProgressFrame.add(scaleProgress)
+root.add(scaleProgressFrame)
+root.add(WinSeparator(axis: .horizontal))
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
