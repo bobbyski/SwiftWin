@@ -109,6 +109,7 @@ let ICC_BAR_CLASSES: DWORD = 0x00000004
 let ICC_PROGRESS_CLASS: DWORD = 0x00000020
 let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 let SW_SHOW: Int32 = 5
+let SW_SHOWNORMAL: Int32 = 1
 let WM_SETFONT: UINT = 0x0030
 let WM_COMMAND: UINT = 0x0111
 let WM_HSCROLL: UINT = 0x0114
@@ -259,4 +260,6 @@ func DefWindowProcW(_ window: HWND?, _ message: UINT, _ wParam: WPARAM, _ lParam
 func PostQuitMessage(_ exitCode: Int32)
 @_silgen_name("MessageBoxW")
 func MessageBoxW(_ window: HWND?, _ text: UnsafePointer<UInt16>, _ caption: UnsafePointer<UInt16>, _ type: UINT) -> Int32
+@_silgen_name("ShellExecuteW")
+func ShellExecuteW(_ window: HWND?, _ operation: UnsafePointer<UInt16>?, _ file: UnsafePointer<UInt16>, _ parameters: UnsafePointer<UInt16>?, _ directory: UnsafePointer<UInt16>?, _ showCommand: Int32) -> HINSTANCE?
 #endif

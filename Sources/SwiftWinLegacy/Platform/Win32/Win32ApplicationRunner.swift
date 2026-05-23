@@ -104,6 +104,8 @@ final class Win32ApplicationRunner {
             createDynamicText(text)
         case let button as WinButton:
             createButton(button.title, style: button.style, action: button.action)
+        case let link as WinLink:
+            createLink(link)
         case let textField as WinTextField:
             createTextField(textField)
         case let secureField as WinSecureField:
@@ -330,6 +332,32 @@ final class Win32ApplicationRunner {
             height: proposedHeight(defaultingTo: 40),
             action: action,
             button: ButtonRenderState(title: title, style: buttonStyle)
+        ) {
+            applyFont(.body, to: control)
+        }
+    }
+
+    /// Creates an owner-drawn external link.
+    ///
+    /// Windows note:
+    /// Opening URLs belongs to the Shell API rather than the windowing API.
+    /// `ShellExecuteW` delegates to the default browser or protocol handler,
+    /// matching what users expect from links in a native Windows app.
+    private func createLink(_ link: WinLink) {
+        if let control = createControl(
+            className: "BUTTON",
+            title: link.title,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
+            width: proposedWidth(defaultingTo: max(96, Int32(link.title.count * 9 + 12))),
+            height: proposedHeight(defaultingTo: Win32LayoutMetrics.textHeight(for: .body)),
+            action: { [weak self, weak link] in
+                guard let self, let link else {
+                    return
+                }
+
+                self.openExternalDestination(link.destination)
+            },
+            link: LinkRenderState(title: link.title, destination: link.destination)
         ) {
             applyFont(.body, to: control)
         }
@@ -719,6 +747,7 @@ final class Win32ApplicationRunner {
         height: Int32,
         action: (() -> Void)?,
         button: ButtonRenderState? = nil,
+        link: LinkRenderState? = nil,
         textField: WinTextField? = nil,
         secureField: WinSecureField? = nil,
         textEditor: WinTextEditor? = nil,
@@ -755,6 +784,7 @@ final class Win32ApplicationRunner {
                     control: control,
                     action: action,
                     button: button,
+                    link: link,
                     textField: textField,
                     secureField: secureField,
                     textEditor: textEditor,
@@ -764,7 +794,7 @@ final class Win32ApplicationRunner {
                 )
                 installHoverTrackingIfNeeded(
                     control: control,
-                    isOwnerDrawn: button != nil || toggle != nil || pickerOption != nil
+                    isOwnerDrawn: button != nil || link != nil || toggle != nil || pickerOption != nil
                 )
                 advance(width: width, height: height)
                 return control
@@ -898,6 +928,7 @@ final class Win32ApplicationRunner {
         control: HWND?,
         action: (() -> Void)?,
         button: ButtonRenderState?,
+        link: LinkRenderState?,
         textField: WinTextField?,
         secureField: WinSecureField?,
         textEditor: WinTextEditor?,
@@ -910,6 +941,9 @@ final class Win32ApplicationRunner {
         }
         if let button {
             Win32ActionRegistry.buttons[UInt32(controlID)] = button
+        }
+        if let link {
+            Win32ActionRegistry.links[UInt32(controlID)] = link
         }
         if let textField {
             Win32ActionRegistry.textFields[controlID] = textField
@@ -1022,6 +1056,36 @@ final class Win32ApplicationRunner {
         while GetMessageW(&message, nil, 0, 0) > 0 {
             _ = TranslateMessage(&message)
             _ = DispatchMessageW(&message)
+        }
+    }
+
+    /// Opens a link destination through the Windows shell.
+    private func openExternalDestination(_ destination: String) {
+        withWideString("open") { operation in
+            withWideString(destination) { file in
+                let result = ShellExecuteW(window, operation, file, nil, nil, SW_SHOWNORMAL)
+                if shellExecuteFailed(result) {
+                    showLinkError(destination)
+                }
+            }
+        }
+    }
+
+    /// Returns whether `ShellExecuteW` reported an error code.
+    private func shellExecuteFailed(_ result: HINSTANCE?) -> Bool {
+        guard let result else {
+            return true
+        }
+
+        return Int(bitPattern: result) <= 32
+    }
+
+    /// Shows a native failure message when Windows cannot open a link.
+    private func showLinkError(_ destination: String) {
+        withWideString("SwiftWinLegacy") { title in
+            withWideString("Windows could not open \(destination).") { message in
+                _ = MessageBoxW(window, message, title, MB_OK | MB_ICONINFORMATION)
+            }
         }
     }
 

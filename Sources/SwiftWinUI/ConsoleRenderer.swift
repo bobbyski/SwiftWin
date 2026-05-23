@@ -169,6 +169,11 @@ public final class ConsoleRenderer: Renderer {
         write("Button(\"\(title)\", style: \(style))")
     }
 
+    /// Prints a link node.
+    public func link(_ title: String, destination: String) {
+        write("Link(\"\(title)\", destination: \"\(destination)\")")
+    }
+
     /// Prints a text-field node.
     public func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
         write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")

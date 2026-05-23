@@ -28,6 +28,7 @@ Implemented:
 - `WinStepper`
 - `WinProgressView`
 - `WinButton`
+- `WinLink`
 - `WinSpacer`
 - `WinDialog`
 - `SwiftWinLegacyDemo`
@@ -68,6 +69,7 @@ let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integra
 root.add(quantity)
 let progress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
 root.add(progress)
+root.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
@@ -108,6 +110,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `Stepper` -> `WinStepper`
 - `ProgressView` -> `WinProgressView`
 - `Button` -> `WinButton`
+- `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`
 - `Spacer` -> `WinSpacer`
 - `Dialog.show` -> `WinDialog.show`
@@ -149,3 +152,14 @@ Current refreshable controls are `WinTextField`, `WinSecureField`,
 `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, and `WinStepper`.
 User-driven edits refresh dependent dynamic text automatically through the
 Win32 event path.
+
+## Opening Links
+
+`WinLink` opens destinations through the Windows Shell API:
+
+```swift
+root.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
+```
+
+Windows dispatches the destination to the user's default browser or protocol
+handler. This is why `SwiftWinLegacy` links `shell32` on Windows.

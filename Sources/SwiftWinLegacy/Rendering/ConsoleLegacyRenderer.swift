@@ -43,6 +43,8 @@ final class ConsoleLegacyRenderer {
             write("WinDynamicText(\"\(text.value)\", size: \(text.style.size), weight: \(text.style.weight))")
         case let button as WinButton:
             write("WinButton(\"\(button.title)\", style: \(button.style))")
+        case let link as WinLink:
+            write("WinLink(\"\(link.title)\", destination: \"\(link.destination)\")")
         case let textField as WinTextField:
             write("WinTextField(prompt: \"\(textField.prompt)\", value: \"\(textField.value)\")")
         case let secureField as WinSecureField:

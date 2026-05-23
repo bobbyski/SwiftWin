@@ -43,7 +43,8 @@ let package = Package(
                 .linkedLibrary("gdi32", .when(platforms: [.windows])),
                 .linkedLibrary("kernel32", .when(platforms: [.windows])),
                 .linkedLibrary("user32", .when(platforms: [.windows])),
-                .linkedLibrary("comctl32", .when(platforms: [.windows]))
+                .linkedLibrary("comctl32", .when(platforms: [.windows])),
+                .linkedLibrary("shell32", .when(platforms: [.windows]))
             ]
         ),
         .target(

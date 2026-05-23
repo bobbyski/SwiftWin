@@ -9,6 +9,7 @@
 enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
+    nonisolated(unsafe) static var links: [UInt32: LinkRenderState] = [:]
     nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
     nonisolated(unsafe) static var stepperLabels: [UInt: StepperLabelRenderState] = [:]
     nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
@@ -36,6 +37,7 @@ enum Win32ActionRegistry {
     static func reset() {
         actions.removeAll()
         buttons.removeAll()
+        links.removeAll()
         stepperValues.removeAll()
         stepperLabels.removeAll()
         dynamicTexts.removeAll()
@@ -497,6 +499,12 @@ struct ButtonRenderState {
     var title: String
     var style: WinButtonStyle
     var segmentRole: SegmentedControlRole? = nil
+}
+
+/// Owner-draw metadata for an external link.
+struct LinkRenderState {
+    var title: String
+    var destination: String
 }
 
 /// Owner-draw metadata for an integrated stepper value segment.

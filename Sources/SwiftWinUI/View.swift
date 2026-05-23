@@ -121,6 +121,8 @@ public protocol Renderer: AnyObject {
     func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders a button and stores its action for native event dispatch.
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
+    /// Renders an external link.
+    func link(_ title: String, destination: String)
     /// Renders a single-line editable text field.
     func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
     /// Renders a password-style single-line editable text field.
@@ -210,6 +212,9 @@ public extension Renderer {
 
     /// Default progress view for renderers without progress support.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {}
+
+    /// Default link for renderers without external URL support.
+    func link(_ title: String, destination: String) {}
 
     /// Default text editor for renderers without multi-line editing support.
     func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {}

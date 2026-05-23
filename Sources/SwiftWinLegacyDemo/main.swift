@@ -60,6 +60,7 @@ content.add(WinDynamicText({ "Theme preview: \(["System", "Light", "Dark"][theme
 content.add(WinDynamicText({ "Diagnostics: \(includeDiagnostics.isOn ? "enabled" : "disabled")" }, style: .caption))
 content.add(WinDynamicText({ "Project summary: \(projectName.value)" }, style: .caption))
 content.add(WinText("Renderer path: SwiftWinLegacy -> Win32", style: .caption))
+content.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
 content.add(WinSpacer())
 
 root.add(content)

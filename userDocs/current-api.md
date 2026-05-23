@@ -104,6 +104,31 @@ Available button styles:
 
 Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling. Owner-drawn buttons also support basic pressed, disabled, focused, and hover paint states when Windows reports those states to the draw handler.
 
+## Link
+
+`Link` renders clickable external link text.
+
+```swift
+Link("Open Swift.org", destination: "https://www.swift.org")
+```
+
+The traditional API exposes the same concept as `WinLink`:
+
+```swift
+let link = WinLink("Open Swift.org", destination: "https://www.swift.org")
+```
+
+Windows note for Apple developers: opening a URL is handled through the Windows
+Shell API, not the window/control API. SwiftWinLegacy uses `ShellExecuteW`, so
+Windows dispatches the destination to the user's default browser or protocol
+handler. That also means the package must link `shell32` on Windows.
+
+Current implementation: links are owner-drawn clickable controls with link-like
+text color, underline, hover, and pressed states. The first SwiftWinUI
+initializer accepts string destinations because importing `Foundation.URL`
+currently trips the ARM64 Windows UCRT overlay issue in this toolchain. A
+SwiftUI-compatible `URL` initializer remains planned.
+
 ## TextField
 
 `TextField` renders a single-line editable text control.

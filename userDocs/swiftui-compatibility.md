@@ -34,6 +34,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `TextField` | Partial |
 | `SecureField` | Partial |
 | `TextEditor` | Partial |
+| `Link` | Partial |
 | `Toggle` | Partial |
 | `Picker` | Partial |
 | `Slider` | Partial |
@@ -54,6 +55,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 TextField("Project name", text: $projectName)
 SecureField("Access code", text: $accessCode)
 Slider("Scale", value: $scale, range: 0...100)
+Link("Open Swift.org", destination: "https://www.swift.org")
 ```
 
 State writes also notify a renderer invalidation hook. The current Win32

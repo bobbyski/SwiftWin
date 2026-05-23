@@ -207,6 +207,11 @@ public final class Win32Renderer: Renderer {
         add(WinButton(title, style: style.winButtonStyle, action: action))
     }
 
+    /// Adapts SwiftWinUI links to `WinLink`.
+    public func link(_ title: String, destination: String) {
+        add(WinLink(title, destination: destination))
+    }
+
     /// Adapts SwiftWinUI text fields to `WinTextField`.
     public func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
         add(WinTextField(prompt, text: text, onChange: onChange, textProvider: textProvider))

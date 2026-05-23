@@ -90,6 +90,7 @@ struct DemoContent: View {
             Text("Diagnostics: \(includeDiagnostics ? "enabled" : "disabled")", style: .caption)
             Text("Project summary: \(projectName)", style: .caption)
             Text("Renderer path: SwiftWinUI -> SwiftWinLegacy -> Win32", style: .caption)
+            Link("Open Swift.org", destination: "https://www.swift.org")
             Spacer()
         }
     }

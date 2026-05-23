@@ -41,6 +41,11 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
         return
     }
 
+    if Win32ActionRegistry.links[item.CtlID] != nil {
+        drawLink(item)
+        return
+    }
+
     if Win32ActionRegistry.stepperValues[item.CtlID] != nil {
         drawStepperValue(item)
         return
@@ -69,6 +74,20 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
     if Win32ActionRegistry.separators[item.CtlID] != nil {
         drawSeparator(item)
     }
+}
+
+/// Paints an owner-drawn link.
+private func drawLink(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let link = Win32ActionRegistry.links[item.CtlID] else {
+        return
+    }
+
+    let isDisabled = (item.itemState & ODS_DISABLED) != 0
+    let isPressed = (item.itemState & ODS_SELECTED) != 0
+    let isHovered = isHot(item)
+    paintControlSurface(item.rcItem, in: deviceContext)
+    paintLinkTitle(link.title, in: item.rcItem, deviceContext: deviceContext, isHovered: isHovered, isPressed: isPressed, isDisabled: isDisabled)
 }
 
 /// Paints the value segment in an integrated stepper.
@@ -318,6 +337,17 @@ private func paintToggleTitle(_ title: String, in rect: RECT, deviceContext: HDC
     }
 }
 
+/// Paints a simple underline for link affordance.
+private func paintLinkUnderline(in rect: RECT, deviceContext: HDC, color: DWORD) {
+    let pen = CreatePen(PS_SOLID, 1, color)
+    let oldPen = SelectObject(deviceContext, pen)
+    let y = rect.bottom - 5
+    _ = MoveToEx(deviceContext, rect.left, y, nil)
+    _ = LineTo(deviceContext, rect.right, y)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(pen)
+}
+
 /// Paints an owner-drawn segmented picker option.
 private func drawPickerOption(_ item: DRAWITEMSTRUCT) {
     guard let deviceContext = item.hDC,
@@ -402,6 +432,27 @@ private func paintSegmentText(_ title: String, in rect: RECT, deviceContext: HDC
     withWideString(title) { title in
         _ = DrawTextW(deviceContext, title, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE)
     }
+}
+
+/// Paints link text with familiar web-style affordance.
+private func paintLinkTitle(
+    _ title: String,
+    in rect: RECT,
+    deviceContext: HDC,
+    isHovered: Bool,
+    isPressed: Bool,
+    isDisabled: Bool
+) {
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, linkTextColor(isHovered: isHovered, isPressed: isPressed, isDisabled: isDisabled))
+
+    var textRect = rect
+    textRect.right -= 4
+
+    withWideString(title) { title in
+        _ = DrawTextW(deviceContext, title, -1, &textRect, DT_VCENTER | DT_SINGLELINE)
+    }
+    paintLinkUnderline(in: textRect, deviceContext: deviceContext, color: linkTextColor(isHovered: isHovered, isPressed: isPressed, isDisabled: isDisabled))
 }
 
 /// Returns owner-draw colors for the current button state.
@@ -505,6 +556,21 @@ private func pickerText(isSelected: Bool, isDisabled: Bool) -> DWORD {
     }
 
     return isSelected ? 0x00b84818 : 0x00271811
+}
+
+/// Returns the link text color for interaction state.
+private func linkTextColor(isHovered: Bool, isPressed: Bool, isDisabled: Bool) -> DWORD {
+    if isDisabled {
+        return 0x008f8a86
+    }
+    if isPressed {
+        return 0x00a23f13
+    }
+    if isHovered {
+        return 0x00d95b20
+    }
+
+    return 0x00b84818
 }
 
 /// Returns whether an owner-drawn item should paint hover state.

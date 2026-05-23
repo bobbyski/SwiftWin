@@ -67,6 +67,8 @@ Current examples:
 - `user32`: windows, messages, controls, dialogs
 - `gdi32`: drawing, fonts, brushes, pens
 - `kernel32`: core process/module APIs
+- `comctl32`: Common Controls such as trackbars and progress bars
+- `shell32`: shell integration such as opening URLs with `ShellExecuteW`
 - `uxtheme`: theming APIs
 
 SwiftPM links these by name in `Package.swift`.
