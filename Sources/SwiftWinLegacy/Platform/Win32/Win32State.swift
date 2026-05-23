@@ -167,5 +167,6 @@ struct WindowScrollState {
 /// Shared paint resources for the current Win32 prototype.
 enum Win32PaintResources {
     nonisolated(unsafe) static var backgroundBrush: HBRUSH?
+    nonisolated(unsafe) static var controlSurfaceBrush: HBRUSH?
 }
 #endif

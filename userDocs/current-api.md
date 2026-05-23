@@ -348,7 +348,7 @@ Text("SwiftWinUI", style: .title)
     .foregroundStyle(.accent)
 ```
 
-Windows note for Apple developers: static text color is handled through the parent window's `WM_CTLCOLORSTATIC` message, not by setting a direct property on the `STATIC` child control. That is why SwiftWinLegacy stores text color metadata and answers Windows during painting. Plain labels default to a transparent rectangle by returning a Win32 `NULL_BRUSH`; only explicit background panels return a solid brush.
+Windows note for Apple developers: static text color is handled through the parent window's `WM_CTLCOLORSTATIC` message, not by setting a direct property on the `STATIC` child control. That is why SwiftWinLegacy stores text color metadata and answers Windows during painting. Plain labels default to a transparent rectangle by returning a Win32 `NULL_BRUSH`; only explicit background panels return a solid brush. Trackbars also report through this paint path, but they still need a real brush or Windows can paint black or blank slider rectangles. SwiftWinLegacy handles that internally with a control-surface brush so slider callers get the polished default behavior.
 
 Current implementation: this is text-only and semantic-color-only. It does not yet support gradients, materials, custom brushes, or automatic dynamic color reconciliation.
 

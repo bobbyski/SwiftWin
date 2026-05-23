@@ -22,6 +22,7 @@ final class Win32ApplicationRunner {
         configureProcessDPIAwareness()
         initializeCommonControls()
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
+        Win32PaintResources.controlSurfaceBrush = CreateSolidBrush(0x00fff6ef)
         registerWindowClass()
         createWindow(descriptor)
         layoutStack = [

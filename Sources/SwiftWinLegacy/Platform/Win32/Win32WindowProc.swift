@@ -96,6 +96,10 @@ private func handleStaticColor(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
         return LRESULT(Int(bitPattern: brush))
     }
 
+    if let brush = sliderBackgroundBrush(for: lParam) {
+        return LRESULT(Int(bitPattern: brush))
+    }
+
     let color = staticTextColor(for: lParam)
     _ = SetTextColor(HDC(bitPattern: wParam), color)
     return LRESULT(Int(bitPattern: staticTextBackgroundBrush()))
@@ -108,6 +112,22 @@ private func staticBackgroundBrush(for lParam: LPARAM) -> HBRUSH? {
     }
 
     return Win32ActionRegistry.staticBackgroundBrushesByHandle[UInt(bitPattern: control)]
+}
+
+/// Returns the stock trackbar background brush.
+///
+/// Windows note:
+/// Trackbars ask through the same static-color message path as labels. Unlike
+/// labels, they still need a real brush or they can paint black/blank
+/// rectangles. This keeps the native slider visible while matching the default
+/// SwiftWin panel surface.
+private func sliderBackgroundBrush(for lParam: LPARAM) -> HBRUSH? {
+    guard let control = HWND(bitPattern: lParam),
+          Win32ActionRegistry.slidersByHandle[UInt(bitPattern: control)] != nil else {
+        return nil
+    }
+
+    return Win32PaintResources.controlSurfaceBrush ?? Win32PaintResources.backgroundBrush
 }
 
 /// Returns the requested text color for one static child HWND.
