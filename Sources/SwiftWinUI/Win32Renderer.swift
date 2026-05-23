@@ -232,6 +232,18 @@ public final class Win32Renderer: Renderer {
         add(WinProgressView(title, value: value, total: total))
     }
 
+    /// Adapts SwiftWinUI steppers to `WinStepper`.
+    public func stepper(
+        _ title: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        step: Int,
+        variant: StepperVariant,
+        onChange: ((Int) -> Void)?
+    ) {
+        add(WinStepper(title, value: value, range: range, step: step, variant: variant.winVariant, onChange: onChange))
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())
@@ -310,6 +322,18 @@ private extension ButtonStyle {
             return .primary
         case .secondary:
             return .secondary
+        }
+    }
+}
+
+private extension StepperVariant {
+    /// Maps declarative stepper presentation to the traditional backend.
+    var winVariant: WinStepperVariant {
+        switch self {
+        case .compact:
+            return .compact
+        case .integratedValue:
+            return .integratedValue
         }
     }
 }

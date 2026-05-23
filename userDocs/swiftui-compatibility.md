@@ -35,6 +35,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Toggle` | Partial |
 | `Picker` | Partial |
 | `Slider` | Partial |
+| `Stepper` | Partial: integer values only |
 | `ProgressView` | Partial: determinate progress only |
 | `List` | Not implemented |
 | `Image` | Not implemented |
@@ -58,8 +59,10 @@ labels can update after state changes.
 
 ```swift
 @State private var scale = 50
+@State private var quantity = 2
 
 Slider("Scale", value: $scale, range: 0...100)
+Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
 Text("Live scale preview: \(scale)", style: .caption)
 ProgressView("Scale progress", value: scale, total: 100)
 ```

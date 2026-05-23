@@ -6,6 +6,7 @@ struct DemoContent: View {
     @State private var includeDiagnostics = true
     @State private var themeIndex = 0
     @State private var scale = 50
+    @State private var quantity = 2
 
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
@@ -31,6 +32,8 @@ struct DemoContent: View {
             Text("Live scale preview: \(scale)", style: .caption)
             ProgressView("Scale progress", value: scale, total: 100)
                 .frame(width: 340)
+            Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
+            Text("Quantity preview: \(quantity)", style: .caption)
             Divider()
             HStack(spacing: 10) {
                 Button("Create Window", style: .primary) {
@@ -67,6 +70,7 @@ struct DemoContent: View {
         Diagnostics: \(includeDiagnostics ? "on" : "off")
         Theme: \(themeName)
         Scale: \(scale)
+        Quantity: \(quantity)
         """
     }
 }

@@ -189,6 +189,18 @@ public final class ConsoleRenderer: Renderer {
         write("Slider(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound))")
     }
 
+    /// Prints a stepper node.
+    public func stepper(
+        _ title: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        step: Int,
+        variant: StepperVariant,
+        onChange: ((Int) -> Void)?
+    ) {
+        write("Stepper(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound), step: \(step), variant: \(variant))")
+    }
+
     /// Prints a progress-view node.
     public func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {
         write("ProgressView(title: \(optionalDescription(title)), value: \(value()), total: \(total))")

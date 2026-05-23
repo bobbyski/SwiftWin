@@ -103,6 +103,8 @@ final class Win32ApplicationRunner {
             createPicker(picker)
         case let slider as WinSlider:
             createSlider(slider)
+        case let stepper as WinStepper:
+            createStepper(stepper)
         case let progressView as WinProgressView:
             createProgressView(progressView)
         case let separator as WinSeparator:
@@ -450,6 +452,91 @@ final class Win32ApplicationRunner {
         }
     }
 
+    /// Creates a composite integer stepper.
+    private func createStepper(_ stepper: WinStepper) {
+        switch stepper.variant {
+        case .compact:
+            createCompactStepper(stepper)
+        case .integratedValue:
+            createIntegratedStepper(stepper)
+        }
+    }
+
+    /// Creates the compact stepper variant: title/value plus two buttons.
+    private func createCompactStepper(_ stepper: WinStepper) {
+        guard let label = createText(stepperDisplayText(stepper), style: .caption) else {
+            return
+        }
+
+        beginStack(axis: .horizontal, spacing: 8)
+        createStepperButton("-", stepper: stepper, delta: -stepper.step, label: { label }, displaysValueOnly: false)
+        createStepperButton("+", stepper: stepper, delta: stepper.step, label: { label }, displaysValueOnly: false)
+        endStack()
+    }
+
+    /// Creates the integrated stepper variant: title plus `- | value | +`.
+    private func createIntegratedStepper(_ stepper: WinStepper) {
+        createText(stepper.title, style: .caption)
+
+        var valueLabel: HWND?
+        beginStack(axis: .horizontal, spacing: 0)
+        createStepperButton("-", stepper: stepper, delta: -stepper.step, label: { valueLabel }, displaysValueOnly: true)
+        valueLabel = createStepperValueLabel(stepper)
+        createStepperButton("+", stepper: stepper, delta: stepper.step, label: { valueLabel }, displaysValueOnly: true)
+        endStack()
+    }
+
+    /// Creates the value label used inside the integrated stepper row.
+    private func createStepperValueLabel(_ stepper: WinStepper) -> HWND? {
+        let control = createControl(
+            className: "STATIC",
+            title: stepperValueText(stepper),
+            style: WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER,
+            width: 64,
+            height: 34,
+            action: nil,
+            textForegroundStyle: .primary
+        )
+        if let control {
+            applyFont(.body, to: control)
+        }
+        return control
+    }
+
+    /// Creates one owner-drawn button for a stepper action.
+    private func createStepperButton(
+        _ title: String,
+        stepper: WinStepper,
+        delta: Int,
+        label: @escaping () -> HWND?,
+        displaysValueOnly: Bool
+    ) {
+        if let control = createControl(
+            className: "BUTTON",
+            title: title,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
+            width: 44,
+            height: 34,
+            action: { [weak self, weak stepper] in
+                guard let self, let stepper else {
+                    return
+                }
+                guard let label = label() else {
+                    return
+                }
+                self.set(
+                    stepper: stepper,
+                    value: stepper.value + delta,
+                    label: label,
+                    displaysValueOnly: displaysValueOnly
+                )
+            },
+            button: ButtonRenderState(title: title, style: .secondary)
+        ) {
+            applyFont(.body, to: control)
+        }
+    }
+
     /// Creates a native determinate progress bar.
     private func createProgressView(_ progressView: WinProgressView) {
         if let title = progressView.title {
@@ -476,6 +563,37 @@ final class Win32ApplicationRunner {
     /// Formats the native value label for a slider.
     private func sliderDisplayText(_ slider: WinSlider) -> String {
         "\(slider.title): \(slider.value)"
+    }
+
+    /// Formats the native value label for a stepper.
+    private func stepperDisplayText(_ stepper: WinStepper) -> String {
+        "\(stepper.title): \(stepper.value)"
+    }
+
+    /// Formats the value-only label for an integrated stepper.
+    private func stepperValueText(_ stepper: WinStepper) -> String {
+        "\(stepper.value)"
+    }
+
+    /// Stores a stepper value and mirrors it back to the native label.
+    private func set(stepper: WinStepper, value: Int, label: HWND, displaysValueOnly: Bool) {
+        let clamped = min(max(value, stepper.minimum), stepper.maximum)
+        guard clamped != stepper.value else {
+            return
+        }
+
+        stepper.value = clamped
+        updateStepperLabel(label, stepper: stepper, displaysValueOnly: displaysValueOnly)
+        stepper.onChange?(clamped)
+        WinDynamicTextInvalidation.invalidateAll()
+    }
+
+    /// Updates the static text label owned by a stepper.
+    private func updateStepperLabel(_ label: HWND, stepper: WinStepper, displaysValueOnly: Bool) {
+        let value = displaysValueOnly ? stepperValueText(stepper) : stepperDisplayText(stepper)
+        withWideString(value) { text in
+            _ = SetWindowTextW(label, text)
+        }
     }
 
     /// Registers the window class used by SwiftWinLegacy windows.

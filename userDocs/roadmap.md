@@ -11,7 +11,7 @@ Current status:
 - Basic `App` and `WindowGroup`
 - Basic `View` and `ViewBuilder`
 - `Text`, `Button`, `Spacer`, `VStack`, `HStack`
-- `TextField`, `Toggle`, `Picker`, `Slider`, and determinate `ProgressView`
+- `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, and determinate `ProgressView`
 - Native Win32 renderer
 - Console renderer
 - Owner-drawn primary and secondary buttons
@@ -23,7 +23,7 @@ Next work:
 - Continue modifiers such as `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`
 - Continue state primitives beyond `@State` and `Binding`
 - Add a real layout engine
-- Add common controls such as `List`, `Image`, `SecureField`, `Stepper`, and `DatePicker`
+- Add common controls such as `List`, `Image`, `SecureField`, `DatePicker`, and `ColorPicker`
 - Add `WebView` backed by WebView2
 - Keep renderer and layout work protocol-oriented so custom implementations can plug in later
 

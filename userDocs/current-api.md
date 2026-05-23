@@ -184,6 +184,33 @@ Slider("Scale", value: $scale, range: 0...100)
 
 Current implementation: the Win32 backend uses a Common Controls trackbar and updates its visible value label as the slider moves.
 
+## Stepper
+
+`Stepper` renders an integer increment/decrement control.
+
+```swift
+Stepper("Quantity", value: 2, range: 0...10) { value in
+    print("Quantity: \(value)")
+}
+```
+
+Binding form:
+
+```swift
+@State private var quantity = 2
+
+Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
+Text("Quantity preview: \(quantity)", style: .caption)
+```
+
+The traditional API exposes the same concept as `WinStepper`:
+
+```swift
+let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
+```
+
+Current implementation: the Win32 backend renders the compact variant as a value label plus two owner-drawn buttons. The integrated variant renders a title label followed by `- | value | +`. Both variants support integer values, bounds, a positive step amount, callback changes, and binding changes. Numeric text entry, floating-point stepping, and richer SwiftUI label-builder overloads are planned.
+
 ## ProgressView
 
 `ProgressView` renders determinate progress.

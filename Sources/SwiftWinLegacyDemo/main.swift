@@ -31,6 +31,9 @@ let scaleProgress = WinProgressView("Scale progress", value: { Double(scale.valu
 let scaleProgressFrame = WinFrame(width: 340, height: nil)
 scaleProgressFrame.add(scaleProgress)
 root.add(scaleProgressFrame)
+let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
+root.add(quantity)
+root.add(WinDynamicText({ "Quantity preview: \(quantity.value)" }, style: .caption))
 root.add(WinSeparator(axis: .horizontal))
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
@@ -44,6 +47,7 @@ buttons.add(WinButton("Create Window", style: .primary) {
         Diagnostics: \(includeDiagnostics.isOn ? "on" : "off")
         Theme: \(["System", "Light", "Dark"][theme.selectedIndex])
         Scale: \(scale.value)
+        Quantity: \(quantity.value)
         """
     )
 })

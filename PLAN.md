@@ -22,7 +22,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 51% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, determinate progress, and separators exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 5: SwiftUI Control Coverage | In Progress | 54% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, integer stepping, determinate progress, and separators exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 25% | stack positioning, spacing, padding, fixed frame hints, basic child advancement | Current layout is direct placement with early modifier containers. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
@@ -52,7 +52,7 @@ Status: In Progress
 
 - Add a real layout tree with measurement and placement.
 - Add SwiftUI-compatible state primitives and rerender invalidation.
-- Add core form controls: `TextField`, `Toggle`, `Picker`, `Slider`, and determinate `ProgressView`.
+- Add core form controls: `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, and determinate `ProgressView`.
 - Add a WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`.
 - Add disabled, hover, focused, and pressed states for controls.
@@ -445,7 +445,7 @@ Remaining:
 | State | `@State`, `Binding`, observable models | Partial: `@State`, `Binding`, control bindings, dynamic text refresh |
 | Environment | `Environment`, environment values, environment-driven styling | Not started |
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
-| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
+| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
 | Modifiers | `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors; text supports semantic foreground colors; containers support solid rounded background panels and rounded rectangular borders |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
@@ -548,7 +548,7 @@ app.run(window)
 | Application Runtime | In Progress | 35% | `WinApplication`, message loop, lifecycle callbacks | `WinApplication` can run one `WinWindow`; lifecycle callbacks remain planned. |
 | Window API | In Progress | 30% | `WinWindow`, size, title, show/close, events | `WinWindow` supports title, size, and content. Events remain planned. |
 | Protocol Contracts | In Progress | 25% | app runner, containers, text, titled/action controls, button contracts | Initial public protocols exist so custom controls and runtimes can interoperate. |
-| Controls | In Progress | 51% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
+| Controls | In Progress | 54% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
 | Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
 | Styling | In Progress | 36% | control styles, theme tokens, fonts, colors | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid rounded `.background`, rounded `.border`, and button styles exist; full theme tokens remain planned. |

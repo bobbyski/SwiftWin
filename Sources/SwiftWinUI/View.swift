@@ -129,6 +129,15 @@ public protocol Renderer: AnyObject {
     func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?)
     /// Renders an integer slider.
     func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?)
+    /// Renders an integer stepper.
+    func stepper(
+        _ title: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        step: Int,
+        variant: StepperVariant,
+        onChange: ((Int) -> Void)?
+    )
     /// Renders a determinate progress indicator.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double)
     /// Renders a spacer.
@@ -196,6 +205,16 @@ public extension Renderer {
 
     /// Default progress view for renderers without progress support.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {}
+
+    /// Default stepper for renderers without stepper support.
+    func stepper(
+        _ title: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        step: Int,
+        variant: StepperVariant,
+        onChange: ((Int) -> Void)?
+    ) {}
 }
 
 /// Axis for stack layout.

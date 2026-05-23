@@ -51,6 +51,8 @@ final class ConsoleLegacyRenderer {
             write("WinPicker(\"\(picker.title)\", selectedIndex: \(picker.selectedIndex), options: \(picker.options))")
         case let slider as WinSlider:
             write("WinSlider(\"\(slider.title)\", value: \(slider.value), range: \(slider.minimum)...\(slider.maximum))")
+        case let stepper as WinStepper:
+            write("WinStepper(\"\(stepper.title)\", value: \(stepper.value), range: \(stepper.minimum)...\(stepper.maximum), step: \(stepper.step), variant: \(stepper.variant))")
         case let progressView as WinProgressView:
             write("WinProgressView(title: \(optionalDescription(progressView.title)), value: \(progressView.value), total: \(progressView.total))")
         case let separator as WinSeparator:
