@@ -5,9 +5,11 @@ import SwiftWinLegacy
 // UI directly, and that Phase I can wrap these same primitives.
 let window = WinWindow(title: "SwiftWinLegacy Demo", width: 960, height: 640)
 let root = WinStack(axis: .vertical, spacing: 14)
+let panel = WinBackground(color: WinForegroundStyle(red: 239, green: 246, blue: 255))
+let paddedRoot = WinPadding(amount: 12)
 
-root.add(WinText("SwiftWinLegacy", style: .title))
-root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
+root.add(WinText("SwiftWinLegacy", style: .title, foregroundStyle: .accent))
+root.add(WinText("A traditional Swift interface wrapping native Windows UI.", foregroundStyle: .secondary))
 
 let projectName = WinTextField("Project name", text: "SwiftWin")
 let projectFrame = WinFrame(width: 340, height: nil)
@@ -53,7 +55,9 @@ buttons.add(disabledButton)
 
 root.add(buttons)
 root.add(WinSpacer())
-root.add(WinText("Phase II traditional API: active.", style: .caption))
+root.add(WinText("Phase II traditional API: active.", style: .caption, foregroundStyle: .secondary))
 
-window.content = root
+paddedRoot.add(root)
+panel.add(paddedRoot)
+window.content = panel
 WinApplication().run(window)

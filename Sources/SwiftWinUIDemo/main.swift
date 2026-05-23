@@ -18,8 +18,10 @@ struct DemoContent: View {
 
         VStack(spacing: 14) {
             Text("SwiftWinUI", style: .title)
+                .foregroundStyle(.accent)
             Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
                 .font(.body)
+                .foregroundStyle(.secondary)
             TextField("Project name", text: $projectName)
                 .frame(width: 340)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
@@ -47,8 +49,10 @@ struct DemoContent: View {
             }
             Spacer()
             Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
+                .foregroundStyle(.secondary)
         }
-        .padding(4)
+        .padding(12)
+        .background(Color(red: 239, green: 246, blue: 255))
     }
 
     /// Builds the current form summary for button actions.

@@ -10,6 +10,7 @@ import SwiftWinLegacy
 public final class Win32Renderer: Renderer {
     private var window: WinWindow?
     private var fontStack: [TextStyle] = []
+    private var foregroundStyleStack: [ForegroundStyle] = []
 
     // Implementation note:
     // `stackPath` is a construction stack, not a layout stack. It tracks the
@@ -36,6 +37,7 @@ public final class Win32Renderer: Renderer {
         window = WinWindow(title: descriptor.title, width: descriptor.width, height: descriptor.height)
         containerPath.removeAll()
         fontStack.removeAll()
+        foregroundStyleStack.removeAll()
     }
 
     /// Runs the generated `SwiftWinLegacy` window.
@@ -120,14 +122,45 @@ public final class Win32Renderer: Renderer {
         style ?? fontStack.last ?? .body
     }
 
+    /// Begins an inherited foreground style scope.
+    public func beginForegroundStyle(_ style: ForegroundStyle) {
+        foregroundStyleStack.append(style)
+    }
+
+    /// Ends the current inherited foreground style scope.
+    public func endForegroundStyle() {
+        if !foregroundStyleStack.isEmpty {
+            foregroundStyleStack.removeLast()
+        }
+    }
+
+    /// Resolves the nearest inherited foreground style.
+    public func resolveForegroundStyle() -> ForegroundStyle {
+        foregroundStyleStack.last ?? .primary
+    }
+
+    /// Begins a background container.
+    public func beginBackground(_ style: Color) {
+        containerPath.append(WinBackground(color: style.winForegroundStyle))
+    }
+
+    /// Closes the current background container and appends it to its parent/window.
+    public func endBackground() {
+        guard let background = containerPath.popLast() else {
+            return
+        }
+
+        add(background)
+    }
+
     /// Adapts SwiftWinUI text to `WinText`.
-    public func text(_ value: String, style: TextStyle) {
-        add(WinText(value, style: style.winTextStyle))
+    public func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle) {
+        add(WinText(value, style: style.winTextStyle, foregroundStyle: foregroundStyle.winForegroundStyle))
     }
 
     /// Adapts dynamic SwiftWinUI text to `WinDynamicText`.
-    public func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
-        add(WinDynamicText(value, style: style.winTextStyle))
+    public func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle) {
+        add(WinDynamicText(value, style: style.winTextStyle, foregroundStyle: foregroundStyle.winForegroundStyle))
     }
 
     /// Adapts SwiftWinUI button to `WinButton`.
@@ -203,6 +236,13 @@ private extension FontWeight {
         case .bold:
             return .bold
         }
+    }
+}
+
+/// Maps declarative foreground styles to legacy foreground styles.
+private extension ForegroundStyle {
+    var winForegroundStyle: WinForegroundStyle {
+        WinForegroundStyle(red: red, green: green, blue: blue)
     }
 }
 

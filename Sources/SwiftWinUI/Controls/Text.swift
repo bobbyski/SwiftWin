@@ -14,7 +14,11 @@ public struct Text: View {
 
     /// Emits a semantic text operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.dynamicText(value, style: context.renderer.resolveTextStyle(style))
+        context.renderer.dynamicText(
+            value,
+            style: context.renderer.resolveTextStyle(style),
+            foregroundStyle: context.renderer.resolveForegroundStyle()
+        )
     }
 }
 
@@ -54,3 +58,35 @@ public enum FontWeight: Sendable, Hashable {
 
 /// SwiftUI-compatible name for text style values used by `.font(...)`.
 public typealias Font = TextStyle
+
+/// Semantic foreground style for text and future shape rendering.
+///
+/// This mirrors the shape of SwiftUI's `.foregroundStyle(...)` without trying
+/// to model every SwiftUI `ShapeStyle` form yet.
+public struct ForegroundStyle: Sendable, Hashable {
+    /// Red channel.
+    public var red: UInt8
+    /// Green channel.
+    public var green: UInt8
+    /// Blue channel.
+    public var blue: UInt8
+
+    /// Main text color.
+    public static let primary = ForegroundStyle(red: 17, green: 24, blue: 39)
+    /// Secondary text color.
+    public static let secondary = ForegroundStyle(red: 83, green: 91, blue: 107)
+    /// Accent color for important labels.
+    public static let accent = ForegroundStyle(red: 37, green: 99, blue: 235)
+    /// Destructive/error color.
+    public static let destructive = ForegroundStyle(red: 185, green: 28, blue: 28)
+
+    /// Creates a foreground style from RGB channels.
+    public init(red: UInt8, green: UInt8, blue: UInt8) {
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
+}
+
+/// SwiftUI-compatible color spelling for the current semantic foreground model.
+public typealias Color = ForegroundStyle

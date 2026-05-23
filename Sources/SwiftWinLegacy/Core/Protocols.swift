@@ -34,6 +34,8 @@ public protocol WinTextDisplaying: WinElement {
     var value: String { get set }
     /// Text style used by the native runtime.
     var style: WinTextStyle { get set }
+    /// Semantic foreground color used by backends that support custom text paint.
+    var foregroundStyle: WinForegroundStyle { get set }
 }
 
 /// Protocol for editable text controls.

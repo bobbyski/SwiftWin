@@ -8,9 +8,9 @@ The strategic goal is maximum practical SwiftUI compatibility. SwiftWinUI should
 
 The core engineering style is small-function, protocol-oriented Swift. Public behavior should be captured in focused protocols wherever that improves type safety, interoperability, testability, or future custom implementations. Concrete classes should be default implementations of those contracts, and large implementation areas should be split before they become difficult to reason about.
 
-Overall planned-code progress: [####------] 39%
+Overall planned-code progress: [####------] 41%
 
-The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
+The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, inherited font and foreground style modifiers, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
 
 Unsupported and partially supported UI capabilities are tracked in [Unsupported SwiftWinUI Coverage](#unsupported-swiftwinui-coverage).
 
@@ -24,7 +24,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
 | 5: SwiftUI Control Coverage | In Progress | 45% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Button`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 25% | stack positioning, spacing, padding, fixed frame hints, basic child advancement | Current layout is direct placement with early modifier containers. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
-| 7: Styling And Theming | In Progress | 45% | text styles, `.font`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font styles, and native hot-tracking hover paint. Needs color tokens, richer focus rings, theme switching, and modern surfaces. |
+| 7: Styling And Theming | In Progress | 51% | text styles, `.font`, `.foregroundStyle`, `.background`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid background panels, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, screenshots, and sample apps. |
@@ -446,8 +446,8 @@ Remaining:
 | Environment | `Environment`, environment values, environment-driven styling | Not started |
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
 | Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads |
-| Modifiers | `.font`, `.foregroundStyle`, `.background`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)` |
-| Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors |
+| Modifiers | `.font`, `.foregroundStyle`, `.background`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors |
+| Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors; text supports semantic foreground colors; containers support solid background panels |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
 | Preview/testing | Console snapshots and examples instead of Xcode previews | Partial alternative |
 
@@ -551,7 +551,7 @@ app.run(window)
 | Controls | In Progress | 45% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinList` | `WinText`, form controls, `WinButton`, `WinSpacer`, and `WinDialog` exist. |
 | Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
-| Styling | In Progress | 25% | control styles, theme tokens, fonts, colors | Text styles, inherited declarative `.font`, and button styles exist; full theme tokens remain planned. |
+| Styling | In Progress | 31% | control styles, theme tokens, fonts, colors | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid `.background`, and button styles exist; full theme tokens remain planned. |
 | Interop Boundary | Planned | 0% | expose native handles safely when needed | Advanced users may need controlled access to HWND/HDC. |
 
 ### Phase II Design Principles
@@ -577,7 +577,7 @@ app.run(window)
 
 | Area | Current Support | Gap |
 | --- | --- | --- |
-| Text | Basic static text | No wrapping, selection, rich text, dynamic color, or accessibility metadata |
+| Text | Basic static text | No wrapping, selection, rich text, dynamic color reconciliation, or accessibility metadata |
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |

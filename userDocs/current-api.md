@@ -56,11 +56,28 @@ VStack(spacing: 8) {
 
 An explicit `Text(..., style:)` still wins over an inherited font modifier.
 
+`foregroundStyle` applies an inherited semantic color to descendant text:
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.foregroundStyle(.secondary)
+```
+
 Available text styles:
 
 - `.title`
 - `.body`
 - `.caption`
+
+Available foreground styles:
+
+- `.primary`
+- `.secondary`
+- `.accent`
+- `.destructive`
 
 ## Button
 
@@ -253,6 +270,32 @@ VStack(spacing: 8) {
 ```
 
 Current implementation: this supports SwiftWinUI's semantic text styles. It is not yet a full SwiftUI `Font` model with custom families, dynamic type, or weight/design modifiers.
+
+`foregroundStyle` applies an inherited semantic foreground color to text.
+
+```swift
+Text("SwiftWinUI", style: .title)
+    .foregroundStyle(.accent)
+```
+
+Windows note for Apple developers: static text color is handled through the parent window's `WM_CTLCOLORSTATIC` message, not by setting a direct property on the `STATIC` child control. That is why SwiftWinLegacy stores text color metadata and answers Windows during painting.
+
+Current implementation: this is text-only and semantic-color-only. It does not yet support gradients, materials, custom brushes, or automatic dynamic color reconciliation.
+
+`background` paints a solid semantic color behind a view.
+
+```swift
+VStack(spacing: 12) {
+    Text("SwiftWinUI", style: .title)
+    Text("Native Windows, Swift-shaped.")
+}
+.padding(12)
+.background(Color(red: 239, green: 246, blue: 255))
+```
+
+Windows note for Apple developers: the current Win32 backend implements this with a child `STATIC` control created before the wrapped controls, then resized after direct-placement layout determines the consumed size. This is more mechanical than SwiftUI's retained rendering model, and it is one reason the future layout/render tree matters.
+
+Current implementation: this supports solid colors only. SwiftUI's arbitrary background views, materials, alignment overloads, clipping, rounded corners, and paint-order semantics remain planned.
 
 ## Spacer
 

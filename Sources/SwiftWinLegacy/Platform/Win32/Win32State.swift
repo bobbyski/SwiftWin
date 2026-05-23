@@ -16,6 +16,8 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
+    nonisolated(unsafe) static var staticTextColorsByHandle: [UInt: DWORD] = [:]
+    nonisolated(unsafe) static var staticBackgroundBrushesByHandle: [UInt: HBRUSH] = [:]
     nonisolated(unsafe) static var controlFramesByHandle: [UInt: ControlFrame] = [:]
     nonisolated(unsafe) static var originalControlProceduresByHandle: [UInt: WNDPROC] = [:]
     nonisolated(unsafe) static var hoveredControlIDs: Set<UInt32> = []
@@ -32,6 +34,8 @@ enum Win32ActionRegistry {
         pickerOptions.removeAll()
         pickerOptionControls.removeAll()
         slidersByHandle.removeAll()
+        staticTextColorsByHandle.removeAll()
+        staticBackgroundBrushesByHandle.removeAll()
         controlFramesByHandle.removeAll()
         originalControlProceduresByHandle.removeAll()
         hoveredControlIDs.removeAll()

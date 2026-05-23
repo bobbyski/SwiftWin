@@ -18,7 +18,7 @@ func swiftWinLegacyWindowProc(
     case WM_SIZE:
         return handleWindowSize(hwnd: hwnd)
     case WM_CTLCOLORSTATIC:
-        return handleStaticColor(wParam: wParam)
+        return handleStaticColor(wParam: wParam, lParam: lParam)
     case WM_DRAWITEM:
         return handleDrawItem(lParam: lParam)
     case WM_DESTROY:
@@ -89,10 +89,33 @@ private func handleHorizontalScroll(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
 }
 
 /// Provides text colors for static controls.
-private func handleStaticColor(wParam: WPARAM) -> LRESULT {
+private func handleStaticColor(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
+    if let brush = staticBackgroundBrush(for: lParam) {
+        return LRESULT(Int(bitPattern: brush))
+    }
+
+    let color = staticTextColor(for: lParam)
     _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
-    _ = SetTextColor(HDC(bitPattern: wParam), 0x00271811)
+    _ = SetTextColor(HDC(bitPattern: wParam), color)
     return LRESULT(Int(bitPattern: Win32PaintResources.backgroundBrush))
+}
+
+/// Returns a custom brush for background-panel static controls.
+private func staticBackgroundBrush(for lParam: LPARAM) -> HBRUSH? {
+    guard let control = HWND(bitPattern: lParam) else {
+        return nil
+    }
+
+    return Win32ActionRegistry.staticBackgroundBrushesByHandle[UInt(bitPattern: control)]
+}
+
+/// Returns the requested text color for one static child HWND.
+private func staticTextColor(for lParam: LPARAM) -> DWORD {
+    guard let control = HWND(bitPattern: lParam) else {
+        return WinForegroundStyle.primary.win32Color
+    }
+
+    return Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] ?? WinForegroundStyle.primary.win32Color
 }
 
 /// Paints owner-drawn controls when Windows asks for them.

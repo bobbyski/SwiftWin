@@ -95,10 +95,20 @@ public protocol Renderer: AnyObject {
     func endFont()
     /// Resolves an explicit or inherited text style.
     func resolveTextStyle(_ style: TextStyle?) -> TextStyle
+    /// Begins a foreground style scope.
+    func beginForegroundStyle(_ style: ForegroundStyle)
+    /// Ends the current foreground style scope.
+    func endForegroundStyle()
+    /// Resolves inherited foreground style.
+    func resolveForegroundStyle() -> ForegroundStyle
+    /// Begins a background color scope.
+    func beginBackground(_ style: Color)
+    /// Ends the current background color scope.
+    func endBackground()
     /// Renders static text.
-    func text(_ value: String, style: TextStyle)
+    func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders text that can be re-evaluated after state changes.
-    func dynamicText(_ value: @escaping () -> String, style: TextStyle)
+    func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders a button and stores its action for native event dispatch.
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
@@ -118,8 +128,8 @@ public extension Renderer {
     func invalidate() {}
 
     /// Default dynamic text implementation for renderers without invalidation.
-    func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
-        text(value(), style: style)
+    func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle) {
+        text(value(), style: style, foregroundStyle: foregroundStyle)
     }
 
     /// Default font scope for renderers that do not track inherited text style.
@@ -132,6 +142,23 @@ public extension Renderer {
     func resolveTextStyle(_ style: TextStyle?) -> TextStyle {
         style ?? .body
     }
+
+    /// Default foreground style scope for renderers that do not track inherited colors.
+    func beginForegroundStyle(_ style: ForegroundStyle) {}
+
+    /// Ends a default foreground style scope.
+    func endForegroundStyle() {}
+
+    /// Resolves foreground style with `.primary` as the baseline.
+    func resolveForegroundStyle() -> ForegroundStyle {
+        .primary
+    }
+
+    /// Default background scope for renderers that do not paint backgrounds.
+    func beginBackground(_ style: Color) {}
+
+    /// Ends a default background scope.
+    func endBackground() {}
 }
 
 /// Axis for stack layout.

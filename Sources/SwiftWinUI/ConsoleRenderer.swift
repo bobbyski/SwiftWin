@@ -6,6 +6,7 @@
 public final class ConsoleRenderer: Renderer {
     private var indent = 0
     private var fontStack: [TextStyle] = []
+    private var foregroundStyleStack: [ForegroundStyle] = []
 
     /// Creates a console renderer.
     public init() {}
@@ -85,14 +86,45 @@ public final class ConsoleRenderer: Renderer {
         style ?? fontStack.last ?? .body
     }
 
+    /// Prints a foreground-style node.
+    public func beginForegroundStyle(_ style: ForegroundStyle) {
+        write("ForegroundStyle(red: \(style.red), green: \(style.green), blue: \(style.blue))")
+        foregroundStyleStack.append(style)
+        indent += 1
+    }
+
+    /// Ends the current foreground-style node.
+    public func endForegroundStyle() {
+        if !foregroundStyleStack.isEmpty {
+            foregroundStyleStack.removeLast()
+        }
+        indent -= 1
+    }
+
+    /// Resolves the current foreground style.
+    public func resolveForegroundStyle() -> ForegroundStyle {
+        foregroundStyleStack.last ?? .primary
+    }
+
+    /// Prints a background node.
+    public func beginBackground(_ style: Color) {
+        write("Background(\(foregroundDescription(style)))")
+        indent += 1
+    }
+
+    /// Ends the current background node.
+    public func endBackground() {
+        indent -= 1
+    }
+
     /// Prints a text node.
-    public func text(_ value: String, style: TextStyle) {
-        write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight))")
+    public func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle) {
+        write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight), foreground: \(foregroundDescription(foregroundStyle)))")
     }
 
     /// Prints dynamic text by evaluating its current value.
-    public func dynamicText(_ value: @escaping () -> String, style: TextStyle) {
-        text(value(), style: style)
+    public func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle) {
+        text(value(), style: style, foregroundStyle: foregroundStyle)
     }
 
     /// Prints a button node.
@@ -139,5 +171,10 @@ public final class ConsoleRenderer: Renderer {
         }
 
         return "\(value)"
+    }
+
+    /// Formats foreground colors deterministically for snapshots.
+    private func foregroundDescription(_ style: ForegroundStyle) -> String {
+        "rgb(\(style.red),\(style.green),\(style.blue))"
     }
 }

@@ -29,7 +29,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)` |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors |
 | `TextField` | Partial |
 | `Toggle` | Partial |
 | `List` | Not implemented |
@@ -112,6 +112,40 @@ This currently maps to SwiftWinUI's semantic `TextStyle` values. Explicit
 `Text(..., style:)` values override the inherited modifier. Custom font
 families, design variants, dynamic type, and weight composition are still
 planned compatibility work.
+
+## Foreground Style Modifier
+
+`.foregroundStyle(_:)` exists as an inherited semantic text-color modifier.
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.foregroundStyle(.secondary)
+```
+
+The current implementation supports `.primary`, `.secondary`, `.accent`, and
+`.destructive` foreground styles. It is intentionally much smaller than
+SwiftUI's full `ShapeStyle` system: gradients, materials, hierarchical styles,
+custom brushes, and non-text shape painting remain planned work.
+
+## Background Modifier
+
+`.background(_:)` exists for solid semantic colors.
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.padding(12)
+.background(Color(red: 239, green: 246, blue: 255))
+```
+
+This is not yet the full SwiftUI background system. Arbitrary background views,
+materials, alignment overloads, clipping, rounded corners, and exact paint-order
+semantics are still planned.
 
 ## Hover State
 

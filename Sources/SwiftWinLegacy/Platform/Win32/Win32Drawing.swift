@@ -1,4 +1,15 @@
 #if os(Windows)
+/// Converts SwiftWin semantic foreground color to Win32 `COLORREF`.
+///
+/// Implementation note:
+/// GDI color values are `COLORREF` in `0x00bbggrr` order, which looks odd if
+/// you are used to CSS/AppKit-style RGB notation.
+extension WinForegroundStyle {
+    var win32Color: DWORD {
+        DWORD(red) | (DWORD(green) << 8) | (DWORD(blue) << 16)
+    }
+}
+
 /// Paints an owner-drawn button.
 ///
 /// Implementation note:

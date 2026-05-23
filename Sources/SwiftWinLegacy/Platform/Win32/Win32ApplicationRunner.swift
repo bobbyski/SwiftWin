@@ -10,6 +10,7 @@ final class Win32ApplicationRunner {
     private var instance: HINSTANCE?
     private var window: HWND?
     private var layoutStack: [LayoutState] = []
+    private var backgroundStack: [BackgroundLayoutState] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
 
@@ -75,12 +76,16 @@ final class Win32ApplicationRunner {
             beginFrame(width: frame.width, height: frame.height)
             frame.children.forEach(render)
             endFrame(width: frame.width, height: frame.height)
+        case let background as WinBackground:
+            beginBackground(color: background.color)
+            background.children.forEach(render)
+            endBackground()
         case let disabled as WinDisabled:
             beginDisabled(disabled.isDisabled)
             disabled.children.forEach(render)
             endDisabled()
         case let text as WinText:
-            createText(text.value, style: text.style)
+            createText(text.value, style: text.style, foregroundStyle: text.foregroundStyle)
         case let text as WinDynamicText:
             createDynamicText(text)
         case let button as WinButton:
@@ -173,6 +178,27 @@ final class Win32ApplicationRunner {
         advance(width: int32(width) ?? size.width, height: int32(height) ?? size.height)
     }
 
+    /// Pushes a background panel layout context.
+    private func beginBackground(color: WinForegroundStyle) {
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        let panel = createBackgroundPanel(color: color, x: origin.x, y: origin.y)
+        backgroundStack.append(BackgroundLayoutState(control: panel, x: origin.x, y: origin.y))
+        layoutStack.append(origin)
+    }
+
+    /// Pops a background context, sizes the panel, and advances the parent.
+    private func endBackground() {
+        guard layoutStack.count > 1,
+              let child = layoutStack.popLast(),
+              let background = backgroundStack.popLast() else {
+            return
+        }
+
+        let size = consumedSize(of: child)
+        resizeBackgroundPanel(background, width: size.width, height: size.height)
+        advance(width: size.width, height: size.height)
+    }
+
     /// Pushes a disabled-state scope.
     private func beginDisabled(_ isDisabled: Bool) {
         let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
@@ -201,14 +227,19 @@ final class Win32ApplicationRunner {
 
     /// Creates a native static text control.
     @discardableResult
-    private func createText(_ value: String, style: WinTextStyle) -> HWND? {
+    private func createText(
+        _ value: String,
+        style: WinTextStyle,
+        foregroundStyle: WinForegroundStyle = .primary
+    ) -> HWND? {
         if let control = createControl(
             className: "STATIC",
             title: value,
             style: WS_CHILD | WS_VISIBLE | SS_LEFT,
             width: proposedWidth(defaultingTo: max(220, Int32(value.count * 9 + 32))),
             height: proposedHeight(defaultingTo: style.size >= 20 ? 36 : 26),
-            action: nil
+            action: nil,
+            textForegroundStyle: foregroundStyle
         ) {
             applyFont(style, to: control)
             return control
@@ -219,7 +250,7 @@ final class Win32ApplicationRunner {
 
     /// Creates a native static text control backed by a dynamic provider.
     private func createDynamicText(_ text: WinDynamicText) {
-        if let control = createText(text.value, style: text.style) {
+        if let control = createText(text.value, style: text.style, foregroundStyle: text.foregroundStyle) {
             let controlID = UInt16(GetDlgCtrlID(control))
             let state = DynamicTextRenderState(text: text, control: control)
             Win32ActionRegistry.dynamicTexts[controlID] = state
@@ -400,7 +431,8 @@ final class Win32ApplicationRunner {
         button: ButtonRenderState? = nil,
         textField: WinTextField? = nil,
         toggle: WinToggle? = nil,
-        pickerOption: PickerOptionState? = nil
+        pickerOption: PickerOptionState? = nil,
+        textForegroundStyle: WinForegroundStyle? = nil
     ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
             return nil
@@ -433,7 +465,8 @@ final class Win32ApplicationRunner {
                     button: button,
                     textField: textField,
                     toggle: toggle,
-                    pickerOption: pickerOption
+                    pickerOption: pickerOption,
+                    textForegroundStyle: textForegroundStyle
                 )
                 installHoverTrackingIfNeeded(
                     control: control,
@@ -469,6 +502,57 @@ final class Win32ApplicationRunner {
         Win32ActionRegistry.controlFramesByHandle[UInt(bitPattern: control)] = frame
     }
 
+    /// Creates a child static control that acts as a solid background panel.
+    ///
+    /// Implementation note:
+    /// The panel is created before its child controls, so later child HWNDs sit
+    /// above it in z-order. It is resized after the children reveal their
+    /// consumed layout size.
+    private func createBackgroundPanel(color: WinForegroundStyle, x: Int32, y: Int32) -> HWND? {
+        guard let window else {
+            return nil
+        }
+
+        let controlID = nextControlID
+        nextControlID += 1
+        return withWideString("STATIC") { controlClass in
+            withWideString("") { controlTitle in
+                let control = CreateWindowExW(
+                    0,
+                    controlClass,
+                    controlTitle,
+                    WS_CHILD | WS_VISIBLE,
+                    x,
+                    y,
+                    1,
+                    1,
+                    window,
+                    HMENU(bitPattern: Int(controlID)),
+                    instance,
+                    nil
+                )
+                if let control {
+                    let brush = CreateSolidBrush(color.win32Color)
+                    Win32ActionRegistry.staticBackgroundBrushesByHandle[UInt(bitPattern: control)] = brush
+                    registerControlFrame(control, x: x, y: y, width: 1, height: 1)
+                }
+                return control
+            }
+        }
+    }
+
+    /// Resizes a background panel after its child content has been placed.
+    private func resizeBackgroundPanel(_ background: BackgroundLayoutState, width: Int32, height: Int32) {
+        guard let control = background.control else {
+            return
+        }
+
+        let resolvedWidth = max(1, width)
+        let resolvedHeight = max(1, height)
+        _ = MoveWindow(control, background.x, background.y, resolvedWidth, resolvedHeight, 1)
+        registerControlFrame(control, x: background.x, y: background.y, width: resolvedWidth, height: resolvedHeight)
+    }
+
     /// Registers Swift state associated with a Win32 child control ID.
     private func registerControlState(
         controlID: UInt16,
@@ -477,7 +561,8 @@ final class Win32ApplicationRunner {
         button: ButtonRenderState?,
         textField: WinTextField?,
         toggle: WinToggle?,
-        pickerOption: PickerOptionState?
+        pickerOption: PickerOptionState?,
+        textForegroundStyle: WinForegroundStyle?
     ) {
         if let action {
             Win32ActionRegistry.actions[controlID] = action
@@ -495,6 +580,9 @@ final class Win32ApplicationRunner {
         if let pickerOption {
             Win32ActionRegistry.pickerOptions[controlID] = pickerOption
             Win32ActionRegistry.pickerOptionControls[controlID] = control
+        }
+        if let textForegroundStyle, let control {
+            Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] = textForegroundStyle.win32Color
         }
     }
 
@@ -664,6 +752,13 @@ final class Win32ApplicationRunner {
 private struct LayoutSize {
     var width: Int32
     var height: Int32
+}
+
+/// Native background panel waiting for its final child-driven size.
+private struct BackgroundLayoutState {
+    var control: HWND?
+    var x: Int32
+    var y: Int32
 }
 
 /// Current direct-placement layout context.

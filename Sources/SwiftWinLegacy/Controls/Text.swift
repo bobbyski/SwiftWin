@@ -4,11 +4,14 @@ public final class WinText: WinTextDisplaying {
     public var value: String
     /// Text style used by the native runtime.
     public var style: WinTextStyle
+    /// Foreground color used when the backend can customize text paint.
+    public var foregroundStyle: WinForegroundStyle
 
     /// Creates text.
-    public init(_ value: String, style: WinTextStyle = .body) {
+    public init(_ value: String, style: WinTextStyle = .body, foregroundStyle: WinForegroundStyle = .primary) {
         self.value = value
         self.style = style
+        self.foregroundStyle = foregroundStyle
     }
 }
 
@@ -25,13 +28,20 @@ public final class WinDynamicText: WinElement {
 
     /// Text style used by the native runtime.
     public var style: WinTextStyle
+    /// Foreground color used when the backend can customize text paint.
+    public var foregroundStyle: WinForegroundStyle
 
     private let provider: () -> String
 
     /// Creates dynamic text.
-    public init(_ provider: @escaping () -> String, style: WinTextStyle = .body) {
+    public init(
+        _ provider: @escaping () -> String,
+        style: WinTextStyle = .body,
+        foregroundStyle: WinForegroundStyle = .primary
+    ) {
         self.provider = provider
         self.style = style
+        self.foregroundStyle = foregroundStyle
     }
 }
 
@@ -64,4 +74,34 @@ public enum WinFontWeight: Sendable, Hashable {
     case semibold
     /// Strong emphasis.
     case bold
+}
+
+/// Semantic foreground colors shared by traditional and declarative text.
+///
+/// Windows note:
+/// GDI's `COLORREF` stores colors as `0x00bbggrr`, so conversion happens in
+/// the Win32 platform layer rather than leaking that representation here.
+public struct WinForegroundStyle: Sendable, Hashable {
+    /// Red channel.
+    public var red: UInt8
+    /// Green channel.
+    public var green: UInt8
+    /// Blue channel.
+    public var blue: UInt8
+
+    /// Main text color.
+    public static let primary = WinForegroundStyle(red: 17, green: 24, blue: 39)
+    /// Secondary text color.
+    public static let secondary = WinForegroundStyle(red: 83, green: 91, blue: 107)
+    /// Accent color used for important labels.
+    public static let accent = WinForegroundStyle(red: 37, green: 99, blue: 235)
+    /// Destructive/error color.
+    public static let destructive = WinForegroundStyle(red: 185, green: 28, blue: 28)
+
+    /// Creates a foreground style from RGB channels.
+    public init(red: UInt8, green: UInt8, blue: UInt8) {
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
 }
