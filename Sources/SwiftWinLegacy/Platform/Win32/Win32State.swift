@@ -14,6 +14,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
     nonisolated(unsafe) static var progressViews: [UInt: ProgressRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
+    nonisolated(unsafe) static var secureFields: [UInt16: WinSecureField] = [:]
     nonisolated(unsafe) static var textEditors: [UInt16: WinTextEditor] = [:]
     nonisolated(unsafe) static var toggles: [UInt16: WinToggle] = [:]
     nonisolated(unsafe) static var toggleControls: [UInt16: HWND] = [:]
@@ -40,6 +41,7 @@ enum Win32ActionRegistry {
         dynamicTexts.removeAll()
         progressViews.removeAll()
         textFields.removeAll()
+        secureFields.removeAll()
         textEditors.removeAll()
         toggles.removeAll()
         toggleControls.removeAll()
@@ -105,6 +107,14 @@ public enum WinControlInvalidation {
         #endif
     }
 
+    /// Refreshes a secure field from its current Swift value.
+    public static func refresh(_ secureField: WinSecureField) {
+        #if os(Windows)
+        refreshNativePeer(secureField)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
     /// Refreshes a text editor from its current Swift value.
     public static func refresh(_ textEditor: WinTextEditor) {
         #if os(Windows)
@@ -151,6 +161,8 @@ private func refreshNativePeer(_ control: WinRefreshableControl) {
     switch control {
     case let textField as WinTextField:
         refreshTextField(textField)
+    case let secureField as WinSecureField:
+        refreshSecureField(secureField)
     case let textEditor as WinTextEditor:
         refreshTextEditor(textEditor)
     case let toggle as WinToggle:
@@ -174,11 +186,39 @@ private func refreshNativePeer(_ control: WinRefreshableControl) {
 /// still direct-placement and identity-light.
 private func refreshProviderBackedControls() {
     refreshTextFields()
+    refreshSecureFields()
     refreshTextEditors()
     refreshToggles()
     refreshPickers()
     refreshSliders()
     refreshSteppers()
+}
+
+/// Mirrors provider-backed secure fields into their native edit controls.
+private func refreshSecureFields() {
+    for (controlID, secureField) in Win32ActionRegistry.secureFields {
+        guard let value = secureField.textProvider?(),
+              value != secureField.value,
+              let control = control(withID: controlID) else {
+            continue
+        }
+
+        secureField.value = value
+        withWideString(value) { text in
+            _ = SetWindowTextW(control, text)
+        }
+    }
+}
+
+/// Mirrors one secure field object into its active native edit control.
+private func refreshSecureField(_ secureField: WinSecureField) {
+    guard let control = secureFieldControl(for: secureField) else {
+        return
+    }
+
+    withWideString(secureField.value) { text in
+        _ = SetWindowTextW(control, text)
+    }
 }
 
 /// Mirrors provider-backed text editors into their native edit controls.
@@ -342,6 +382,15 @@ private func refreshStepper(_ stepper: WinStepper) {
 /// Returns the native edit control registered for one text field.
 private func textFieldControl(for textField: WinTextField) -> HWND? {
     guard let entry = Win32ActionRegistry.textFields.first(where: { $0.value === textField }) else {
+        return nil
+    }
+
+    return control(withID: entry.key)
+}
+
+/// Returns the native edit control registered for one secure field.
+private func secureFieldControl(for secureField: WinSecureField) -> HWND? {
+    guard let entry = Win32ActionRegistry.secureFields.first(where: { $0.value === secureField }) else {
         return nil
     }
 

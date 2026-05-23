@@ -123,6 +123,8 @@ public protocol Renderer: AnyObject {
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
     func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
+    /// Renders a password-style single-line editable text field.
+    func secureField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
     /// Renders a multi-line editable text area.
     func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
     /// Renders a boolean toggle.
@@ -211,6 +213,9 @@ public extension Renderer {
 
     /// Default text editor for renderers without multi-line editing support.
     func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {}
+
+    /// Default secure field for renderers without password editing support.
+    func secureField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {}
 
     /// Default stepper for renderers without stepper support.
     func stepper(

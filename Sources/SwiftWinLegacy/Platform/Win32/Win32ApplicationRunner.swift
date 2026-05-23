@@ -106,6 +106,8 @@ final class Win32ApplicationRunner {
             createButton(button.title, style: button.style, action: button.action)
         case let textField as WinTextField:
             createTextField(textField)
+        case let secureField as WinSecureField:
+            createSecureField(secureField)
         case let textEditor as WinTextEditor:
             createTextEditor(textEditor)
         case let toggle as WinToggle:
@@ -367,6 +369,27 @@ final class Win32ApplicationRunner {
             height: proposedHeight(defaultingTo: 32),
             action: nil,
             textField: field
+        ) {
+            applyFont(.body, to: control)
+            setPlaceholder(field.prompt, for: control)
+        }
+    }
+
+    /// Creates a native password-style edit control.
+    ///
+    /// Windows note:
+    /// `ES_PASSWORD` masks glyphs in the Win32 `EDIT` control. It does not
+    /// magically secure the Swift-side string, clipboard policy, or process
+    /// memory; higher-level credential APIs remain future work.
+    private func createSecureField(_ field: WinSecureField) {
+        if let control = createControl(
+            className: "EDIT",
+            title: field.value,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL | ES_PASSWORD,
+            width: proposedWidth(defaultingTo: 280),
+            height: proposedHeight(defaultingTo: 32),
+            action: nil,
+            secureField: field
         ) {
             applyFont(.body, to: control)
             setPlaceholder(field.prompt, for: control)
@@ -697,6 +720,7 @@ final class Win32ApplicationRunner {
         action: (() -> Void)?,
         button: ButtonRenderState? = nil,
         textField: WinTextField? = nil,
+        secureField: WinSecureField? = nil,
         textEditor: WinTextEditor? = nil,
         toggle: WinToggle? = nil,
         pickerOption: PickerOptionState? = nil,
@@ -732,6 +756,7 @@ final class Win32ApplicationRunner {
                     action: action,
                     button: button,
                     textField: textField,
+                    secureField: secureField,
                     textEditor: textEditor,
                     toggle: toggle,
                     pickerOption: pickerOption,
@@ -874,6 +899,7 @@ final class Win32ApplicationRunner {
         action: (() -> Void)?,
         button: ButtonRenderState?,
         textField: WinTextField?,
+        secureField: WinSecureField?,
         textEditor: WinTextEditor?,
         toggle: WinToggle?,
         pickerOption: PickerOptionState?,
@@ -887,6 +913,9 @@ final class Win32ApplicationRunner {
         }
         if let textField {
             Win32ActionRegistry.textFields[controlID] = textField
+        }
+        if let secureField {
+            Win32ActionRegistry.secureFields[controlID] = secureField
         }
         if let textEditor {
             Win32ActionRegistry.textEditors[controlID] = textEditor

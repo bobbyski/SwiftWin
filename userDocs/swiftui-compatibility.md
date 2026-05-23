@@ -32,6 +32,8 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Environment` | Not implemented |
 | Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | `TextField` | Partial |
+| `SecureField` | Partial |
+| `TextEditor` | Partial |
 | `Toggle` | Partial |
 | `Picker` | Partial |
 | `Slider` | Partial |
@@ -50,6 +52,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 @State private var scale = 50
 
 TextField("Project name", text: $projectName)
+SecureField("Access code", text: $accessCode)
 Slider("Scale", value: $scale, range: 0...100)
 ```
 

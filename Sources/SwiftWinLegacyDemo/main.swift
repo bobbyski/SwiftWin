@@ -17,6 +17,7 @@ root.add(WinSeparator(axis: .horizontal))
 
 let projectName = WinTextField("Project name", text: "SwiftWin")
 let notes = WinTextEditor("Notes", text: "Milestone 2 notes:\nText editing is now multi-line.")
+let accessCode = WinSecureField("Access code", text: "swift")
 let content = WinStack(axis: .vertical, spacing: 14)
 
 let projectFrame = WinFrame(width: 380, height: nil)
@@ -33,6 +34,10 @@ let notesFrame = WinFrame(width: 380, height: 96)
 notesFrame.add(notes)
 content.add(notesFrame)
 content.add(WinDynamicText({ "Notes: \(notes.value.count) characters" }, style: .caption))
+let accessCodeFrame = WinFrame(width: 380, height: nil)
+accessCodeFrame.add(accessCode)
+content.add(accessCodeFrame)
+content.add(WinDynamicText({ "Access code: \(accessCode.value.isEmpty ? "missing" : "set")" }, style: .caption))
 
 let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
 content.add(includeDiagnostics)
@@ -73,6 +78,7 @@ footer.add(WinButton("Create Window", style: .primary) {
         Scale: \(scale.value)
         Quantity: \(quantity.value)
         Notes: \(notes.value)
+        Access code: \(accessCode.value.isEmpty ? "missing" : "set")
         """
     )
 })
@@ -91,7 +97,8 @@ footer.add(WinButton("Reset") {
         theme: theme,
         scale: scale,
         quantity: quantity,
-        notes: notes
+        notes: notes,
+        accessCode: accessCode
     )
 })
 let disabledButton = WinDisabled(isDisabled: true)
@@ -141,7 +148,8 @@ private func resetForm(
     theme: WinPicker,
     scale: WinSlider,
     quantity: WinStepper,
-    notes: WinTextEditor
+    notes: WinTextEditor,
+    accessCode: WinSecureField
 ) {
     projectName.value = "SwiftWin"
     includeDiagnostics.isOn = true
@@ -149,10 +157,12 @@ private func resetForm(
     scale.value = 50
     quantity.value = 2
     notes.value = "Milestone 2 notes:\nText editing is now multi-line."
+    accessCode.value = "swift"
 
     WinControlInvalidation.refresh([
         projectName,
         notes,
+        accessCode,
         includeDiagnostics,
         theme,
         scale,

@@ -58,6 +58,9 @@ private func handleCommand(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
         if updateTextField(controlID: controlID, control: control) {
             return 0
         }
+        if updateSecureField(controlID: controlID, control: control) {
+            return 0
+        }
         updateTextEditor(controlID: controlID, control: control)
         return 0
     }
@@ -242,6 +245,23 @@ private func updateTextField(controlID: UInt16, control: HWND) -> Bool {
 
     textField.value = value
     textField.onChange?(value)
+    WinDynamicTextInvalidation.invalidateAll()
+    return true
+}
+
+/// Copies native edit-control text into the matching `WinSecureField`.
+private func updateSecureField(controlID: UInt16, control: HWND) -> Bool {
+    guard let secureField = Win32ActionRegistry.secureFields[controlID] else {
+        return false
+    }
+
+    let value = text(from: control)
+    guard value != secureField.value else {
+        return true
+    }
+
+    secureField.value = value
+    secureField.onChange?(value)
     WinDynamicTextInvalidation.invalidateAll()
     return true
 }

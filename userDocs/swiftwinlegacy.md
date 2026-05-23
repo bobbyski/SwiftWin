@@ -20,6 +20,7 @@ Implemented:
 - `WinStack`
 - `WinText`
 - `WinTextField`
+- `WinSecureField`
 - `WinTextEditor`
 - `WinToggle`
 - `WinPicker`
@@ -53,6 +54,8 @@ root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 let projectName = WinTextField("Project name", text: "SwiftWin")
 root.add(projectName)
+let accessCode = WinSecureField("Access code", text: "")
+root.add(accessCode)
 let notes = WinTextEditor("Notes", text: "Milestone notes")
 root.add(notes)
 let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
@@ -97,6 +100,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 
 - `Text` -> `WinText`
 - `TextField` -> `WinTextField`
+- `SecureField` -> `WinSecureField`
 - `TextEditor` -> `WinTextEditor`
 - `Toggle` -> `WinToggle`
 - `Picker` -> `WinPicker`
@@ -132,6 +136,7 @@ dynamic text and progress views update once:
 ```swift
 WinControlInvalidation.refresh([
     projectName,
+    accessCode,
     notes,
     includeDiagnostics,
     theme,
@@ -140,6 +145,7 @@ WinControlInvalidation.refresh([
 ])
 ```
 
-Current refreshable controls are `WinTextField`, `WinTextEditor`, `WinToggle`,
-`WinPicker`, `WinSlider`, and `WinStepper`. User-driven edits refresh
-dependent dynamic text automatically through the Win32 event path.
+Current refreshable controls are `WinTextField`, `WinSecureField`,
+`WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, and `WinStepper`.
+User-driven edits refresh dependent dynamic text automatically through the
+Win32 event path.

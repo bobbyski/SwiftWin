@@ -124,6 +124,30 @@ TextField("Project name", text: $projectName)
 
 Current implementation: native edits update the bound value. Full automatic view rerendering is still planned.
 
+## SecureField
+
+`SecureField` renders a password-style single-line editable text control.
+
+```swift
+@State private var accessCode = ""
+
+SecureField("Access code", text: $accessCode)
+    .frame(width: 380)
+Text("Access code: \(accessCode.isEmpty ? "missing" : "set")", style: .caption)
+```
+
+The traditional API exposes the same concept as `WinSecureField`:
+
+```swift
+let accessCode = WinSecureField("Access code", text: "")
+```
+
+Current implementation: the Win32 backend uses an `EDIT` control with
+`ES_PASSWORD`, so typed characters are masked by Windows. The value still
+exists as a normal Swift string in the app process. Console renderers redact the
+value by default, but reveal controls, submit handling, clipboard policy, and
+stronger credential-management helpers remain future work.
+
 ## TextEditor
 
 `TextEditor` renders a multi-line editable text area.
@@ -285,10 +309,10 @@ struct DemoContent: View {
 }
 ```
 
-Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, text editors, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
+Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, secure fields, text editors, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
 
 Dynamic `Text` values also refresh through the current invalidation hook. The
-Win32 backend refreshes these labels after `TextField`, `TextEditor`, `Toggle`, `Picker`,
+Win32 backend refreshes these labels after `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`,
 `Slider`, and `Stepper` changes, which is enough for current live previews and
 simple inline validation:
 
@@ -465,4 +489,4 @@ The traditional layer now exposes focused protocols for extension points:
 - `WinActionControl`
 - `WinButtonDisplaying`
 
-These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, `WinTextField`, `WinTextEditor`, and `WinButton` implementations.
+These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, and `WinButton` implementations.

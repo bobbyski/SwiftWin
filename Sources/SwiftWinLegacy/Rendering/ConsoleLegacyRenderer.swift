@@ -45,6 +45,8 @@ final class ConsoleLegacyRenderer {
             write("WinButton(\"\(button.title)\", style: \(button.style))")
         case let textField as WinTextField:
             write("WinTextField(prompt: \"\(textField.prompt)\", value: \"\(textField.value)\")")
+        case let secureField as WinSecureField:
+            write("WinSecureField(prompt: \"\(secureField.prompt)\", value: \"<redacted>\")")
         case let textEditor as WinTextEditor:
             write("WinTextEditor(prompt: \"\(textEditor.prompt)\", value: \"\(textEditor.value)\")")
         case let toggle as WinToggle:

@@ -174,6 +174,11 @@ public final class ConsoleRenderer: Renderer {
         write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")
     }
 
+    /// Emits a diagnostic representation of a secure field.
+    public func secureField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
+        write("SecureField(prompt: \"\(prompt)\", text: \"<redacted>\")")
+    }
+
     /// Emits a diagnostic representation of a multi-line editor.
     public func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
         write("TextEditor(prompt: \"\(prompt)\", text: \"\(text)\")")

@@ -212,6 +212,11 @@ public final class Win32Renderer: Renderer {
         add(WinTextField(prompt, text: text, onChange: onChange, textProvider: textProvider))
     }
 
+    /// Adapts SwiftWinUI secure fields to `WinSecureField`.
+    public func secureField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
+        add(WinSecureField(prompt, text: text, onChange: onChange, textProvider: textProvider))
+    }
+
     /// Adapts SwiftWinUI text editors to `WinTextEditor`.
     public func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
         add(WinTextEditor(prompt, text: text, onChange: onChange, textProvider: textProvider))
