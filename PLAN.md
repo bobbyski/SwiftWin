@@ -1,14 +1,22 @@
 # SwiftWinUI Framework Implementation Plan
 
+## Working On Milestone 2: Usable Mini Framework
+
+Milestone ladder progress: [##-----] 2 of 7 milestones active
+
+Current milestone progress: [#######---] 70%
+
 ## Summary
 
 This plan covers the work needed to grow the current experimental SwiftWinUI package from a focused SwiftPM prototype into a broader Windows UI family with two public layers: Phase I, a SwiftUI-compatible declarative framework, and Phase II, a traditional non-declarative Swift framework that can be used directly or serve as the imperative engine underneath the declarative layer.
 
 The strategic goal is maximum practical SwiftUI compatibility. SwiftWinUI should strive for source-level compatibility with common SwiftUI app code, even though 100% compatibility may not be achievable on Windows. Public API decisions should prefer SwiftUI naming, modifier shape, result-builder behavior, state concepts, layout semantics, and view composition patterns wherever practical. Platform-specific differences should be pushed behind renderer internals or documented as explicit compatibility gaps.
 
+Product rule: goal one is that Swift code written with Apple-platform instincts should feel like it works on Windows without constant platform trivia. Goal two is that controls should be polished by default. When Win32 has low-level behavior such as clipped static text, manual scrolling, or owner-draw state gaps, the SDK should capture that knowledge in shared backend metrics, controls, or layout primitives rather than forcing each app or demo to patch around it.
+
 The core engineering style is small-function, protocol-oriented Swift. Public behavior should be captured in focused protocols wherever that improves type safety, interoperability, testability, or future custom implementations. Concrete classes should be default implementations of those contracts, and large implementation areas should be split before they become difficult to reason about.
 
-Overall planned-code progress: [####------] 44%
+Overall planned-code progress: [####------] 45%
 
 The implemented base already includes the SwiftPM framework, demo executable, `App` and `WindowGroup` entry point, declarative `View` protocol, `ViewBuilder`, `Text`, `Button`, `Spacer`, `VStack`, `HStack`, text styles, inherited font and foreground style modifiers, button styles, a renderer protocol boundary, a diagnostic console renderer, a native Win32 renderer, real HWND window creation, native text controls, owner-drawn buttons, button command routing, native message boxes through `Dialog.show`, basic stack positioning, Windows linker settings, protocol extension points in `SwiftWinLegacy`, and GitHub-style README documentation. The next architectural steps are to separate layout measurement from rendering, add SwiftUI-compatible state and invalidation, expand the SwiftUI control and modifier catalog in tested batches, make renderer resources safer and more reusable, and split the traditional runtime into smaller protocol-backed components.
 
@@ -23,11 +31,11 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
 | 5: SwiftUI Control Coverage | In Progress | 54% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, integer stepping, determinate progress, and separators exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
-| 6: Layout Engine | In Progress | 25% | stack positioning, spacing, padding, fixed frame hints, basic child advancement | Current layout is direct placement with early modifier containers. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
+| 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
-| 8: SwiftUI State And Invalidation | In Progress | 42% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
+| 8: SwiftUI State And Invalidation | In Progress | 45% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
-| 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, screenshots, and sample apps. |
+| 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
 | 11: Phase II Traditional Swift Framework | In Progress | 23% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 35% | focused protocols, small functions, separable runtime/layout/platform pieces | `SwiftWinUI` controls and `SwiftWinLegacy` core/control/platform files are now split by responsibility. |
@@ -99,6 +107,16 @@ Status: In Progress
 - Wrap Phase II internally from Phase I so both frameworks evolve together.
 - Keep shared renderer/runtime/platform code in one place to avoid divergent behavior.
 
+### Milestone 7: Cleanup And Documentation Polish
+
+Status: Planned
+
+- Capture final screenshots for README and user documentation after the default UI polish is representative.
+- Refresh README images after major visual styling changes settle.
+- Audit user docs for stale implementation notes.
+- Tighten examples, file links, and platform caveats before broader sharing.
+- Confirm all demo screenshots show current SwiftWinLegacy and SwiftWinUI behavior.
+
 ## Demo Application Checklist
 
 This checklist turns framework progress into increasingly complex applications that can be run, inspected, and used as viability tests. Each demo should exist in both forms when practical: a `SwiftWinLegacy` version that proves the imperative layer, and a `SwiftWinUI` version that proves the declarative wrapper.
@@ -113,7 +131,6 @@ Goal: prove that Swift can create and run a native Windows desktop process with 
 - [x] Route button actions to Swift closures.
 - [x] Show native message dialogs.
 - [x] Provide both `SwiftWinUIDemo` and `SwiftWinLegacyDemo`.
-- [ ] Add screenshots to the README and user documentation.
 
 Demoable app: a simple welcome window with two buttons and a status/caption line.
 
@@ -127,7 +144,7 @@ Goal: prove that basic desktop form workflows are viable.
 - [x] Add `Slider` or numeric entry.
 - [x] Add `@State` and `Binding`-style data flow in `SwiftWinUI`.
 - [x] Add imperative value change callbacks in `SwiftWinLegacy`.
-- [ ] Validate input and show inline error text.
+- [x] Validate input and show inline error text.
 - [x] Update simple dependent text without recreating the whole native window.
 - [ ] Update arbitrary controls/layout without recreating the whole native window.
 
@@ -196,6 +213,19 @@ Goal: prove that SwiftWinUI and SwiftWinLegacy are credible foundations for real
 - [ ] Package build/run instructions so another developer can clone and evaluate the app.
 
 Candidate real app: a Swift package workbench for Windows that can open a SwiftPM package, show package targets/files, edit notes or markdown documentation, run configured build commands, display logs, and show embedded WebView documentation/previews. This would test whether the framework can support a practical developer tool rather than only a UI toy.
+
+### Milestone 7 Demo: Cleanup Documentation Pass
+
+Goal: make the public project documentation match the implemented framework after the viability demos prove the platform direction.
+
+- [ ] Capture clean screenshots of `SwiftWinUIDemo`.
+- [ ] Capture clean screenshots of `SwiftWinLegacyDemo`.
+- [ ] Add screenshots to README and user documentation.
+- [ ] Verify screenshots show the current default polished controls.
+- [ ] Remove or archive obsolete screenshots after major visual changes.
+- [ ] Re-read docs as a first-time Windows Swift developer and fix confusing gaps.
+
+Demoable output: a documentation-ready repository with current screenshots, tested build/run snippets, and user docs that reflect the actual SDK behavior.
 
 ## Phase Details
 
@@ -362,6 +392,7 @@ Implemented:
 - Spacing support.
 - Uniform padding modifier.
 - Fixed width/height frame proposal.
+- Prototype window-level mouse-wheel scrolling by moving child `HWND` controls and forcing a full redraw.
 
 Remaining:
 
@@ -373,7 +404,7 @@ Remaining:
 - Minimum and maximum sizes.
 - DPI scaling.
 - Resize invalidation.
-- Scrollable regions.
+- Real `ScrollView` / `WinScrollView` with clipping, scrollbars, nested content, and targeted repainting.
 
 ### 7: Styling And Theming
 
@@ -485,7 +516,6 @@ Implemented:
 
 Remaining:
 
-- Add screenshots.
 - Add API reference.
 - Add a small gallery app.
 - Add Windows-for-Apple-developers notes whenever a Windows concept differs from AppKit, UIKit, SwiftUI, or `WKWebView` expectations.
@@ -583,7 +613,7 @@ app.run(window)
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
-| Forms | Partial | `TextField`, `Toggle`, `Picker`, and `Slider` exist with callback and binding changes. No validation yet |
+| Forms | Partial | `TextField`, `Toggle`, `Picker`, and `Slider` exist with callback and binding changes. Inline validation works in the demo, but there is no reusable validation API yet |
 | WebView | None | No WebView2 hosting, navigation API, JavaScript bridge, local asset loading, or WebAssembly sample |
 | Lists | None | No table/list view, diffing, selection, or virtualization |
 | Images | None | No bitmap loading, scaling, or icon rendering |
@@ -601,4 +631,3 @@ app.run(window)
 5. Prototype `WebView` / `WinWebView` with WebView2.
 6. Add a WebAssembly sample page loaded inside WebView2.
 7. Add console snapshot verification.
-8. Add screenshots to the README.

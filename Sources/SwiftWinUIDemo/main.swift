@@ -12,48 +12,34 @@ struct DemoContent: View {
         ["System", "Light", "Dark"][themeIndex]
     }
 
+    /// Inline project-name validation used by the form demo.
+    private var projectNameValidationMessage: String {
+        let meaningfulCharacters = projectNameMeaningfulCharacterCount(projectName)
+        if meaningfulCharacters == 0 {
+            return "Project name is required."
+        }
+        if meaningfulCharacters < 3 {
+            return "Project name needs at least 3 characters."
+        }
+        return ""
+    }
+
+    /// Counts non-whitespace characters for lightweight validation.
+    private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
+        value.filter { !$0.isWhitespace }.count
+    }
+
     /// Rebuildable view body using local declarations like SwiftUI.
     @ViewBuilder
     var body: some View {
         let themes = ["System", "Light", "Dark"]
 
         VStack(spacing: 14) {
-            Text("SwiftWinUI", style: .title)
-                .foregroundStyle(.accent)
-            Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-            TextField("Project name", text: $projectName)
-                .frame(width: 340)
-            Toggle("Include diagnostics", isOn: $includeDiagnostics)
-            Picker("Theme", options: themes, selectedIndex: $themeIndex)
-            Slider("Scale", value: $scale, range: 0...100)
-                .frame(width: 340)
-            Text("Live scale preview: \(scale)", style: .caption)
-            ProgressView("Scale progress", value: scale, total: 100)
-                .frame(width: 340)
-            Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
-            Text("Quantity preview: \(quantity)", style: .caption)
+            header
             Divider()
-            HStack(spacing: 10) {
-                Button("Create Window", style: .primary) {
-                    // Use a native dialog rather than `print` so the action
-                    // is visible when launched as a GUI app.
-                    Dialog.show(
-                        title: "Create Window",
-                        message: formSummary(themeName: themes[themeIndex])
-                    )
-                }
-                Button("Settings") {
-                    Dialog.show(
-                        title: "Settings",
-                        message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
-                    )
-                }
-                Button("Disabled") {}
-                    .disabled()
-            }
-            Spacer()
+            content(themes: themes)
+            Divider()
+            footer(themes: themes)
             Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)
                 .foregroundStyle(.secondary)
         }
@@ -61,6 +47,66 @@ struct DemoContent: View {
         .background(Color(red: 239, green: 246, blue: 255))
         .border(Color(red: 191, green: 219, blue: 254), width: 1)
         .cornerRadius(10)
+    }
+
+    /// Header area for the demo window.
+    @ViewBuilder
+    private var header: some View {
+        VStack(spacing: 6) {
+            Text("SwiftWinUI", style: .title)
+                .foregroundStyle(.accent)
+            Text("A Swift-first framework for Windows desktop apps that can finally open real windows.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Center content area with enough rows to exercise wheel scrolling.
+    @ViewBuilder
+    private func content(themes: [String]) -> some View {
+        VStack(spacing: 14) {
+            TextField("Project name", text: $projectName)
+                .frame(width: 380)
+            Text(projectNameValidationMessage, style: .caption)
+                .foregroundStyle(.destructive)
+            Toggle("Include diagnostics", isOn: $includeDiagnostics)
+            Picker("Theme", options: themes, selectedIndex: $themeIndex)
+            Slider("Scale", value: $scale, range: 0...100)
+                .frame(width: 380)
+            Text("Live scale preview: \(scale)", style: .caption)
+            ProgressView("Scale progress", value: scale, total: 100)
+                .frame(width: 380)
+            Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
+            Text("Quantity preview: \(quantity)", style: .caption)
+            Text("Theme preview: \(themes[themeIndex])", style: .caption)
+            Text("Diagnostics: \(includeDiagnostics ? "enabled" : "disabled")", style: .caption)
+            Text("Project summary: \(projectName)", style: .caption)
+            Text("Renderer path: SwiftWinUI -> SwiftWinLegacy -> Win32", style: .caption)
+            Spacer()
+        }
+    }
+
+    /// Footer area for command buttons.
+    @ViewBuilder
+    private func footer(themes: [String]) -> some View {
+        HStack(spacing: 10) {
+            Button("Create Window", style: .primary) {
+                // Use a native dialog rather than `print` so the action
+                // is visible when launched as a GUI app.
+                Dialog.show(
+                    title: "Create Window",
+                    message: formSummary(themeName: themes[themeIndex])
+                )
+            }
+            Button("Settings") {
+                Dialog.show(
+                    title: "Settings",
+                    message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
+                )
+            }
+            Button("Disabled") {}
+                .disabled()
+        }
     }
 
     /// Builds the current form summary for button actions.

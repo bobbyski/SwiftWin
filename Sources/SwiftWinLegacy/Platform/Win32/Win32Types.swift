@@ -20,6 +20,7 @@ typealias HFONT = UnsafeMutableRawPointer
 typealias HDC = UnsafeMutableRawPointer
 typealias HGDIOBJ = UnsafeMutableRawPointer
 typealias HPEN = UnsafeMutableRawPointer
+typealias HRGN = UnsafeMutableRawPointer
 typealias HANDLE = UnsafeMutableRawPointer
 typealias HMENU = UnsafeMutableRawPointer
 typealias WNDPROC = @convention(c) (HWND?, UINT, WPARAM, LPARAM) -> LRESULT
@@ -151,6 +152,10 @@ let MB_ICONINFORMATION: UINT = 0x00000040
 let GWLP_WNDPROC: Int32 = -4
 let TME_LEAVE: DWORD = 0x00000002
 let HOVER_DEFAULT: DWORD = 0xffffffff
+let RDW_INVALIDATE: UINT = 0x0001
+let RDW_ERASE: UINT = 0x0004
+let RDW_ALLCHILDREN: UINT = 0x0080
+let RDW_UPDATENOW: UINT = 0x0100
 
 /// Provides a temporary null-terminated UTF-16 pointer for Win32 APIs.
 func withWideString<Result>(_ value: String, _ body: (UnsafePointer<UInt16>) -> Result) -> Result {
@@ -186,6 +191,8 @@ func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
 func UpdateWindow(_ window: HWND) -> BOOL
 @_silgen_name("InvalidateRect")
 func InvalidateRect(_ window: HWND?, _ rect: UnsafePointer<RECT>?, _ erase: BOOL) -> BOOL
+@_silgen_name("RedrawWindow")
+func RedrawWindow(_ window: HWND?, _ updateRect: UnsafePointer<RECT>?, _ updateRegion: HRGN?, _ flags: UINT) -> BOOL
 @_silgen_name("EnableWindow")
 func EnableWindow(_ window: HWND?, _ enable: BOOL) -> BOOL
 @_silgen_name("MoveWindow")

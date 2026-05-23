@@ -90,14 +90,15 @@ private func handleHorizontalScroll(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
 
 /// Provides text colors for static controls.
 private func handleStaticColor(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
+    _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
+
     if let brush = staticBackgroundBrush(for: lParam) {
         return LRESULT(Int(bitPattern: brush))
     }
 
     let color = staticTextColor(for: lParam)
-    _ = SetBkMode(HDC(bitPattern: wParam), TRANSPARENT)
     _ = SetTextColor(HDC(bitPattern: wParam), color)
-    return LRESULT(Int(bitPattern: Win32PaintResources.backgroundBrush))
+    return LRESULT(Int(bitPattern: staticTextBackgroundBrush()))
 }
 
 /// Returns a custom brush for background-panel static controls.
@@ -118,6 +119,17 @@ private func staticTextColor(for lParam: LPARAM) -> DWORD {
     return Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] ?? WinForegroundStyle.primary.win32Color
 }
 
+/// Returns the default brush for label backgrounds.
+///
+/// Windows note:
+/// `SetBkMode(..., TRANSPARENT)` only affects how GDI draws the glyph
+/// background. `WM_CTLCOLORSTATIC` still asks for a brush to paint the control
+/// rectangle, so normal labels must return `NULL_BRUSH` to stay visually
+/// transparent over panels and custom surfaces.
+private func staticTextBackgroundBrush() -> HBRUSH? {
+    GetStockObject(NULL_BRUSH)
+}
+
 /// Paints owner-drawn controls when Windows asks for them.
 private func handleDrawItem(lParam: LPARAM) -> LRESULT {
     guard let drawItem = UnsafePointer<DRAWITEMSTRUCT>(bitPattern: lParam)?.pointee else {
@@ -133,29 +145,21 @@ private func applyScrollOffset(_ requestedOffset: Int32, window: HWND?) {
     let offset = clampedScrollOffset(requestedOffset, window: window)
     Win32ActionRegistry.scrollState.offset = offset
 
-    invalidateScrolledWindow(window)
+    redrawScrolledWindow(window)
     for frame in Win32ActionRegistry.controlFramesByHandle.values {
         _ = MoveWindow(frame.control, frame.x, frame.y - offset, frame.width, frame.height, 1)
     }
-    invalidateScrolledWindow(window)
-    updateScrolledWindow(window)
+    redrawScrolledWindow(window)
 }
 
-/// Invalidates the full client area before and after child HWND scrolling.
+/// Erases and repaints the full client area before and after child HWND scrolling.
 ///
 /// Windows note:
 /// Moving child controls does not automatically erase every old pixel they
-/// occupied. A full invalidation is a blunt but reliable prototype fix until a
-/// real `ScrollView` owns clipping and painting.
-private func invalidateScrolledWindow(_ window: HWND?) {
-    _ = InvalidateRect(window, nil, 1)
-}
-
-/// Flushes the repaint requested by `invalidateScrolledWindow`.
-private func updateScrolledWindow(_ window: HWND?) {
-    if let window {
-        _ = UpdateWindow(window)
-    }
+/// occupied. `RedrawWindow` with `RDW_ALLCHILDREN` is a blunt but reliable
+/// prototype fix until a real `ScrollView` owns clipping and painting.
+private func redrawScrolledWindow(_ window: HWND?) {
+    _ = RedrawWindow(window, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW)
 }
 
 /// Clamps a requested scroll offset to the rendered content bounds.
@@ -193,6 +197,7 @@ private func updateTextField(controlID: UInt16, control: HWND) {
 
     textField.value = value
     textField.onChange?(value)
+    WinDynamicTextInvalidation.invalidateAll()
 }
 
 /// Copies native checkbox state into the matching `WinToggle`.
@@ -204,6 +209,7 @@ private func updateToggle(controlID: UInt16, control: HWND) -> Bool {
     toggle.isOn.toggle()
     _ = InvalidateRect(control, nil, 1)
     toggle.onChange?(toggle.isOn)
+    WinDynamicTextInvalidation.invalidateAll()
 
     return true
 }
@@ -218,6 +224,7 @@ private func updatePicker(controlID: UInt16) -> Bool {
         option.picker.selectedIndex = option.index
         invalidatePickerOptions(for: option.picker)
         option.picker.onChange?(option.index)
+        WinDynamicTextInvalidation.invalidateAll()
     }
 
     return true

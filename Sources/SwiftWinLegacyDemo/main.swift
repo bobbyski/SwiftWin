@@ -9,35 +9,54 @@ let panel = WinBackground(color: WinForegroundStyle(red: 239, green: 246, blue: 
 let borderedPanel = WinBorder(color: WinForegroundStyle(red: 191, green: 219, blue: 254), width: 1, cornerRadius: 10)
 let paddedRoot = WinPadding(amount: 12)
 
-root.add(WinText("SwiftWinLegacy", style: .title, foregroundStyle: .accent))
-root.add(WinText("A traditional Swift interface wrapping native Windows UI.", foregroundStyle: .secondary))
-
-let projectName = WinTextField("Project name", text: "SwiftWin")
-let projectFrame = WinFrame(width: 340, height: nil)
-projectFrame.add(projectName)
-root.add(projectFrame)
-
-let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
-root.add(includeDiagnostics)
-
-let theme = WinPicker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0)
-root.add(theme)
-
-let scale = WinSlider("Scale", value: 50, range: 0...100)
-let scaleFrame = WinFrame(width: 340, height: nil)
-scaleFrame.add(scale)
-root.add(scaleFrame)
-let scaleProgress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
-let scaleProgressFrame = WinFrame(width: 340, height: nil)
-scaleProgressFrame.add(scaleProgress)
-root.add(scaleProgressFrame)
-let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
-root.add(quantity)
-root.add(WinDynamicText({ "Quantity preview: \(quantity.value)" }, style: .caption))
+let header = WinStack(axis: .vertical, spacing: 6)
+header.add(WinText("SwiftWinLegacy", style: .title, foregroundStyle: .accent))
+header.add(WinText("A traditional Swift interface wrapping native Windows UI.", foregroundStyle: .secondary))
+root.add(header)
 root.add(WinSeparator(axis: .horizontal))
 
-let buttons = WinStack(axis: .horizontal, spacing: 10)
-buttons.add(WinButton("Create Window", style: .primary) {
+let projectName = WinTextField("Project name", text: "SwiftWin")
+let content = WinStack(axis: .vertical, spacing: 14)
+
+let projectFrame = WinFrame(width: 380, height: nil)
+projectFrame.add(projectName)
+content.add(projectFrame)
+content.add(
+    WinDynamicText(
+        { projectNameValidationMessage(projectName.value) },
+        style: .caption,
+        foregroundStyle: .destructive
+    )
+)
+
+let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
+content.add(includeDiagnostics)
+
+let theme = WinPicker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0)
+content.add(theme)
+
+let scale = WinSlider("Scale", value: 50, range: 0...100)
+let scaleFrame = WinFrame(width: 380, height: nil)
+scaleFrame.add(scale)
+content.add(scaleFrame)
+let scaleProgress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
+let scaleProgressFrame = WinFrame(width: 380, height: nil)
+scaleProgressFrame.add(scaleProgress)
+content.add(scaleProgressFrame)
+let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
+content.add(quantity)
+content.add(WinDynamicText({ "Quantity preview: \(quantity.value)" }, style: .caption))
+content.add(WinDynamicText({ "Theme preview: \(["System", "Light", "Dark"][theme.selectedIndex])" }, style: .caption))
+content.add(WinDynamicText({ "Diagnostics: \(includeDiagnostics.isOn ? "enabled" : "disabled")" }, style: .caption))
+content.add(WinDynamicText({ "Project summary: \(projectName.value)" }, style: .caption))
+content.add(WinText("Renderer path: SwiftWinLegacy -> Win32", style: .caption))
+content.add(WinSpacer())
+
+root.add(content)
+root.add(WinSeparator(axis: .horizontal))
+
+let footer = WinStack(axis: .horizontal, spacing: 10)
+footer.add(WinButton("Create Window", style: .primary) {
     // Visible native feedback is important for GUI-launched processes, where
     // `print` output is easy to miss.
     WinDialog.show(
@@ -51,7 +70,7 @@ buttons.add(WinButton("Create Window", style: .primary) {
         """
     )
 })
-buttons.add(WinButton("Settings") {
+footer.add(WinButton("Settings") {
     // This message documents the intended layering: SwiftWinUI should wrap this
     // imperative layer as the runtime grows.
     WinDialog.show(
@@ -61,10 +80,9 @@ buttons.add(WinButton("Settings") {
 })
 let disabledButton = WinDisabled(isDisabled: true)
 disabledButton.add(WinButton("Disabled") {})
-buttons.add(disabledButton)
+footer.add(disabledButton)
 
-root.add(buttons)
-root.add(WinSpacer())
+root.add(footer)
 root.add(WinText("Phase II traditional API: active.", style: .caption, foregroundStyle: .secondary))
 
 paddedRoot.add(root)
@@ -72,3 +90,25 @@ panel.add(paddedRoot)
 borderedPanel.add(panel)
 window.content = borderedPanel
 WinApplication().run(window)
+
+/// Validates the project name for the imperative demo.
+///
+/// Implementation note:
+/// This mirrors the declarative demo's inline validation behavior while using
+/// the traditional API directly. Dynamic text invalidation is owned by the SDK,
+/// so the app only describes the rule.
+private func projectNameValidationMessage(_ value: String) -> String {
+    let meaningfulCharacters = projectNameMeaningfulCharacterCount(value)
+    if meaningfulCharacters == 0 {
+        return "Project name is required."
+    }
+    if meaningfulCharacters < 3 {
+        return "Project name needs at least 3 characters."
+    }
+    return ""
+}
+
+/// Counts non-whitespace characters for lightweight validation.
+private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
+    value.filter { !$0.isWhitespace }.count
+}

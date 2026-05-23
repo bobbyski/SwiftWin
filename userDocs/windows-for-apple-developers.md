@@ -21,6 +21,32 @@ Examples:
 
 This is lower-level than SwiftUI actions or AppKit delegate callbacks.
 
+## Child Window Scrolling
+
+Win32 does not make a plain window scroll automatically.
+
+The current prototype handles mouse-wheel scrolling by moving child `HWND`
+controls and asking Windows to erase and repaint the client area. This is a
+temporary window-level path. A real `ScrollView` / `WinScrollView` should own
+clipping, scrollbars, nested content, and repaint behavior.
+
+Apple-platform mental model: this is closer to manually moving subviews and
+forcing invalidation than to dropping content inside a ready-made
+`NSScrollView`, `UIScrollView`, or SwiftUI `ScrollView`.
+
+## Text Measurement And Clipping
+
+Win32 text controls clip to the rectangle the app gives them. This differs from
+the higher-level Apple-platform expectation that labels usually size themselves
+from font metrics unless constrained by layout.
+
+SwiftWinUI and SwiftWinLegacy should absorb this by default. The SDK's Win32
+backend keeps shared text metrics for width and height so large titles, body
+text, and descenders such as `y` and `g` render without app-level frame hacks.
+Future layout work should replace these heuristics with real GDI measurement,
+but the product rule stays the same: app code should feel Mac-like, and Windows
+mechanics should be hidden behind polished defaults whenever practical.
+
 ## GDI Resources
 
 Win32 drawing often uses GDI handles:

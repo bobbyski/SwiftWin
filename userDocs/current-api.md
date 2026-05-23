@@ -262,13 +262,22 @@ struct DemoContent: View {
 
 Current limitation: state writes schedule renderer invalidation, but the Win32 renderer does not yet reconcile or rebuild arbitrary dependent views. Buttons and control callbacks read updated state today.
 
-Dynamic `Text` values also refresh through the current invalidation hook:
+Dynamic `Text` values also refresh through the current invalidation hook. The
+Win32 backend refreshes these labels after `TextField`, `Toggle`, `Picker`,
+`Slider`, and `Stepper` changes, which is enough for current live previews and
+simple inline validation:
 
 ```swift
 @State private var scale = 50
 
 Slider("Scale", value: $scale, range: 0...100)
 Text("Live scale preview: \(scale)", style: .caption)
+```
+
+```swift
+TextField("Project name", text: $projectName)
+Text(projectName.isEmpty ? "Project name is required." : "", style: .caption)
+    .foregroundStyle(.destructive)
 ```
 
 This is a narrow bridge toward SwiftUI-style body invalidation, not a full diffing engine yet.
@@ -339,7 +348,7 @@ Text("SwiftWinUI", style: .title)
     .foregroundStyle(.accent)
 ```
 
-Windows note for Apple developers: static text color is handled through the parent window's `WM_CTLCOLORSTATIC` message, not by setting a direct property on the `STATIC` child control. That is why SwiftWinLegacy stores text color metadata and answers Windows during painting.
+Windows note for Apple developers: static text color is handled through the parent window's `WM_CTLCOLORSTATIC` message, not by setting a direct property on the `STATIC` child control. That is why SwiftWinLegacy stores text color metadata and answers Windows during painting. Plain labels default to a transparent rectangle by returning a Win32 `NULL_BRUSH`; only explicit background panels return a solid brush.
 
 Current implementation: this is text-only and semantic-color-only. It does not yet support gradients, materials, custom brushes, or automatic dynamic color reconciliation.
 

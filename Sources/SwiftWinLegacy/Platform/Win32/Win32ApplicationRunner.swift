@@ -24,7 +24,14 @@ final class Win32ApplicationRunner {
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
         registerWindowClass()
         createWindow(descriptor)
-        layoutStack = [LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)]
+        layoutStack = [
+            LayoutState(
+                axis: .vertical,
+                x: Win32LayoutMetrics.rootInset,
+                y: Win32LayoutMetrics.rootTop,
+                spacing: Win32LayoutMetrics.stackSpacing
+            )
+        ]
 
         if let content = descriptor.content {
             render(content)
@@ -265,6 +272,11 @@ final class Win32ApplicationRunner {
     }
 
     /// Creates a native static text control.
+    ///
+    /// SDK polish rule:
+    /// Text controls use shared Win32 layout metrics by default. App authors
+    /// should not need to know that Win32 `STATIC` controls clip descenders or
+    /// need extra width for large semantic styles.
     @discardableResult
     private func createText(
         _ value: String,
@@ -275,8 +287,8 @@ final class Win32ApplicationRunner {
             className: "STATIC",
             title: value,
             style: WS_CHILD | WS_VISIBLE | SS_LEFT,
-            width: proposedWidth(defaultingTo: max(220, Int32(value.count * 9 + 32))),
-            height: proposedHeight(defaultingTo: style.size >= 20 ? 36 : 26),
+            width: proposedWidth(defaultingTo: Win32LayoutMetrics.textWidth(for: value, style: style)),
+            height: proposedHeight(defaultingTo: Win32LayoutMetrics.textHeight(for: style)),
             action: nil,
             textForegroundStyle: foregroundStyle
         ) {
