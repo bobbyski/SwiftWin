@@ -1,5 +1,5 @@
 /// Checkbox-style boolean control in the traditional API.
-public final class WinToggle: WinBooleanControl {
+public final class WinToggle: WinBooleanControl, WinRefreshableControl {
     /// Text shown next to the checkbox.
     public var title: String
     /// Current boolean value.
@@ -20,5 +20,10 @@ public final class WinToggle: WinBooleanControl {
         self.isOn = isOn
         self.onChange = onChange
         self.valueProvider = valueProvider
+    }
+
+    /// Mirrors the current Swift value into the active native control.
+    public func refresh() {
+        WinControlInvalidation.refresh(self)
     }
 }

@@ -105,3 +105,27 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `Dialog.show` -> `WinDialog.show`
 
 This is the intended simultaneous development model unless a future architectural change proves cleaner.
+
+## Refreshing Controls
+
+Traditional apps can mutate control objects directly. For controls backed by
+native HWND peers, call `refresh()` after a code-driven change to mirror the new
+Swift value into the live window and update dependent dynamic text/progress:
+
+```swift
+projectName.value = "SwiftWin"
+includeDiagnostics.isOn = true
+theme.selectedIndex = 0
+scale.value = 50
+quantity.value = 2
+
+projectName.refresh()
+includeDiagnostics.refresh()
+theme.refresh()
+scale.refresh()
+quantity.refresh()
+```
+
+Current refreshable controls are `WinTextField`, `WinToggle`, `WinPicker`,
+`WinSlider`, and `WinStepper`. User-driven edits refresh dependent dynamic text
+automatically through the Win32 event path.

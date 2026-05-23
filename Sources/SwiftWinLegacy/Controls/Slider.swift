@@ -2,7 +2,7 @@
 ///
 /// The current Win32 backend maps this to a common-controls trackbar and keeps
 /// the visible value label synchronized while native scroll messages arrive.
-public final class WinSlider: WinRangeControl {
+public final class WinSlider: WinRangeControl, WinRefreshableControl {
     /// Label describing the value.
     public var title: String
     /// Current value.
@@ -30,5 +30,10 @@ public final class WinSlider: WinRangeControl {
         self.value = min(max(value, minimum), maximum)
         self.onChange = onChange
         self.valueProvider = valueProvider
+    }
+
+    /// Mirrors the current Swift value into the active native control.
+    public func refresh() {
+        WinControlInvalidation.refresh(self)
     }
 }

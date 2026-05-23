@@ -79,6 +79,53 @@ public enum WinDynamicTextInvalidation {
     }
 }
 
+/// Public refresh entry points for imperative controls.
+///
+/// The methods live beside the Win32 registry today because the active native
+/// peers are stored there. A future per-window runtime object should own these
+/// lookups instead of process-global state.
+public enum WinControlInvalidation {
+    /// Refreshes a text field from its current Swift value.
+    public static func refresh(_ textField: WinTextField) {
+        #if os(Windows)
+        refreshTextField(textField)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
+    /// Refreshes a toggle from its current Swift value.
+    public static func refresh(_ toggle: WinToggle) {
+        #if os(Windows)
+        refreshToggle(toggle)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
+    /// Refreshes a picker from its current Swift selection.
+    public static func refresh(_ picker: WinPicker) {
+        #if os(Windows)
+        refreshPicker(picker)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
+    /// Refreshes a slider from its current Swift value.
+    public static func refresh(_ slider: WinSlider) {
+        #if os(Windows)
+        refreshSlider(slider)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
+    /// Refreshes a stepper from its current Swift value.
+    public static func refresh(_ stepper: WinStepper) {
+        #if os(Windows)
+        refreshStepper(stepper)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+}
+
 /// Refreshes native controls whose values can be read from external state.
 ///
 /// Implementation decision:
@@ -109,6 +156,17 @@ private func refreshTextFields() {
     }
 }
 
+/// Mirrors one text field object into its active native edit control.
+private func refreshTextField(_ textField: WinTextField) {
+    guard let control = textFieldControl(for: textField) else {
+        return
+    }
+
+    withWideString(textField.value) { text in
+        _ = SetWindowTextW(control, text)
+    }
+}
+
 /// Mirrors provider-backed toggles into owner-drawn checkbox controls.
 private func refreshToggles() {
     for (controlID, toggle) in Win32ActionRegistry.toggles {
@@ -119,6 +177,17 @@ private func refreshToggles() {
         }
 
         toggle.isOn = value
+        _ = InvalidateRect(control, nil, 1)
+    }
+}
+
+/// Mirrors one toggle object into its active owner-drawn control.
+private func refreshToggle(_ toggle: WinToggle) {
+    for (controlID, candidate) in Win32ActionRegistry.toggles where candidate === toggle {
+        guard let control = Win32ActionRegistry.toggleControls[controlID] else {
+            continue
+        }
+
         _ = InvalidateRect(control, nil, 1)
     }
 }
@@ -141,6 +210,17 @@ private func refreshPickers() {
     }
 }
 
+/// Mirrors one picker object into its active owner-drawn options.
+private func refreshPicker(_ picker: WinPicker) {
+    for (controlID, option) in Win32ActionRegistry.pickerOptions where option.picker === picker {
+        guard let control = Win32ActionRegistry.pickerOptionControls[controlID] else {
+            continue
+        }
+
+        _ = InvalidateRect(control, nil, 1)
+    }
+}
+
 /// Mirrors provider-backed sliders into their trackbars and value labels.
 private func refreshSliders() {
     for (handle, state) in Win32ActionRegistry.slidersByHandle {
@@ -150,6 +230,17 @@ private func refreshSliders() {
         }
 
         setSlider(state, value: providerValue, control: control, notify: false)
+    }
+}
+
+/// Mirrors one slider object into its active trackbar and label.
+private func refreshSlider(_ slider: WinSlider) {
+    for (handle, state) in Win32ActionRegistry.slidersByHandle where state.slider === slider {
+        guard let control = HWND(bitPattern: handle) else {
+            continue
+        }
+
+        setSlider(state, value: slider.value, control: control, notify: false, force: true)
     }
 }
 
@@ -164,6 +255,41 @@ private func refreshSteppers() {
     }
 
     for controlID in Win32ActionRegistry.stepperValues.keys {
+        guard let frame = Win32ActionRegistry.controlFramesByHandle.values.first(where: { GetDlgCtrlID($0.control) == Int32(controlID) }) else {
+            continue
+        }
+
+        _ = InvalidateRect(frame.control, nil, 1)
+    }
+}
+
+/// Mirrors one stepper object into its active labels and value segments.
+private func refreshStepper(_ stepper: WinStepper) {
+    for state in Win32ActionRegistry.stepperLabels.values where state.stepper === stepper {
+        updateStepperLabel(state)
+    }
+    invalidateStepperValueSegments(for: stepper)
+}
+
+/// Returns the native edit control registered for one text field.
+private func textFieldControl(for textField: WinTextField) -> HWND? {
+    guard let entry = Win32ActionRegistry.textFields.first(where: { $0.value === textField }) else {
+        return nil
+    }
+
+    return control(withID: entry.key)
+}
+
+/// Finds a native child control by Win32 dialog/control ID.
+private func control(withID controlID: UInt16) -> HWND? {
+    Win32ActionRegistry.controlFramesByHandle.values.first {
+        GetDlgCtrlID($0.control) == Int32(controlID)
+    }?.control
+}
+
+/// Redraws owner-drawn value segments for one stepper.
+private func invalidateStepperValueSegments(for stepper: WinStepper) {
+    for (controlID, state) in Win32ActionRegistry.stepperValues where state.stepper === stepper {
         guard let frame = Win32ActionRegistry.controlFramesByHandle.values.first(where: { GetDlgCtrlID($0.control) == Int32(controlID) }) else {
             continue
         }
@@ -191,10 +317,10 @@ private func updateProgressView(_ state: ProgressRenderState) {
 }
 
 /// Stores a slider value and mirrors it back to native controls.
-func setSlider(_ state: SliderRenderState, value: Int, control: HWND, notify: Bool) {
+func setSlider(_ state: SliderRenderState, value: Int, control: HWND, notify: Bool, force: Bool = false) {
     let slider = state.slider
     let clamped = min(max(value, slider.minimum), slider.maximum)
-    guard clamped != slider.value else {
+    guard force || clamped != slider.value else {
         return
     }
 

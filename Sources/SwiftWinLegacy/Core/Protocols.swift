@@ -108,3 +108,13 @@ public protocol WinRangeControl: WinElement {
     /// Closure invoked after native editing changes the value.
     var onChange: ((Int) -> Void)? { get set }
 }
+
+/// Protocol for controls whose native HWND can be refreshed from Swift values.
+///
+/// This is intentionally small: the element remains the source of truth, while
+/// the active runtime decides how to mirror that value into native controls.
+/// Custom controls can conform later once they have renderer support.
+public protocol WinRefreshableControl: WinElement {
+    /// Requests that the active runtime refresh the control's native peer.
+    func refresh()
+}

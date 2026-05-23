@@ -1,5 +1,5 @@
 /// Segmented radio-button picker in the traditional API.
-public final class WinPicker: WinSelectionControl {
+public final class WinPicker: WinSelectionControl, WinRefreshableControl {
     /// Label describing the selection.
     public var title: String
     /// Available option labels.
@@ -24,5 +24,10 @@ public final class WinPicker: WinSelectionControl {
         self.selectedIndex = min(max(selectedIndex, 0), max(0, options.count - 1))
         self.onChange = onChange
         self.selectionProvider = selectionProvider
+    }
+
+    /// Mirrors the current Swift value into the active native control.
+    public func refresh() {
+        WinControlInvalidation.refresh(self)
     }
 }

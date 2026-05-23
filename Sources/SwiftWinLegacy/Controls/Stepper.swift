@@ -3,7 +3,7 @@
 /// The current Win32 backend renders this as a small composite control made
 /// from a value label and two owner-drawn buttons. That keeps the behavior
 /// portable while the layout and numeric-entry story are still evolving.
-public final class WinStepper: WinRangeControl {
+public final class WinStepper: WinRangeControl, WinRefreshableControl {
     /// Label describing the stepped value.
     public var title: String
     /// Current value.
@@ -39,6 +39,11 @@ public final class WinStepper: WinRangeControl {
         self.value = min(max(value, minimum), maximum)
         self.onChange = onChange
         self.valueProvider = valueProvider
+    }
+
+    /// Mirrors the current Swift value into the active native control.
+    public func refresh() {
+        WinControlInvalidation.refresh(self)
     }
 }
 

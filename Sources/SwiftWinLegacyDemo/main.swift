@@ -125,8 +125,9 @@ private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
 /// Resets mutable controls from imperative code.
 ///
 /// Implementation note:
-/// Calling `WinDynamicTextInvalidation.invalidateAll()` exercises the same
-/// provider-backed refresh path used by declarative `@State` bindings.
+/// Traditional code owns the control objects directly. Mutating each control
+/// followed by `refresh()` mirrors those values into native HWND peers and then
+/// updates dependent dynamic text/progress views.
 private func resetForm(
     projectName: WinTextField,
     includeDiagnostics: WinToggle,
@@ -134,15 +135,15 @@ private func resetForm(
     scale: WinSlider,
     quantity: WinStepper
 ) {
-    projectName.textProvider = { "SwiftWin" }
-    includeDiagnostics.valueProvider = { true }
-    theme.selectionProvider = { 0 }
-    scale.valueProvider = { 50 }
-    quantity.valueProvider = { 2 }
-    WinDynamicTextInvalidation.invalidateAll()
-    projectName.textProvider = nil
-    includeDiagnostics.valueProvider = nil
-    theme.selectionProvider = nil
-    scale.valueProvider = nil
-    quantity.valueProvider = nil
+    projectName.value = "SwiftWin"
+    includeDiagnostics.isOn = true
+    theme.selectedIndex = 0
+    scale.value = 50
+    quantity.value = 2
+
+    projectName.refresh()
+    includeDiagnostics.refresh()
+    theme.refresh()
+    scale.refresh()
+    quantity.refresh()
 }

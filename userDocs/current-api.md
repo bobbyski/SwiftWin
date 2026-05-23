@@ -260,7 +260,7 @@ struct DemoContent: View {
 }
 ```
 
-Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window.
+Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
 
 Dynamic `Text` values also refresh through the current invalidation hook. The
 Win32 backend refreshes these labels after `TextField`, `Toggle`, `Picker`,
