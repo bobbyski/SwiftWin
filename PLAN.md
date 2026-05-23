@@ -4,7 +4,7 @@
 
 Milestone ladder progress: [##-----] 2 of 7 milestones active
 
-Current milestone progress: [########--] 80%
+Current milestone progress: [########--] 82%
 
 ## Summary
 
@@ -30,13 +30,13 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 58% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, integer stepping, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 5: SwiftUI Control Coverage | In Progress | 60% | `Text`, `TextField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, multi-line text editing, integer stepping, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 60% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, imperative refresh API, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, provider-backed control refresh, direct `SwiftWinLegacy` control refresh, and batched imperative refresh exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
-| 11: Phase II Traditional Swift Framework | In Progress | 23% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
+| 11: Phase II Traditional Swift Framework | In Progress | 25% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 35% | focused protocols, small functions, separable runtime/layout/platform pieces | `SwiftWinUI` controls and `SwiftWinLegacy` core/control/platform files are now split by responsibility. |
 | 14: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
@@ -61,6 +61,7 @@ Status: In Progress
 - Add a real layout tree with measurement and placement.
 - Add SwiftUI-compatible state primitives and rerender invalidation.
 - Add core form controls: `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, and determinate `ProgressView`.
+- Add multi-line `TextEditor` / `WinTextEditor` for simple notes and document-like input.
 - Add a WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`.
 - Add disabled, hover, focused, and pressed states for controls.
@@ -139,6 +140,7 @@ Demoable app: a simple welcome window with two buttons and a status/caption line
 Goal: prove that basic desktop form workflows are viable.
 
 - [x] Add `TextField` / `WinTextField`.
+- [x] Add `TextEditor` / `WinTextEditor`.
 - [x] Add `Toggle` / `WinToggle`.
 - [x] Add `Picker` or segmented selection.
 - [x] Add `Slider` or numeric entry.

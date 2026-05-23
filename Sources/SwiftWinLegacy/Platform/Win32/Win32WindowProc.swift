@@ -55,7 +55,10 @@ private func handleCommand(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     let notification = UInt16((wParam >> 16) & 0xffff)
 
     if notification == EN_CHANGE, let control = HWND(bitPattern: lParam) {
-        updateTextField(controlID: controlID, control: control)
+        if updateTextField(controlID: controlID, control: control) {
+            return 0
+        }
+        updateTextEditor(controlID: controlID, control: control)
         return 0
     }
 
@@ -227,18 +230,35 @@ private func wheelDelta(from wParam: WPARAM) -> Int32 {
 }
 
 /// Copies native edit-control text into the matching `WinTextField`.
-private func updateTextField(controlID: UInt16, control: HWND) {
+private func updateTextField(controlID: UInt16, control: HWND) -> Bool {
     guard let textField = Win32ActionRegistry.textFields[controlID] else {
-        return
+        return false
     }
 
     let value = text(from: control)
     guard value != textField.value else {
-        return
+        return true
     }
 
     textField.value = value
     textField.onChange?(value)
+    WinDynamicTextInvalidation.invalidateAll()
+    return true
+}
+
+/// Copies native edit-control text into the matching `WinTextEditor`.
+private func updateTextEditor(controlID: UInt16, control: HWND) {
+    guard let textEditor = Win32ActionRegistry.textEditors[controlID] else {
+        return
+    }
+
+    let value = text(from: control)
+    guard value != textEditor.value else {
+        return
+    }
+
+    textEditor.value = value
+    textEditor.onChange?(value)
     WinDynamicTextInvalidation.invalidateAll()
 }
 

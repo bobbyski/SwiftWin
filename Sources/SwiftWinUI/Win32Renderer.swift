@@ -212,6 +212,11 @@ public final class Win32Renderer: Renderer {
         add(WinTextField(prompt, text: text, onChange: onChange, textProvider: textProvider))
     }
 
+    /// Adapts SwiftWinUI text editors to `WinTextEditor`.
+    public func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
+        add(WinTextEditor(prompt, text: text, onChange: onChange, textProvider: textProvider))
+    }
+
     /// Adapts SwiftWinUI toggles to `WinToggle`.
     public func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?) {
         add(WinToggle(title, isOn: isOn, onChange: onChange, valueProvider: valueProvider))

@@ -16,6 +16,7 @@ root.add(header)
 root.add(WinSeparator(axis: .horizontal))
 
 let projectName = WinTextField("Project name", text: "SwiftWin")
+let notes = WinTextEditor("Notes", text: "Milestone 2 notes:\nText editing is now multi-line.")
 let content = WinStack(axis: .vertical, spacing: 14)
 
 let projectFrame = WinFrame(width: 380, height: nil)
@@ -28,6 +29,10 @@ content.add(
         foregroundStyle: .destructive
     )
 )
+let notesFrame = WinFrame(width: 380, height: 96)
+notesFrame.add(notes)
+content.add(notesFrame)
+content.add(WinDynamicText({ "Notes: \(notes.value.count) characters" }, style: .caption))
 
 let includeDiagnostics = WinToggle("Include diagnostics", isOn: true)
 content.add(includeDiagnostics)
@@ -67,6 +72,7 @@ footer.add(WinButton("Create Window", style: .primary) {
         Theme: \(["System", "Light", "Dark"][theme.selectedIndex])
         Scale: \(scale.value)
         Quantity: \(quantity.value)
+        Notes: \(notes.value)
         """
     )
 })
@@ -84,7 +90,8 @@ footer.add(WinButton("Reset") {
         includeDiagnostics: includeDiagnostics,
         theme: theme,
         scale: scale,
-        quantity: quantity
+        quantity: quantity,
+        notes: notes
     )
 })
 let disabledButton = WinDisabled(isDisabled: true)
@@ -133,16 +140,19 @@ private func resetForm(
     includeDiagnostics: WinToggle,
     theme: WinPicker,
     scale: WinSlider,
-    quantity: WinStepper
+    quantity: WinStepper,
+    notes: WinTextEditor
 ) {
     projectName.value = "SwiftWin"
     includeDiagnostics.isOn = true
     theme.selectedIndex = 0
     scale.value = 50
     quantity.value = 2
+    notes.value = "Milestone 2 notes:\nText editing is now multi-line."
 
     WinControlInvalidation.refresh([
         projectName,
+        notes,
         includeDiagnostics,
         theme,
         scale,

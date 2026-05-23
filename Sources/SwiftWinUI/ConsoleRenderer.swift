@@ -174,6 +174,11 @@ public final class ConsoleRenderer: Renderer {
         write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")
     }
 
+    /// Emits a diagnostic representation of a multi-line editor.
+    public func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
+        write("TextEditor(prompt: \"\(prompt)\", text: \"\(text)\")")
+    }
+
     /// Prints a toggle node.
     public func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?) {
         write("Toggle(\"\(title)\", isOn: \(isOn))")

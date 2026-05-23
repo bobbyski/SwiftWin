@@ -123,6 +123,8 @@ public protocol Renderer: AnyObject {
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
     func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
+    /// Renders a multi-line editable text area.
+    func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
     /// Renders a boolean toggle.
     func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?)
     /// Renders a segmented picker.
@@ -206,6 +208,9 @@ public extension Renderer {
 
     /// Default progress view for renderers without progress support.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {}
+
+    /// Default text editor for renderers without multi-line editing support.
+    func textEditor(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {}
 
     /// Default stepper for renderers without stepper support.
     func stepper(

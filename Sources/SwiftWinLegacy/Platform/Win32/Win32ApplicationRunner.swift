@@ -106,6 +106,8 @@ final class Win32ApplicationRunner {
             createButton(button.title, style: button.style, action: button.action)
         case let textField as WinTextField:
             createTextField(textField)
+        case let textEditor as WinTextEditor:
+            createTextEditor(textEditor)
         case let toggle as WinToggle:
             createToggle(toggle)
         case let picker as WinPicker:
@@ -368,6 +370,27 @@ final class Win32ApplicationRunner {
         ) {
             applyFont(.body, to: control)
             setPlaceholder(field.prompt, for: control)
+        }
+    }
+
+    /// Creates a native multi-line edit control.
+    ///
+    /// Windows note:
+    /// Win32 uses the same `EDIT` class for single-line and multi-line text,
+    /// with style flags deciding behavior. Placeholder cue banners are not
+    /// reliable for multiline edit controls, so `prompt` remains semantic for
+    /// now and future accessibility work should expose it through UIA.
+    private func createTextEditor(_ editor: WinTextEditor) {
+        if let control = createControl(
+            className: "EDIT",
+            title: editor.value,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
+            width: proposedWidth(defaultingTo: 380),
+            height: proposedHeight(defaultingTo: 96),
+            action: nil,
+            textEditor: editor
+        ) {
+            applyFont(.body, to: control)
         }
     }
 
@@ -674,6 +697,7 @@ final class Win32ApplicationRunner {
         action: (() -> Void)?,
         button: ButtonRenderState? = nil,
         textField: WinTextField? = nil,
+        textEditor: WinTextEditor? = nil,
         toggle: WinToggle? = nil,
         pickerOption: PickerOptionState? = nil,
         textForegroundStyle: WinForegroundStyle? = nil
@@ -708,6 +732,7 @@ final class Win32ApplicationRunner {
                     action: action,
                     button: button,
                     textField: textField,
+                    textEditor: textEditor,
                     toggle: toggle,
                     pickerOption: pickerOption,
                     textForegroundStyle: textForegroundStyle
@@ -849,6 +874,7 @@ final class Win32ApplicationRunner {
         action: (() -> Void)?,
         button: ButtonRenderState?,
         textField: WinTextField?,
+        textEditor: WinTextEditor?,
         toggle: WinToggle?,
         pickerOption: PickerOptionState?,
         textForegroundStyle: WinForegroundStyle?
@@ -861,6 +887,9 @@ final class Win32ApplicationRunner {
         }
         if let textField {
             Win32ActionRegistry.textFields[controlID] = textField
+        }
+        if let textEditor {
+            Win32ActionRegistry.textEditors[controlID] = textEditor
         }
         if let toggle {
             Win32ActionRegistry.toggles[controlID] = toggle

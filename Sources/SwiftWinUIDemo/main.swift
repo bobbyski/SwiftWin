@@ -7,6 +7,7 @@ struct DemoContent: View {
     @State private var themeIndex = 0
     @State private var scale = 50
     @State private var quantity = 2
+    @State private var notes = "Milestone 2 notes:\nText editing is now multi-line."
 
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
@@ -69,6 +70,9 @@ struct DemoContent: View {
                 .frame(width: 380)
             Text(projectNameValidationMessage, style: .caption)
                 .foregroundStyle(.destructive)
+            TextEditor("Notes", text: $notes)
+                .frame(width: 380, height: 96)
+            Text("Notes: \(notes.count) characters", style: .caption)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
             Picker("Theme", options: themes, selectedIndex: $themeIndex)
             Slider("Scale", value: $scale, range: 0...100)
@@ -119,6 +123,7 @@ struct DemoContent: View {
         themeIndex = 0
         scale = 50
         quantity = 2
+        notes = "Milestone 2 notes:\nText editing is now multi-line."
     }
 
     /// Builds the current form summary for button actions.
@@ -129,6 +134,7 @@ struct DemoContent: View {
         Theme: \(themeName)
         Scale: \(scale)
         Quantity: \(quantity)
+        Notes: \(notes)
         """
     }
 }
