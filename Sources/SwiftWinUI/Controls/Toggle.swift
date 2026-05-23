@@ -5,6 +5,7 @@
 public struct Toggle: View {
     private let title: String
     private let isOn: Bool
+    private let valueProvider: (() -> Bool)?
     private let onChange: ((Bool) -> Void)?
 
     /// Creates a toggle.
@@ -15,6 +16,7 @@ public struct Toggle: View {
     ) {
         self.title = title
         self.isOn = isOn
+        self.valueProvider = nil
         self.onChange = onChange
     }
 
@@ -22,6 +24,7 @@ public struct Toggle: View {
     public init(_ title: String, isOn: Binding<Bool>) {
         self.title = title
         self.isOn = isOn.wrappedValue
+        self.valueProvider = { isOn.wrappedValue }
         self.onChange = { value in
             isOn.wrappedValue = value
         }
@@ -29,6 +32,6 @@ public struct Toggle: View {
 
     /// Emits a semantic toggle operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.toggle(title, isOn: isOn, onChange: onChange)
+        context.renderer.toggle(title, isOn: isOn, valueProvider: valueProvider, onChange: onChange)
     }
 }

@@ -135,6 +135,7 @@ let ODS_HOTLIGHT: UINT = 0x0040
 let TRANSPARENT: Int32 = 1
 let PS_SOLID: Int32 = 0
 let NULL_BRUSH: Int32 = 5
+let NULL_PEN: Int32 = 8
 let FW_REGULAR: Int32 = 400
 let FW_SEMIBOLD: Int32 = 600
 let FW_BOLD: Int32 = 700

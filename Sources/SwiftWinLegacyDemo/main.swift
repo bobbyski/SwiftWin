@@ -78,6 +78,15 @@ footer.add(WinButton("Settings") {
         message: "SwiftWinUI can wrap this imperative layer as it grows."
     )
 })
+footer.add(WinButton("Reset") {
+    resetForm(
+        projectName: projectName,
+        includeDiagnostics: includeDiagnostics,
+        theme: theme,
+        scale: scale,
+        quantity: quantity
+    )
+})
 let disabledButton = WinDisabled(isDisabled: true)
 disabledButton.add(WinButton("Disabled") {})
 footer.add(disabledButton)
@@ -111,4 +120,29 @@ private func projectNameValidationMessage(_ value: String) -> String {
 /// Counts non-whitespace characters for lightweight validation.
 private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
     value.filter { !$0.isWhitespace }.count
+}
+
+/// Resets mutable controls from imperative code.
+///
+/// Implementation note:
+/// Calling `WinDynamicTextInvalidation.invalidateAll()` exercises the same
+/// provider-backed refresh path used by declarative `@State` bindings.
+private func resetForm(
+    projectName: WinTextField,
+    includeDiagnostics: WinToggle,
+    theme: WinPicker,
+    scale: WinSlider,
+    quantity: WinStepper
+) {
+    projectName.textProvider = { "SwiftWin" }
+    includeDiagnostics.valueProvider = { true }
+    theme.selectionProvider = { 0 }
+    scale.valueProvider = { 50 }
+    quantity.valueProvider = { 2 }
+    WinDynamicTextInvalidation.invalidateAll()
+    projectName.textProvider = nil
+    includeDiagnostics.valueProvider = nil
+    theme.selectionProvider = nil
+    scale.valueProvider = nil
+    quantity.valueProvider = nil
 }

@@ -8,17 +8,21 @@ public final class WinPicker: WinSelectionControl {
     public var selectedIndex: Int
     /// Closure invoked when native editing changes the selected index.
     public var onChange: ((Int) -> Void)?
+    /// Optional source of truth used when external state invalidates the view.
+    public var selectionProvider: (() -> Int)?
 
     /// Creates a picker.
     public init(
         _ title: String,
         options: [String],
         selectedIndex: Int = 0,
-        onChange: ((Int) -> Void)? = nil
+        onChange: ((Int) -> Void)? = nil,
+        selectionProvider: (() -> Int)? = nil
     ) {
         self.title = title
         self.options = options
         self.selectedIndex = min(max(selectedIndex, 0), max(0, options.count - 1))
         self.onChange = onChange
+        self.selectionProvider = selectionProvider
     }
 }

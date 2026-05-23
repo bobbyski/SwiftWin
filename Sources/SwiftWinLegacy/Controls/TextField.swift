@@ -11,15 +11,19 @@ public final class WinTextField: WinEditableText {
     public var value: String
     /// Closure invoked when native editing changes the value.
     public var onChange: ((String) -> Void)?
+    /// Optional source of truth used when external state invalidates the view.
+    public var textProvider: (() -> String)?
 
     /// Creates a text field.
     public init(
         _ prompt: String,
         text: String = "",
-        onChange: ((String) -> Void)? = nil
+        onChange: ((String) -> Void)? = nil,
+        textProvider: (() -> String)? = nil
     ) {
         self.prompt = prompt
         self.value = text
         self.onChange = onChange
+        self.textProvider = textProvider
     }
 }

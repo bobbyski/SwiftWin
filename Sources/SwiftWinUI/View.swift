@@ -122,13 +122,13 @@ public protocol Renderer: AnyObject {
     /// Renders a button and stores its action for native event dispatch.
     func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
     /// Renders a single-line editable text field.
-    func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?)
+    func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?)
     /// Renders a boolean toggle.
-    func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?)
+    func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?)
     /// Renders a segmented picker.
-    func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?)
+    func picker(_ title: String, options: [String], selectedIndex: Int, selectionProvider: (() -> Int)?, onChange: ((Int) -> Void)?)
     /// Renders an integer slider.
-    func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?)
+    func slider(_ title: String, value: Int, range: ClosedRange<Int>, valueProvider: (() -> Int)?, onChange: ((Int) -> Void)?)
     /// Renders an integer stepper.
     func stepper(
         _ title: String,
@@ -136,6 +136,7 @@ public protocol Renderer: AnyObject {
         range: ClosedRange<Int>,
         step: Int,
         variant: StepperVariant,
+        valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     )
     /// Renders a determinate progress indicator.
@@ -213,6 +214,7 @@ public extension Renderer {
         range: ClosedRange<Int>,
         step: Int,
         variant: StepperVariant,
+        valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     ) {}
 }

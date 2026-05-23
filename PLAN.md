@@ -4,7 +4,7 @@
 
 Milestone ladder progress: [##-----] 2 of 7 milestones active
 
-Current milestone progress: [#######---] 70%
+Current milestone progress: [########--] 80%
 
 ## Summary
 
@@ -30,10 +30,10 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 54% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, integer stepping, determinate progress, and separators exist with callback and binding-based changes. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 5: SwiftUI Control Coverage | In Progress | 58% | `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, integer stepping, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
-| 8: SwiftUI State And Invalidation | In Progress | 45% | `@State`, `Binding`, event invalidation, dynamic text, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, and an invalidation hook exist. Full SwiftUI-compatible rerendering remains planned. |
+| 8: SwiftUI State And Invalidation | In Progress | 55% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, and provider-backed control refresh exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
 | 11: Phase II Traditional Swift Framework | In Progress | 23% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
@@ -146,7 +146,8 @@ Goal: prove that basic desktop form workflows are viable.
 - [x] Add imperative value change callbacks in `SwiftWinLegacy`.
 - [x] Validate input and show inline error text.
 - [x] Update simple dependent text without recreating the whole native window.
-- [ ] Update arbitrary controls/layout without recreating the whole native window.
+- [x] Update arbitrary controls without recreating the whole native window.
+- [ ] Update layout-affecting view changes without recreating the whole native window.
 
 Demoable app: a small settings editor with text fields, toggles, validation, save/cancel actions, and live preview text.
 

@@ -170,22 +170,22 @@ public final class ConsoleRenderer: Renderer {
     }
 
     /// Prints a text-field node.
-    public func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?) {
+    public func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
         write("TextField(prompt: \"\(prompt)\", text: \"\(text)\")")
     }
 
     /// Prints a toggle node.
-    public func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?) {
+    public func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?) {
         write("Toggle(\"\(title)\", isOn: \(isOn))")
     }
 
     /// Prints a picker node.
-    public func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?) {
+    public func picker(_ title: String, options: [String], selectedIndex: Int, selectionProvider: (() -> Int)?, onChange: ((Int) -> Void)?) {
         write("Picker(\"\(title)\", selectedIndex: \(selectedIndex), options: \(options))")
     }
 
     /// Prints a slider node.
-    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?) {
+    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, valueProvider: (() -> Int)?, onChange: ((Int) -> Void)?) {
         write("Slider(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound))")
     }
 
@@ -196,6 +196,7 @@ public final class ConsoleRenderer: Renderer {
         range: ClosedRange<Int>,
         step: Int,
         variant: StepperVariant,
+        valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     ) {
         write("Stepper(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound), step: \(step), variant: \(variant))")

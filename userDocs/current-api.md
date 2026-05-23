@@ -260,7 +260,7 @@ struct DemoContent: View {
 }
 ```
 
-Current limitation: state writes schedule renderer invalidation, but the Win32 renderer does not yet reconcile or rebuild arbitrary dependent views. Buttons and control callbacks read updated state today.
+Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window.
 
 Dynamic `Text` values also refresh through the current invalidation hook. The
 Win32 backend refreshes these labels after `TextField`, `Toggle`, `Picker`,
@@ -280,7 +280,7 @@ Text(projectName.isEmpty ? "Project name is required." : "", style: .caption)
     .foregroundStyle(.destructive)
 ```
 
-This is a narrow bridge toward SwiftUI-style body invalidation, not a full diffing engine yet.
+This is a narrow bridge toward SwiftUI-style body invalidation, not a full diffing engine yet. Layout-affecting state changes still need real reconciliation and measure/place work.
 
 ## Stacks
 

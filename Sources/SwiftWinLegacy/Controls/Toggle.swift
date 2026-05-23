@@ -6,15 +6,19 @@ public final class WinToggle: WinBooleanControl {
     public var isOn: Bool
     /// Closure invoked when native editing changes the value.
     public var onChange: ((Bool) -> Void)?
+    /// Optional source of truth used when external state invalidates the view.
+    public var valueProvider: (() -> Bool)?
 
     /// Creates a toggle.
     public init(
         _ title: String,
         isOn: Bool = false,
-        onChange: ((Bool) -> Void)? = nil
+        onChange: ((Bool) -> Void)? = nil,
+        valueProvider: (() -> Bool)? = nil
     ) {
         self.title = title
         self.isOn = isOn
         self.onChange = onChange
+        self.valueProvider = valueProvider
     }
 }

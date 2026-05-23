@@ -253,8 +253,25 @@ private func drawToggle(_ item: DRAWITEMSTRUCT) {
 
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
+    paintControlSurface(item.rcItem, in: deviceContext)
     paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn, isHovered: isHovered, isDisabled: isDisabled)
     paintToggleTitle(toggle.title, in: item.rcItem, deviceContext: deviceContext, isDisabled: isDisabled)
+}
+
+/// Paints the default surface behind an owner-drawn control.
+///
+/// Windows note:
+/// `BS_OWNERDRAW` transfers the whole visual responsibility to us. If a
+/// painter draws only the checkbox and text, the untouched row area can retain
+/// the platform's default gray control fill instead of the surrounding panel.
+private func paintControlSurface(_ rect: RECT, in deviceContext: HDC) {
+    let brush = CreateSolidBrush(Win32PaintResources.controlSurfaceColor)
+    let oldBrush = SelectObject(deviceContext, brush)
+    let oldPen = SelectObject(deviceContext, GetStockObject(NULL_PEN))
+    _ = Rectangle(deviceContext, rect.left, rect.top, rect.right, rect.bottom)
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(brush)
 }
 
 /// Paints the custom checkbox square.

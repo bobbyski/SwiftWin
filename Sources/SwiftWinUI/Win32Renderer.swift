@@ -208,23 +208,23 @@ public final class Win32Renderer: Renderer {
     }
 
     /// Adapts SwiftWinUI text fields to `WinTextField`.
-    public func textField(_ prompt: String, text: String, onChange: ((String) -> Void)?) {
-        add(WinTextField(prompt, text: text, onChange: onChange))
+    public func textField(_ prompt: String, text: String, textProvider: (() -> String)?, onChange: ((String) -> Void)?) {
+        add(WinTextField(prompt, text: text, onChange: onChange, textProvider: textProvider))
     }
 
     /// Adapts SwiftWinUI toggles to `WinToggle`.
-    public func toggle(_ title: String, isOn: Bool, onChange: ((Bool) -> Void)?) {
-        add(WinToggle(title, isOn: isOn, onChange: onChange))
+    public func toggle(_ title: String, isOn: Bool, valueProvider: (() -> Bool)?, onChange: ((Bool) -> Void)?) {
+        add(WinToggle(title, isOn: isOn, onChange: onChange, valueProvider: valueProvider))
     }
 
     /// Adapts SwiftWinUI pickers to `WinPicker`.
-    public func picker(_ title: String, options: [String], selectedIndex: Int, onChange: ((Int) -> Void)?) {
-        add(WinPicker(title, options: options, selectedIndex: selectedIndex, onChange: onChange))
+    public func picker(_ title: String, options: [String], selectedIndex: Int, selectionProvider: (() -> Int)?, onChange: ((Int) -> Void)?) {
+        add(WinPicker(title, options: options, selectedIndex: selectedIndex, onChange: onChange, selectionProvider: selectionProvider))
     }
 
     /// Adapts SwiftWinUI sliders to `WinSlider`.
-    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, onChange: ((Int) -> Void)?) {
-        add(WinSlider(title, value: value, range: range, onChange: onChange))
+    public func slider(_ title: String, value: Int, range: ClosedRange<Int>, valueProvider: (() -> Int)?, onChange: ((Int) -> Void)?) {
+        add(WinSlider(title, value: value, range: range, onChange: onChange, valueProvider: valueProvider))
     }
 
     /// Adapts SwiftWinUI progress to `WinProgressView`.
@@ -239,9 +239,10 @@ public final class Win32Renderer: Renderer {
         range: ClosedRange<Int>,
         step: Int,
         variant: StepperVariant,
+        valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     ) {
-        add(WinStepper(title, value: value, range: range, step: step, variant: variant.winVariant, onChange: onChange))
+        add(WinStepper(title, value: value, range: range, step: step, variant: variant.winVariant, onChange: onChange, valueProvider: valueProvider))
     }
 
     /// Adapts SwiftWinUI spacer to `WinSpacer`.

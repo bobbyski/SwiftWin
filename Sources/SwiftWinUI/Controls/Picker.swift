@@ -7,6 +7,7 @@ public struct Picker: View {
     private let title: String
     private let options: [String]
     private let selectedIndex: Int
+    private let selectionProvider: (() -> Int)?
     private let onChange: ((Int) -> Void)?
 
     /// Creates a picker.
@@ -19,6 +20,7 @@ public struct Picker: View {
         self.title = title
         self.options = options
         self.selectedIndex = selectedIndex
+        self.selectionProvider = nil
         self.onChange = onChange
     }
 
@@ -31,6 +33,7 @@ public struct Picker: View {
         self.title = title
         self.options = options
         self.selectedIndex = selectedIndex.wrappedValue
+        self.selectionProvider = { selectedIndex.wrappedValue }
         self.onChange = { index in
             selectedIndex.wrappedValue = index
         }
@@ -38,6 +41,6 @@ public struct Picker: View {
 
     /// Emits a semantic picker operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.picker(title, options: options, selectedIndex: selectedIndex, onChange: onChange)
+        context.renderer.picker(title, options: options, selectedIndex: selectedIndex, selectionProvider: selectionProvider, onChange: onChange)
     }
 }

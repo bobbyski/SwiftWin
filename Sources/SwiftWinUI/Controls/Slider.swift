@@ -6,6 +6,7 @@ public struct Slider: View {
     private let title: String
     private let value: Int
     private let range: ClosedRange<Int>
+    private let valueProvider: (() -> Int)?
     private let onChange: ((Int) -> Void)?
 
     /// Creates a slider.
@@ -18,6 +19,7 @@ public struct Slider: View {
         self.title = title
         self.value = value
         self.range = range
+        self.valueProvider = nil
         self.onChange = onChange
     }
 
@@ -30,6 +32,7 @@ public struct Slider: View {
         self.title = title
         self.value = value.wrappedValue
         self.range = range
+        self.valueProvider = { value.wrappedValue }
         self.onChange = { newValue in
             value.wrappedValue = newValue
         }
@@ -37,6 +40,6 @@ public struct Slider: View {
 
     /// Emits a semantic slider operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.slider(title, value: value, range: range, onChange: onChange)
+        context.renderer.slider(title, value: value, range: range, valueProvider: valueProvider, onChange: onChange)
     }
 }

@@ -13,18 +13,22 @@ public final class WinSlider: WinRangeControl {
     public var maximum: Int
     /// Closure invoked when native editing changes the value.
     public var onChange: ((Int) -> Void)?
+    /// Optional source of truth used when external state invalidates the view.
+    public var valueProvider: (() -> Int)?
 
     /// Creates a slider.
     public init(
         _ title: String,
         value: Int = 0,
         range: ClosedRange<Int> = 0...100,
-        onChange: ((Int) -> Void)? = nil
+        onChange: ((Int) -> Void)? = nil,
+        valueProvider: (() -> Int)? = nil
     ) {
         self.title = title
         self.minimum = range.lowerBound
         self.maximum = max(range.lowerBound, range.upperBound)
         self.value = min(max(value, minimum), maximum)
         self.onChange = onChange
+        self.valueProvider = valueProvider
     }
 }

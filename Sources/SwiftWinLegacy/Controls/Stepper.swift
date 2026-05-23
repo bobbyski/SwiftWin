@@ -18,6 +18,8 @@ public final class WinStepper: WinRangeControl {
     public var variant: WinStepperVariant
     /// Closure invoked when native interaction changes the value.
     public var onChange: ((Int) -> Void)?
+    /// Optional source of truth used when external state invalidates the view.
+    public var valueProvider: (() -> Int)?
 
     /// Creates a stepper.
     public init(
@@ -26,7 +28,8 @@ public final class WinStepper: WinRangeControl {
         range: ClosedRange<Int> = 0...100,
         step: Int = 1,
         variant: WinStepperVariant = .compact,
-        onChange: ((Int) -> Void)? = nil
+        onChange: ((Int) -> Void)? = nil,
+        valueProvider: (() -> Int)? = nil
     ) {
         self.title = title
         self.minimum = range.lowerBound
@@ -35,6 +38,7 @@ public final class WinStepper: WinRangeControl {
         self.variant = variant
         self.value = min(max(value, minimum), maximum)
         self.onChange = onChange
+        self.valueProvider = valueProvider
     }
 }
 

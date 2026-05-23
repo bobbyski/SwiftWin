@@ -84,7 +84,8 @@ private func handleHorizontalScroll(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     }
 
     let value = Int(SendMessageW(control, TBM_GETPOS, 0, 0))
-    set(sliderState: state, value: value, control: control)
+    setSlider(state, value: value, control: control, notify: true)
+    WinDynamicTextInvalidation.invalidateAll()
     return 0
 }
 
@@ -102,6 +103,11 @@ private func handleStaticColor(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
 
     let color = staticTextColor(for: lParam)
     _ = SetTextColor(HDC(bitPattern: wParam), color)
+
+    if let brush = mutableTextSurfaceBrush(for: lParam) {
+        return LRESULT(Int(bitPattern: brush))
+    }
+
     return LRESULT(Int(bitPattern: staticTextBackgroundBrush()))
 }
 
@@ -124,6 +130,22 @@ private func staticBackgroundBrush(for lParam: LPARAM) -> HBRUSH? {
 private func sliderBackgroundBrush(for lParam: LPARAM) -> HBRUSH? {
     guard let control = HWND(bitPattern: lParam),
           Win32ActionRegistry.slidersByHandle[UInt(bitPattern: control)] != nil else {
+        return nil
+    }
+
+    return Win32PaintResources.controlSurfaceBrush ?? Win32PaintResources.backgroundBrush
+}
+
+/// Returns a solid surface brush for labels whose text changes in place.
+///
+/// Windows note:
+/// `NULL_BRUSH` is ideal for fixed labels over custom panels, but mutable
+/// `STATIC` text can leave stale glyph pixels when Windows repaints only the
+/// changed child. A matching surface brush preserves the polished look while
+/// preventing text trails during state refresh.
+private func mutableTextSurfaceBrush(for lParam: LPARAM) -> HBRUSH? {
+    guard let control = HWND(bitPattern: lParam),
+          Win32ActionRegistry.mutableTextSurfaceHandles.contains(UInt(bitPattern: control)) else {
         return nil
     }
 
@@ -257,28 +279,6 @@ private func invalidatePickerOptions(for picker: WinPicker) {
             continue
         }
         _ = InvalidateRect(control, nil, 1)
-    }
-}
-
-/// Stores a slider value and mirrors it back to the native controls.
-private func set(sliderState: SliderRenderState, value: Int, control: HWND) {
-    let slider = sliderState.slider
-    let clamped = min(max(value, slider.minimum), slider.maximum)
-    guard clamped != slider.value else {
-        return
-    }
-
-    slider.value = clamped
-    updateSliderLabel(sliderState.label, slider: slider)
-    _ = SendMessageW(control, TBM_SETPOS, 1, LPARAM(clamped))
-    slider.onChange?(clamped)
-    WinDynamicTextInvalidation.invalidateAll()
-}
-
-/// Updates the static text label owned by a slider.
-private func updateSliderLabel(_ label: HWND, slider: WinSlider) {
-    withWideString("\(slider.title): \(slider.value)") { text in
-        _ = SetWindowTextW(label, text)
     }
 }
 

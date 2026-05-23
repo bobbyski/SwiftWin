@@ -22,7 +22,8 @@ final class Win32ApplicationRunner {
         configureProcessDPIAwareness()
         initializeCommonControls()
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
-        Win32PaintResources.controlSurfaceBrush = CreateSolidBrush(0x00fff6ef)
+        Win32PaintResources.controlSurfaceColor = 0x00fff6ef
+        Win32PaintResources.controlSurfaceBrush = CreateSolidBrush(Win32PaintResources.controlSurfaceColor)
         registerWindowClass()
         createWindow(descriptor)
         layoutStack = [
@@ -306,6 +307,7 @@ final class Win32ApplicationRunner {
             let controlID = UInt16(GetDlgCtrlID(control))
             let state = DynamicTextRenderState(text: text, control: control)
             Win32ActionRegistry.dynamicTexts[controlID] = state
+            registerMutableTextSurface(control)
         }
     }
 
@@ -458,6 +460,7 @@ final class Win32ApplicationRunner {
             height: proposedHeight(defaultingTo: 36),
             action: nil
         ) {
+            registerMutableTextSurface(label)
             let state = SliderRenderState(slider: slider, label: label)
             Win32ActionRegistry.slidersByHandle[UInt(bitPattern: control)] = state
             _ = SendMessageW(control, TBM_SETRANGE, 1, makeLong(low: slider.minimum, high: slider.maximum))
@@ -480,6 +483,7 @@ final class Win32ApplicationRunner {
         guard let label = createText(stepperDisplayText(stepper), style: .caption) else {
             return
         }
+        registerStepperLabel(stepper, label: label, displaysValueOnly: false)
 
         beginStack(axis: .horizontal, spacing: 8)
         createStepperButton("-", stepper: stepper, delta: -stepper.step, label: { label }, displaysValueOnly: false)
@@ -527,9 +531,30 @@ final class Win32ApplicationRunner {
         if let control {
             let controlID = UInt32(GetDlgCtrlID(control))
             Win32ActionRegistry.stepperValues[controlID] = StepperValueRenderState(stepper: stepper)
+            registerStepperLabel(stepper, label: control, displaysValueOnly: true)
             applyFont(.body, to: control)
         }
         return control
+    }
+
+    /// Registers a stepper value label for provider-backed invalidation.
+    private func registerStepperLabel(_ stepper: WinStepper, label: HWND, displaysValueOnly: Bool) {
+        Win32ActionRegistry.stepperLabels[UInt(bitPattern: label)] = StepperLabelRenderState(
+            stepper: stepper,
+            label: label,
+            displaysValueOnly: displaysValueOnly
+        )
+        registerMutableTextSurface(label)
+    }
+
+    /// Marks a text control as state-mutated so it erases stale glyph pixels.
+    ///
+    /// Windows note:
+    /// Transparent `STATIC` labels look right for fixed text, but repeatedly
+    /// changing their text can leave old glyphs behind. Mutable labels use the
+    /// current control surface brush so updates are clean by default.
+    private func registerMutableTextSurface(_ control: HWND) {
+        Win32ActionRegistry.mutableTextSurfaceHandles.insert(UInt(bitPattern: control))
     }
 
     /// Creates one owner-drawn button for a stepper action.
@@ -554,12 +579,7 @@ final class Win32ApplicationRunner {
                 guard let label = label() else {
                     return
                 }
-                self.set(
-                    stepper: stepper,
-                    value: stepper.value + delta,
-                    label: label,
-                    displaysValueOnly: displaysValueOnly
-                )
+                self.set(stepper: stepper, value: stepper.value + delta, label: label, displaysValueOnly: displaysValueOnly)
             },
             button: ButtonRenderState(title: title, style: .secondary, segmentRole: segmentRole)
         ) {
@@ -607,23 +627,15 @@ final class Win32ApplicationRunner {
 
     /// Stores a stepper value and mirrors it back to the native label.
     private func set(stepper: WinStepper, value: Int, label: HWND, displaysValueOnly: Bool) {
-        let clamped = min(max(value, stepper.minimum), stepper.maximum)
-        guard clamped != stepper.value else {
+        let state = StepperLabelRenderState(stepper: stepper, label: label, displaysValueOnly: displaysValueOnly)
+        let oldValue = stepper.value
+        setStepperLabel(state, value: value)
+        guard stepper.value != oldValue else {
             return
         }
 
-        stepper.value = clamped
-        updateStepperLabel(label, stepper: stepper, displaysValueOnly: displaysValueOnly)
-        stepper.onChange?(clamped)
+        stepper.onChange?(stepper.value)
         WinDynamicTextInvalidation.invalidateAll()
-    }
-
-    /// Updates the static text label owned by a stepper.
-    private func updateStepperLabel(_ label: HWND, stepper: WinStepper, displaysValueOnly: Bool) {
-        let value = displaysValueOnly ? stepperValueText(stepper) : stepperDisplayText(stepper)
-        withWideString(value) { text in
-            _ = SetWindowTextW(label, text)
-        }
     }
 
     /// Registers the window class used by SwiftWinLegacy windows.

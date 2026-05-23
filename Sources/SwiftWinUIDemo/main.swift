@@ -104,9 +104,21 @@ struct DemoContent: View {
                     message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
                 )
             }
+            Button("Reset") {
+                resetForm()
+            }
             Button("Disabled") {}
                 .disabled()
         }
+    }
+
+    /// Resets bound controls from code to exercise native invalidation.
+    private func resetForm() {
+        projectName = "SwiftWin"
+        includeDiagnostics = true
+        themeIndex = 0
+        scale = 50
+        quantity = 2
     }
 
     /// Builds the current form summary for button actions.

@@ -8,6 +8,7 @@ public struct Stepper: View {
     private let range: ClosedRange<Int>
     private let step: Int
     private let variant: StepperVariant
+    private let valueProvider: (() -> Int)?
     private let onChange: ((Int) -> Void)?
 
     /// Creates a stepper.
@@ -24,6 +25,7 @@ public struct Stepper: View {
         self.range = range
         self.step = step
         self.variant = variant
+        self.valueProvider = nil
         self.onChange = onChange
     }
 
@@ -40,6 +42,7 @@ public struct Stepper: View {
         self.range = range
         self.step = step
         self.variant = variant
+        self.valueProvider = { value.wrappedValue }
         self.onChange = { newValue in
             value.wrappedValue = newValue
         }
@@ -47,7 +50,7 @@ public struct Stepper: View {
 
     /// Emits a semantic stepper operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.stepper(title, value: value, range: range, step: step, variant: variant, onChange: onChange)
+        context.renderer.stepper(title, value: value, range: range, step: step, variant: variant, valueProvider: valueProvider, onChange: onChange)
     }
 }
 

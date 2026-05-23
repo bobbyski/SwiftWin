@@ -10,6 +10,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
+    nonisolated(unsafe) static var stepperLabels: [UInt: StepperLabelRenderState] = [:]
     nonisolated(unsafe) static var dynamicTexts: [UInt16: DynamicTextRenderState] = [:]
     nonisolated(unsafe) static var progressViews: [UInt: ProgressRenderState] = [:]
     nonisolated(unsafe) static var textFields: [UInt16: WinTextField] = [:]
@@ -23,6 +24,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var separators: [UInt32: SeparatorRenderState] = [:]
     nonisolated(unsafe) static var staticTextColorsByHandle: [UInt: DWORD] = [:]
     nonisolated(unsafe) static var staticBackgroundBrushesByHandle: [UInt: HBRUSH] = [:]
+    nonisolated(unsafe) static var mutableTextSurfaceHandles: Set<UInt> = []
     nonisolated(unsafe) static var controlFramesByHandle: [UInt: ControlFrame] = [:]
     nonisolated(unsafe) static var originalControlProceduresByHandle: [UInt: WNDPROC] = [:]
     nonisolated(unsafe) static var hoveredControlIDs: Set<UInt32> = []
@@ -33,6 +35,7 @@ enum Win32ActionRegistry {
         actions.removeAll()
         buttons.removeAll()
         stepperValues.removeAll()
+        stepperLabels.removeAll()
         dynamicTexts.removeAll()
         progressViews.removeAll()
         textFields.removeAll()
@@ -46,6 +49,7 @@ enum Win32ActionRegistry {
         separators.removeAll()
         staticTextColorsByHandle.removeAll()
         staticBackgroundBrushesByHandle.removeAll()
+        mutableTextSurfaceHandles.removeAll()
         controlFramesByHandle.removeAll()
         originalControlProceduresByHandle.removeAll()
         hoveredControlIDs.removeAll()
@@ -64,6 +68,7 @@ public enum WinDynamicTextInvalidation {
     /// Refreshes all registered dynamic text labels.
     public static func invalidateAll() {
         #if os(Windows)
+        refreshProviderBackedControls()
         for state in Win32ActionRegistry.dynamicTexts.values {
             updateDynamicText(state)
         }
@@ -71,6 +76,99 @@ public enum WinDynamicTextInvalidation {
             updateProgressView(state)
         }
         #endif
+    }
+}
+
+/// Refreshes native controls whose values can be read from external state.
+///
+/// Implementation decision:
+/// This is a narrow reconciliation pass, not a full SwiftUI diff. It lets
+/// `@State` and `Binding` update existing HWND controls while the runtime is
+/// still direct-placement and identity-light.
+private func refreshProviderBackedControls() {
+    refreshTextFields()
+    refreshToggles()
+    refreshPickers()
+    refreshSliders()
+    refreshSteppers()
+}
+
+/// Mirrors provider-backed text fields into their native edit controls.
+private func refreshTextFields() {
+    for (controlID, textField) in Win32ActionRegistry.textFields {
+        guard let value = textField.textProvider?(),
+              value != textField.value,
+              let control = Win32ActionRegistry.controlFramesByHandle.values.first(where: { GetDlgCtrlID($0.control) == Int32(controlID) })?.control else {
+            continue
+        }
+
+        textField.value = value
+        withWideString(value) { text in
+            _ = SetWindowTextW(control, text)
+        }
+    }
+}
+
+/// Mirrors provider-backed toggles into owner-drawn checkbox controls.
+private func refreshToggles() {
+    for (controlID, toggle) in Win32ActionRegistry.toggles {
+        guard let value = toggle.valueProvider?(),
+              value != toggle.isOn,
+              let control = Win32ActionRegistry.toggleControls[controlID] else {
+            continue
+        }
+
+        toggle.isOn = value
+        _ = InvalidateRect(control, nil, 1)
+    }
+}
+
+/// Mirrors provider-backed picker selections into owner-drawn options.
+private func refreshPickers() {
+    for option in Win32ActionRegistry.pickerOptions.values {
+        guard let providerValue = option.picker.selectionProvider?() else {
+            continue
+        }
+
+        let clamped = min(max(providerValue, 0), max(0, option.picker.options.count - 1))
+        if clamped != option.picker.selectedIndex {
+            option.picker.selectedIndex = clamped
+        }
+    }
+
+    for control in Win32ActionRegistry.pickerOptionControls.values {
+        _ = InvalidateRect(control, nil, 1)
+    }
+}
+
+/// Mirrors provider-backed sliders into their trackbars and value labels.
+private func refreshSliders() {
+    for (handle, state) in Win32ActionRegistry.slidersByHandle {
+        guard let providerValue = state.slider.valueProvider?(),
+              let control = HWND(bitPattern: handle) else {
+            continue
+        }
+
+        setSlider(state, value: providerValue, control: control, notify: false)
+    }
+}
+
+/// Mirrors provider-backed steppers into their labels and value segments.
+private func refreshSteppers() {
+    for state in Win32ActionRegistry.stepperLabels.values {
+        guard let providerValue = state.stepper.valueProvider?() else {
+            continue
+        }
+
+        setStepperLabel(state, value: providerValue)
+    }
+
+    for controlID in Win32ActionRegistry.stepperValues.keys {
+        guard let frame = Win32ActionRegistry.controlFramesByHandle.values.first(where: { GetDlgCtrlID($0.control) == Int32(controlID) }) else {
+            continue
+        }
+
+        _ = InvalidateRect(frame.control, nil, 1)
     }
 }
 
@@ -92,6 +190,50 @@ private func updateProgressView(_ state: ProgressRenderState) {
     _ = SendMessageW(state.control, PBM_SETPOS, WPARAM(progressPosition(for: state.progressView)), 0)
 }
 
+/// Stores a slider value and mirrors it back to native controls.
+func setSlider(_ state: SliderRenderState, value: Int, control: HWND, notify: Bool) {
+    let slider = state.slider
+    let clamped = min(max(value, slider.minimum), slider.maximum)
+    guard clamped != slider.value else {
+        return
+    }
+
+    slider.value = clamped
+    updateSliderLabel(state.label, slider: slider)
+    _ = SendMessageW(control, TBM_SETPOS, 1, LPARAM(clamped))
+    if notify {
+        slider.onChange?(clamped)
+    }
+}
+
+/// Updates the static text label owned by a slider.
+private func updateSliderLabel(_ label: HWND, slider: WinSlider) {
+    withWideString("\(slider.title): \(slider.value)") { text in
+        _ = SetWindowTextW(label, text)
+    }
+}
+
+/// Stores a stepper value and mirrors it back to one native label.
+func setStepperLabel(_ state: StepperLabelRenderState, value: Int) {
+    let stepper = state.stepper
+    let clamped = min(max(value, stepper.minimum), stepper.maximum)
+    guard clamped != stepper.value else {
+        return
+    }
+
+    stepper.value = clamped
+    updateStepperLabel(state)
+}
+
+/// Updates the static text label owned by a stepper.
+func updateStepperLabel(_ state: StepperLabelRenderState) {
+    let value = state.displaysValueOnly ? "\(state.stepper.value)" : "\(state.stepper.title): \(state.stepper.value)"
+    withWideString(value) { text in
+        _ = SetWindowTextW(state.label, text)
+    }
+    _ = InvalidateRect(state.label, nil, 1)
+}
+
 /// Converts a progress view value into a normalized progress-bar position.
 func progressPosition(for progressView: WinProgressView) -> Int {
     let ratio = min(max(progressView.value / progressView.total, 0), 1)
@@ -108,6 +250,13 @@ struct ButtonRenderState {
 /// Owner-draw metadata for an integrated stepper value segment.
 struct StepperValueRenderState {
     var stepper: WinStepper
+}
+
+/// Native label associated with a stepper value.
+struct StepperLabelRenderState {
+    var stepper: WinStepper
+    var label: HWND
+    var displaysValueOnly: Bool
 }
 
 /// Position of a segment inside a cohesive multi-part control.
@@ -168,5 +317,6 @@ struct WindowScrollState {
 enum Win32PaintResources {
     nonisolated(unsafe) static var backgroundBrush: HBRUSH?
     nonisolated(unsafe) static var controlSurfaceBrush: HBRUSH?
+    nonisolated(unsafe) static var controlSurfaceColor: DWORD = 0x00fff6ef
 }
 #endif

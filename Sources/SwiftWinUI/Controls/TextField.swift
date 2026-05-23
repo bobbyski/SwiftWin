@@ -5,6 +5,7 @@
 public struct TextField: View {
     private let prompt: String
     private let text: String
+    private let textProvider: (() -> String)?
     private let onChange: ((String) -> Void)?
 
     /// Creates a text field.
@@ -15,6 +16,7 @@ public struct TextField: View {
     ) {
         self.prompt = prompt
         self.text = text
+        self.textProvider = nil
         self.onChange = onChange
     }
 
@@ -22,6 +24,7 @@ public struct TextField: View {
     public init(_ prompt: String, text: Binding<String>) {
         self.prompt = prompt
         self.text = text.wrappedValue
+        self.textProvider = { text.wrappedValue }
         self.onChange = { value in
             text.wrappedValue = value
         }
@@ -29,6 +32,6 @@ public struct TextField: View {
 
     /// Emits a semantic text-field operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.textField(prompt, text: text, onChange: onChange)
+        context.renderer.textField(prompt, text: text, textProvider: textProvider, onChange: onChange)
     }
 }
