@@ -53,6 +53,7 @@ struct DemoContent: View {
         }
         .padding(12)
         .background(Color(red: 239, green: 246, blue: 255))
+        .border(Color(red: 191, green: 219, blue: 254), width: 1)
     }
 
     /// Builds the current form summary for button actions.

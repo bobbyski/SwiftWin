@@ -11,6 +11,7 @@ final class Win32ApplicationRunner {
     private var window: HWND?
     private var layoutStack: [LayoutState] = []
     private var backgroundStack: [BackgroundLayoutState] = []
+    private var borderStack: [BorderLayoutState] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
 
@@ -80,6 +81,10 @@ final class Win32ApplicationRunner {
             beginBackground(color: background.color)
             background.children.forEach(render)
             endBackground()
+        case let border as WinBorder:
+            beginBorder(color: border.color, width: border.width)
+            border.children.forEach(render)
+            endBorder()
         case let disabled as WinDisabled:
             beginDisabled(disabled.isDisabled)
             disabled.children.forEach(render)
@@ -196,6 +201,33 @@ final class Win32ApplicationRunner {
 
         let size = consumedSize(of: child)
         resizeBackgroundPanel(background, width: size.width, height: size.height)
+        advance(width: size.width, height: size.height)
+    }
+
+    /// Pushes a border layout context.
+    private func beginBorder(color: WinForegroundStyle, width: Double) {
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        borderStack.append(
+            BorderLayoutState(
+                x: origin.x,
+                y: origin.y,
+                color: color,
+                width: max(1, Int32(width))
+            )
+        )
+        layoutStack.append(origin)
+    }
+
+    /// Pops a border context, creates its drawing panel, and advances the parent.
+    private func endBorder() {
+        guard layoutStack.count > 1,
+              let child = layoutStack.popLast(),
+              let border = borderStack.popLast() else {
+            return
+        }
+
+        let size = consumedSize(of: child)
+        createBorderPanel(border, width: size.width, height: size.height)
         advance(width: size.width, height: size.height)
     }
 
@@ -553,6 +585,45 @@ final class Win32ApplicationRunner {
         registerControlFrame(control, x: background.x, y: background.y, width: resolvedWidth, height: resolvedHeight)
     }
 
+    /// Creates a disabled owner-drawn panel that paints a border above content.
+    ///
+    /// Windows note:
+    /// The panel is created after its children so the border remains visible.
+    /// It is immediately disabled so normal mouse interaction continues to
+    /// target the real controls underneath.
+    private func createBorderPanel(_ border: BorderLayoutState, width: Int32, height: Int32) {
+        guard let window else {
+            return
+        }
+
+        let controlID = nextControlID
+        nextControlID += 1
+        let resolvedWidth = max(1, width)
+        let resolvedHeight = max(1, height)
+        let control = withWideString("STATIC") { controlClass in
+            withWideString("") { controlTitle in
+                CreateWindowExW(
+                    0,
+                    controlClass,
+                    controlTitle,
+                    WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
+                    border.x,
+                    border.y,
+                    resolvedWidth,
+                    resolvedHeight,
+                    window,
+                    HMENU(bitPattern: Int(controlID)),
+                    instance,
+                    nil
+                )
+            }
+        }
+
+        Win32ActionRegistry.borders[UInt32(controlID)] = BorderRenderState(color: border.color, width: border.width)
+        registerControlFrame(control, x: border.x, y: border.y, width: resolvedWidth, height: resolvedHeight)
+        _ = EnableWindow(control, 0)
+    }
+
     /// Registers Swift state associated with a Win32 child control ID.
     private func registerControlState(
         controlID: UInt16,
@@ -759,6 +830,14 @@ private struct BackgroundLayoutState {
     var control: HWND?
     var x: Int32
     var y: Int32
+}
+
+/// Border panel metadata waiting for child-driven size.
+private struct BorderLayoutState {
+    var x: Int32
+    var y: Int32
+    var color: WinForegroundStyle
+    var width: Int32
 }
 
 /// Current direct-placement layout context.

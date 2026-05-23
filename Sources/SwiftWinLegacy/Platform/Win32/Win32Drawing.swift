@@ -44,7 +44,33 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
 
     if Win32ActionRegistry.pickerOptions[UInt16(item.CtlID)] != nil {
         drawPickerOption(item)
+        return
     }
+
+    if Win32ActionRegistry.borders[item.CtlID] != nil {
+        drawBorder(item)
+    }
+}
+
+/// Paints a noninteractive border panel.
+private func drawBorder(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let border = Win32ActionRegistry.borders[item.CtlID] else {
+        return
+    }
+
+    let pen = CreatePen(PS_SOLID, border.width, border.color.win32Color)
+    let oldPen = SelectObject(deviceContext, pen)
+    let inset = max(0, border.width / 2)
+
+    _ = MoveToEx(deviceContext, item.rcItem.left + inset, item.rcItem.top + inset, nil)
+    _ = LineTo(deviceContext, item.rcItem.right - inset - 1, item.rcItem.top + inset)
+    _ = LineTo(deviceContext, item.rcItem.right - inset - 1, item.rcItem.bottom - inset - 1)
+    _ = LineTo(deviceContext, item.rcItem.left + inset, item.rcItem.bottom - inset - 1)
+    _ = LineTo(deviceContext, item.rcItem.left + inset, item.rcItem.top + inset)
+
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(pen)
 }
 
 /// Paints the rounded button surface.

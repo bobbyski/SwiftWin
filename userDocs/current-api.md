@@ -297,6 +297,22 @@ Windows note for Apple developers: the current Win32 backend implements this wit
 
 Current implementation: this supports solid colors only. SwiftUI's arbitrary background views, materials, alignment overloads, clipping, rounded corners, and paint-order semantics remain planned.
 
+`border` paints a solid rectangular border around a view.
+
+```swift
+VStack(spacing: 12) {
+    Text("SwiftWinUI", style: .title)
+    Text("Native Windows, Swift-shaped.")
+}
+.padding(12)
+.background(Color(red: 239, green: 246, blue: 255))
+.border(Color(red: 191, green: 219, blue: 254), width: 1)
+```
+
+Windows note for Apple developers: the current Win32 backend paints the border with a disabled owner-drawn child control created after the wrapped content. Creating it last keeps the border visible; disabling it keeps mouse input flowing to the actual controls below.
+
+Current implementation: this supports rectangular solid borders only. Rounded borders, shape strokes, overlays, clipping, and precise SwiftUI paint-order behavior remain planned.
+
 ## Spacer
 
 `Spacer` inserts fixed spacing in the current stack.

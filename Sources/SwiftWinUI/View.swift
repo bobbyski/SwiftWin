@@ -105,6 +105,10 @@ public protocol Renderer: AnyObject {
     func beginBackground(_ style: Color)
     /// Ends the current background color scope.
     func endBackground()
+    /// Begins a solid border scope.
+    func beginBorder(_ color: Color, width: Double)
+    /// Ends the current solid border scope.
+    func endBorder()
     /// Renders static text.
     func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders text that can be re-evaluated after state changes.
@@ -159,6 +163,12 @@ public extension Renderer {
 
     /// Ends a default background scope.
     func endBackground() {}
+
+    /// Default border scope for renderers that do not paint borders.
+    func beginBorder(_ color: Color, width: Double) {}
+
+    /// Ends a default border scope.
+    func endBorder() {}
 }
 
 /// Axis for stack layout.

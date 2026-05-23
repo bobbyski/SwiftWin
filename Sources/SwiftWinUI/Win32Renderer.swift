@@ -153,6 +153,20 @@ public final class Win32Renderer: Renderer {
         add(background)
     }
 
+    /// Begins a border container.
+    public func beginBorder(_ color: Color, width: Double) {
+        containerPath.append(WinBorder(color: color.winForegroundStyle, width: width))
+    }
+
+    /// Closes the current border container and appends it to its parent/window.
+    public func endBorder() {
+        guard let border = containerPath.popLast() else {
+            return
+        }
+
+        add(border)
+    }
+
     /// Adapts SwiftWinUI text to `WinText`.
     public func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle) {
         add(WinText(value, style: style.winTextStyle, foregroundStyle: foregroundStyle.winForegroundStyle))

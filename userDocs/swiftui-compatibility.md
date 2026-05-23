@@ -29,7 +29,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)` rectangular borders |
 | `TextField` | Partial |
 | `Toggle` | Partial |
 | `List` | Not implemented |
@@ -146,6 +146,23 @@ VStack(spacing: 8) {
 This is not yet the full SwiftUI background system. Arbitrary background views,
 materials, alignment overloads, clipping, rounded corners, and exact paint-order
 semantics are still planned.
+
+## Border Modifier
+
+`.border(_:width:)` exists for solid rectangular borders.
+
+```swift
+VStack(spacing: 8) {
+    Text("SwiftWinUI")
+    Text("Native Windows, Swift-shaped.")
+}
+.padding(12)
+.background(Color(red: 239, green: 246, blue: 255))
+.border(Color(red: 191, green: 219, blue: 254), width: 1)
+```
+
+This is not yet a full SwiftUI overlay or shape-stroke system. Rounded borders,
+shape styles, clipping, and exact modifier-order paint behavior remain planned.
 
 ## Hover State
 

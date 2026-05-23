@@ -117,6 +117,17 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints a border node.
+    public func beginBorder(_ color: Color, width: Double) {
+        write("Border(color: \(foregroundDescription(color)), width: \(width))")
+        indent += 1
+    }
+
+    /// Ends the current border node.
+    public func endBorder() {
+        indent -= 1
+    }
+
     /// Prints a text node.
     public func text(_ value: String, style: TextStyle, foregroundStyle: ForegroundStyle) {
         write("Text(\"\(value)\", size: \(style.size), weight: \(style.weight), foreground: \(foregroundDescription(foregroundStyle)))")
