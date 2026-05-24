@@ -659,7 +659,9 @@ struct WindowScrollState {
 enum Win32PaintResources {
     nonisolated(unsafe) static var backgroundBrush: HBRUSH?
     nonisolated(unsafe) static var controlSurfaceBrush: HBRUSH?
+    nonisolated(unsafe) static var focusedEditBrush: HBRUSH?
     nonisolated(unsafe) static var controlSurfaceColor: DWORD = 0x00fff6ef
+    nonisolated(unsafe) static var focusedEditColor: DWORD = 0x00d3f8ff
 }
 
 /// Converts a framework date to the Win32 `SYSTEMTIME` shape.

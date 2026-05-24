@@ -54,6 +54,10 @@ focus internally, but once SwiftWin takes over drawing for buttons, links,
 segmented pickers, toggles, and swatches, the backend tracks `WM_SETFOCUS` and
 `WM_KILLFOCUS` directly and paints a clear focus ring.
 
+Native text fields use a different hook. SwiftWin handles `WM_CTLCOLOREDIT` to
+give focused edit controls and the Date Time Picker's inner edit field a subtle
+warm background, because their only stock focus hint may otherwise be the caret.
+
 Apple-platform mental model: this is closer to manually moving subviews and
 forcing invalidation than to dropping content inside a ready-made
 `NSScrollView`, `UIScrollView`, or SwiftUI `ScrollView`.

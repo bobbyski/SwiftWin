@@ -63,6 +63,7 @@ private func markControlFocused(_ control: HWND?) {
     }
 
     _ = InvalidateRect(control, nil, 1)
+    _ = RedrawWindow(control, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW)
 }
 
 /// Clears focus state from a control and repaints it.
@@ -73,6 +74,7 @@ private func markControlUnfocused(_ control: HWND?) {
     }
 
     _ = InvalidateRect(control, nil, 1)
+    _ = RedrawWindow(control, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW)
 }
 
 /// Lets multiline text editors use Tab for focus traversal.

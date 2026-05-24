@@ -24,6 +24,7 @@ final class Win32ApplicationRunner {
         Win32PaintResources.backgroundBrush = CreateSolidBrush(0x00fbf8f7)
         Win32PaintResources.controlSurfaceColor = 0x00fff6ef
         Win32PaintResources.controlSurfaceBrush = CreateSolidBrush(Win32PaintResources.controlSurfaceColor)
+        Win32PaintResources.focusedEditBrush = CreateSolidBrush(Win32PaintResources.focusedEditColor)
         registerWindowClass()
         createWindow(descriptor)
         layoutStack = [
@@ -406,6 +407,7 @@ final class Win32ApplicationRunner {
         ) {
             applyFont(.body, to: control)
             setPlaceholder(field.prompt, for: control)
+            installControlTracking(for: control)
         }
     }
 
@@ -427,6 +429,7 @@ final class Win32ApplicationRunner {
         ) {
             applyFont(.body, to: control)
             setPlaceholder(field.prompt, for: control)
+            installControlTracking(for: control)
         }
     }
 
@@ -546,6 +549,7 @@ final class Win32ApplicationRunner {
         ) {
             applyFont(.body, to: control)
             setNativeDate(control, date: datePicker.date)
+            installControlTracking(for: control)
         }
     }
 

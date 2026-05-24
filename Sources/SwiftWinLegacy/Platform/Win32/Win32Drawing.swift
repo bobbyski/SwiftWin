@@ -658,7 +658,7 @@ private func hasKeyboardFocus(_ item: DRAWITEMSTRUCT) -> Bool {
 
 /// Returns the shared focus ring color.
 private func focusRingColor() -> DWORD {
-    0x00f07820
+    0x0000a8ff
 }
 
 /// Returns whether an owner-drawn item should paint hover state.

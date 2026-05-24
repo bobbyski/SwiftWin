@@ -96,6 +96,7 @@ reason about.
 - [x] Add date-only `DatePicker` / `WinDatePicker` with native Win32 Date Time Picker hosting and document the segmented keyboard-entry behavior.
 - [x] Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`.
 - [x] Add disabled, pressed, hover, and visible keyboard-focused paint states for owner-drawn controls.
+- [x] Add native edit-control focus coloring so text fields are visible without relying only on the caret.
 - [x] Add internal hover tracking for owner-drawn control paint.
 - [x] Add imperative refresh for single controls and batched multi-control updates.
 - [x] Add dynamic text and progress refresh after form events.

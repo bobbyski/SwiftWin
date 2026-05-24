@@ -140,6 +140,7 @@ let WM_COMMAND: UINT = 0x0111
 let WM_HSCROLL: UINT = 0x0114
 let WM_NOTIFY: UINT = 0x004e
 let WM_DRAWITEM: UINT = 0x002b
+let WM_CTLCOLOREDIT: UINT = 0x0133
 let WM_CTLCOLORSTATIC: UINT = 0x0138
 let WM_SIZE: UINT = 0x0005
 let WM_MOUSEMOVE: UINT = 0x0200
@@ -178,6 +179,7 @@ let TRANSPARENT: Int32 = 1
 let PS_SOLID: Int32 = 0
 let NULL_BRUSH: Int32 = 5
 let NULL_PEN: Int32 = 8
+let WHITE_BRUSH: Int32 = 0
 let FW_REGULAR: Int32 = 400
 let FW_SEMIBOLD: Int32 = 600
 let FW_BOLD: Int32 = 700
@@ -268,6 +270,8 @@ func CreateSolidBrush(_ color: DWORD) -> HBRUSH?
 func GetStockObject(_ object: Int32) -> HGDIOBJ?
 @_silgen_name("SetBkMode")
 func SetBkMode(_ deviceContext: HDC?, _ backgroundMode: Int32) -> Int32
+@_silgen_name("SetBkColor")
+func SetBkColor(_ deviceContext: HDC?, _ color: DWORD) -> DWORD
 @_silgen_name("SetTextColor")
 func SetTextColor(_ deviceContext: HDC?, _ color: DWORD) -> DWORD
 @_silgen_name("CreatePen")

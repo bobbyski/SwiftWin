@@ -19,6 +19,8 @@ func swiftWinLegacyWindowProc(
         return handleMouseWheel(hwnd: hwnd, wParam: wParam)
     case WM_SIZE:
         return handleWindowSize(hwnd: hwnd)
+    case WM_CTLCOLOREDIT:
+        return handleEditColor(wParam: wParam, lParam: lParam)
     case WM_CTLCOLORSTATIC:
         return handleStaticColor(wParam: wParam, lParam: lParam)
     case WM_DRAWITEM:
@@ -109,6 +111,62 @@ private func handleHorizontalScroll(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     setSlider(state, value: value, control: control, notify: true)
     WinDynamicTextInvalidation.invalidateAll()
     return 0
+}
+
+/// Provides background colors for native edit controls.
+///
+/// Windows note:
+/// Text fields are not owner-drawn. The supported lightweight customization
+/// hook is `WM_CTLCOLOREDIT`, where the parent returns a brush used by the
+/// child edit control. This gives keyboard focus a visible state without
+/// replacing the native edit implementation. Date Time Pickers host an inner
+/// edit child, so the check also recognizes controls whose parent is a
+/// registered `WinDatePicker` HWND.
+private func handleEditColor(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
+    guard let control = HWND(bitPattern: lParam),
+          isEditableTextControl(control) else {
+        return 0
+    }
+
+    guard isFocusedEditableTextControl(control) else {
+        return LRESULT(Int(bitPattern: GetStockObject(WHITE_BRUSH)))
+    }
+
+    _ = SetBkColor(HDC(bitPattern: wParam), Win32PaintResources.focusedEditColor)
+    _ = SetTextColor(HDC(bitPattern: wParam), WinForegroundStyle.primary.win32Color)
+    return LRESULT(Int(bitPattern: Win32PaintResources.focusedEditBrush))
+}
+
+/// Returns whether a child HWND belongs to a SwiftWin editable text control.
+private func isEditableTextControl(_ control: HWND) -> Bool {
+    let controlID = UInt16(GetDlgCtrlID(control))
+    return Win32ActionRegistry.textFields[controlID] != nil ||
+        Win32ActionRegistry.secureFields[controlID] != nil ||
+        Win32ActionRegistry.textEditors[controlID] != nil ||
+        datePickerParent(for: control) != nil
+}
+
+/// Returns whether an editable text control currently has focus.
+private func isFocusedEditableTextControl(_ control: HWND) -> Bool {
+    let controlID = UInt32(GetDlgCtrlID(control))
+    if Win32ActionRegistry.focusedControlIDs.contains(controlID) {
+        return true
+    }
+
+    guard let parent = datePickerParent(for: control) else {
+        return false
+    }
+
+    return Win32ActionRegistry.focusedControlIDs.contains(UInt32(GetDlgCtrlID(parent)))
+}
+
+/// Returns the registered date picker HWND that owns an internal edit child.
+private func datePickerParent(for control: HWND) -> HWND? {
+    guard let parent = GetParent(control) else {
+        return nil
+    }
+
+    return Win32ActionRegistry.datePickerControls.values.contains { $0 == parent } ? parent : nil
 }
 
 /// Provides text colors for static controls.
