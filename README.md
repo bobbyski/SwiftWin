@@ -17,9 +17,9 @@ Functions should stay as small as reasonably practical. When an implementation s
 ## Features
 
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
-- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, and `Spacer`
-- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinProgressView`, `WinButton`, `WinSpacer`, and `WinDialog`
-- Early form input with `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, and determinate `ProgressView`
+- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Link`, `Button`, and `Spacer`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinSpacer`, and `WinDialog`
+- Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, first-pass `ColorPicker`, and determinate `ProgressView`
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
@@ -105,6 +105,7 @@ struct DemoApp: App {
                 TextField("Project name", text: "SwiftWin")
                 Toggle("Include diagnostics", isOn: true)
                 Picker("Theme", options: ["System", "Light", "Dark"])
+                ColorPicker("Accent color", color: .accent)
                 Slider("Scale", value: 50, range: 0...100)
                 Stepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
                 ProgressView("Scale progress", value: 50, total: 100)

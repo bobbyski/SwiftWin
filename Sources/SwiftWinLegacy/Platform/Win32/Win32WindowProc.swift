@@ -79,7 +79,8 @@ private func handleCommand(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
 private func handleControlClick(controlID: UInt16, control: HWND) -> Bool {
     let handledToggle = updateToggle(controlID: controlID, control: control)
     let handledPicker = updatePicker(controlID: controlID)
-    return handledToggle || handledPicker
+    let handledColorPicker = updateColorPicker(controlID: controlID, control: control)
+    return handledToggle || handledPicker || handledColorPicker
 }
 
 /// Routes `WM_HSCROLL` notifications from native trackbar-backed sliders.
@@ -310,6 +311,29 @@ private func updatePicker(controlID: UInt16) -> Bool {
     }
 
     return true
+}
+
+/// Advances a color picker through its default palette.
+private func updateColorPicker(controlID: UInt16, control: HWND) -> Bool {
+    guard let colorPicker = Win32ActionRegistry.colorPickers[controlID] else {
+        return false
+    }
+
+    colorPicker.color = nextPaletteColor(after: colorPicker.color)
+    _ = InvalidateRect(control, nil, 1)
+    colorPicker.onChange?(colorPicker.color)
+    WinDynamicTextInvalidation.invalidateAll()
+    return true
+}
+
+/// Returns the next palette color after the current color.
+private func nextPaletteColor(after color: WinForegroundStyle) -> WinForegroundStyle {
+    let palette = WinColorPicker.defaultPalette
+    guard let index = palette.firstIndex(of: color) else {
+        return palette.first ?? color
+    }
+
+    return palette[(index + 1) % palette.count]
 }
 
 /// Redraws all native option buttons for a picker.

@@ -59,6 +59,8 @@ final class ConsoleLegacyRenderer {
             write("WinSlider(\"\(slider.title)\", value: \(slider.value), range: \(slider.minimum)...\(slider.maximum))")
         case let stepper as WinStepper:
             write("WinStepper(\"\(stepper.title)\", value: \(stepper.value), range: \(stepper.minimum)...\(stepper.maximum), step: \(stepper.step), variant: \(stepper.variant))")
+        case let colorPicker as WinColorPicker:
+            write("WinColorPicker(\"\(colorPicker.title)\", color: \(colorDescription(colorPicker.color)))")
         case let progressView as WinProgressView:
             write("WinProgressView(title: \(optionalDescription(progressView.title)), value: \(progressView.value), total: \(progressView.total))")
         case let separator as WinSeparator:
@@ -91,5 +93,10 @@ final class ConsoleLegacyRenderer {
         }
 
         return "\"\(value)\""
+    }
+
+    /// Formats RGB colors deterministically.
+    private func colorDescription(_ color: WinForegroundStyle) -> String {
+        "rgb(\(color.red),\(color.green),\(color.blue))"
     }
 }

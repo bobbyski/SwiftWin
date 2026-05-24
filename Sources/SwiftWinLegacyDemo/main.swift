@@ -45,6 +45,16 @@ content.add(includeDiagnostics)
 let theme = WinPicker("Theme", options: ["System", "Light", "Dark"], selectedIndex: 0)
 content.add(theme)
 
+let accentColor = WinColorPicker("Accent color", color: .accent)
+content.add(accentColor)
+content.add(
+    WinDynamicText(
+        { "Accent color: \(colorDescription(accentColor.color))" },
+        style: .caption,
+        foregroundStyle: .accent
+    )
+)
+
 let scale = WinSlider("Scale", value: 50, range: 0...100)
 let scaleFrame = WinFrame(width: 380, height: nil)
 scaleFrame.add(scale)
@@ -78,6 +88,7 @@ footer.add(WinButton("Create Window", style: .primary) {
         Theme: \(["System", "Light", "Dark"][theme.selectedIndex])
         Scale: \(scale.value)
         Quantity: \(quantity.value)
+        Accent color: \(colorDescription(accentColor.color))
         Notes: \(notes.value)
         Access code: \(accessCode.value.isEmpty ? "missing" : "set")
         """
@@ -99,7 +110,8 @@ footer.add(WinButton("Reset") {
         scale: scale,
         quantity: quantity,
         notes: notes,
-        accessCode: accessCode
+        accessCode: accessCode,
+        accentColor: accentColor
     )
 })
 let disabledButton = WinDisabled(isDisabled: true)
@@ -137,6 +149,11 @@ private func projectNameMeaningfulCharacterCount(_ value: String) -> Int {
     value.filter { !$0.isWhitespace }.count
 }
 
+/// Describes a color for previews and dialogs.
+private func colorDescription(_ color: WinForegroundStyle) -> String {
+    "rgb(\(color.red), \(color.green), \(color.blue))"
+}
+
 /// Resets mutable controls from imperative code.
 ///
 /// Implementation note:
@@ -150,7 +167,8 @@ private func resetForm(
     scale: WinSlider,
     quantity: WinStepper,
     notes: WinTextEditor,
-    accessCode: WinSecureField
+    accessCode: WinSecureField,
+    accentColor: WinColorPicker
 ) {
     projectName.value = "SwiftWin"
     includeDiagnostics.isOn = true
@@ -159,6 +177,7 @@ private func resetForm(
     quantity.value = 2
     notes.value = "Milestone 2 notes:\nText editing is now multi-line."
     accessCode.value = "swift"
+    accentColor.color = .accent
 
     WinControlInvalidation.refresh([
         projectName,
@@ -166,6 +185,7 @@ private func resetForm(
         accessCode,
         includeDiagnostics,
         theme,
+        accentColor,
         scale,
         quantity,
     ])

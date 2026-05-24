@@ -260,6 +260,22 @@ public final class Win32Renderer: Renderer {
         add(WinStepper(title, value: value, range: range, step: step, variant: variant.winVariant, onChange: onChange, valueProvider: valueProvider))
     }
 
+    /// Adapts SwiftWinUI color pickers to `WinColorPicker`.
+    public func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?) {
+        add(
+            WinColorPicker(
+                title,
+                color: color.winForegroundStyle,
+                onChange: { value in
+                    onChange?(value.color)
+                },
+                colorProvider: {
+                    colorProvider?().winForegroundStyle ?? color.winForegroundStyle
+                }
+            )
+        )
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())
@@ -327,6 +343,12 @@ private extension FontWeight {
 private extension ForegroundStyle {
     var winForegroundStyle: WinForegroundStyle {
         WinForegroundStyle(red: red, green: green, blue: blue)
+    }
+}
+
+private extension WinForegroundStyle {
+    var color: Color {
+        Color(red: red, green: green, blue: blue)
     }
 }
 

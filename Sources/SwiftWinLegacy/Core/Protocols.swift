@@ -109,6 +109,16 @@ public protocol WinRangeControl: WinElement {
     var onChange: ((Int) -> Void)? { get set }
 }
 
+/// Protocol for controls that edit an RGB color value.
+public protocol WinColorControl: WinElement {
+    /// Label describing the color.
+    var title: String { get set }
+    /// Current RGB color.
+    var color: WinForegroundStyle { get set }
+    /// Closure invoked after native interaction changes the color.
+    var onChange: ((WinForegroundStyle) -> Void)? { get set }
+}
+
 /// Protocol for controls whose native HWND can be refreshed from Swift values.
 ///
 /// This is intentionally small: the element remains the source of truth, while

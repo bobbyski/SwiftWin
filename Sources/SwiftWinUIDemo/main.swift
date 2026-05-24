@@ -9,6 +9,7 @@ struct DemoContent: View {
     @State private var quantity = 2
     @State private var notes = "Milestone 2 notes:\nText editing is now multi-line."
     @State private var accessCode = "swift"
+    @State private var accentColor = Color.accent
 
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
@@ -79,6 +80,9 @@ struct DemoContent: View {
             Text("Access code: \(accessCode.isEmpty ? "missing" : "set")", style: .caption)
             Toggle("Include diagnostics", isOn: $includeDiagnostics)
             Picker("Theme", options: themes, selectedIndex: $themeIndex)
+            ColorPicker("Accent color", selection: $accentColor)
+            Text("Accent color: \(colorDescription(accentColor))", style: .caption)
+                .foregroundStyle(accentColor)
             Slider("Scale", value: $scale, range: 0...100)
                 .frame(width: 380)
             Text("Live scale preview: \(scale)", style: .caption)
@@ -130,6 +134,7 @@ struct DemoContent: View {
         quantity = 2
         notes = "Milestone 2 notes:\nText editing is now multi-line."
         accessCode = "swift"
+        accentColor = .accent
     }
 
     /// Builds the current form summary for button actions.
@@ -140,9 +145,15 @@ struct DemoContent: View {
         Theme: \(themeName)
         Scale: \(scale)
         Quantity: \(quantity)
+        Accent color: \(colorDescription(accentColor))
         Notes: \(notes)
         Access code: \(accessCode.isEmpty ? "missing" : "set")
         """
+    }
+
+    /// Describes a semantic RGB color for demo previews and dialogs.
+    private func colorDescription(_ color: Color) -> String {
+        "rgb(\(color.red), \(color.green), \(color.blue))"
     }
 }
 

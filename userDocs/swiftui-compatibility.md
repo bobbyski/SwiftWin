@@ -39,6 +39,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Picker` | Partial |
 | `Slider` | Partial |
 | `Stepper` | Partial: integer values only |
+| `ColorPicker` | Partial: palette-cycle swatch picker only |
 | `ProgressView` | Partial: determinate progress only |
 | `List` | Not implemented |
 | `Image` | Not implemented |
@@ -55,6 +56,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 TextField("Project name", text: $projectName)
 SecureField("Access code", text: $accessCode)
 Slider("Scale", value: $scale, range: 0...100)
+ColorPicker("Accent color", selection: $accentColor)
 Link("Open Swift.org", destination: "https://www.swift.org")
 ```
 
@@ -70,6 +72,7 @@ Slider("Scale", value: $scale, range: 0...100)
 Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
 Text("Live scale preview: \(scale)", style: .caption)
 ProgressView("Scale progress", value: scale, total: 100)
+ColorPicker("Accent color", selection: $accentColor)
 ```
 
 Full native reconciliation is still planned. Layout changes, conditional view

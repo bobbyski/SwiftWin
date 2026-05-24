@@ -61,6 +61,11 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
         return
     }
 
+    if Win32ActionRegistry.colorPickers[UInt16(item.CtlID)] != nil {
+        drawColorPicker(item)
+        return
+    }
+
     if Win32ActionRegistry.backgrounds[item.CtlID] != nil {
         drawBackground(item)
         return
@@ -74,6 +79,20 @@ func drawOwnerDrawnControl(_ item: DRAWITEMSTRUCT) {
     if Win32ActionRegistry.separators[item.CtlID] != nil {
         drawSeparator(item)
     }
+}
+
+/// Paints an owner-drawn color picker row.
+private func drawColorPicker(_ item: DRAWITEMSTRUCT) {
+    guard let deviceContext = item.hDC,
+          let colorPicker = Win32ActionRegistry.colorPickers[UInt16(item.CtlID)] else {
+        return
+    }
+
+    let isDisabled = (item.itemState & ODS_DISABLED) != 0
+    let isHovered = isHot(item)
+    paintControlSurface(item.rcItem, in: deviceContext)
+    paintColorSwatch(colorPicker.color, in: item.rcItem, deviceContext: deviceContext, isHovered: isHovered, isDisabled: isDisabled)
+    paintColorPickerTitle(colorPicker.title, in: item.rcItem, deviceContext: deviceContext, isDisabled: isDisabled)
 }
 
 /// Paints an owner-drawn link.
@@ -387,6 +406,35 @@ private func paintPickerOptionTitle(_ title: String, in rect: RECT, deviceContex
 
     withWideString(title) { title in
         _ = DrawTextW(deviceContext, title, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE)
+    }
+}
+
+/// Paints the selected color swatch.
+private func paintColorSwatch(_ color: WinForegroundStyle, in rect: RECT, deviceContext: HDC, isHovered: Bool, isDisabled: Bool) {
+    let swatch = RECT(left: rect.left + 1, top: rect.top + 5, right: rect.left + 31, bottom: rect.top + 29)
+    let fill = CreateSolidBrush(isDisabled ? 0x00e8e1dd : color.win32Color)
+    let border = CreatePen(PS_SOLID, isHovered && !isDisabled ? 2 : 1, isDisabled ? 0x00c8c0ba : 0x00cfc7c2)
+    let oldBrush = SelectObject(deviceContext, fill)
+    let oldPen = SelectObject(deviceContext, border)
+
+    _ = RoundRect(deviceContext, swatch.left, swatch.top, swatch.right, swatch.bottom, 6, 6)
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(fill)
+    _ = DeleteObject(border)
+}
+
+/// Paints the label portion of a color picker.
+private func paintColorPickerTitle(_ title: String, in rect: RECT, deviceContext: HDC, isDisabled: Bool) {
+    _ = SetBkMode(deviceContext, TRANSPARENT)
+    _ = SetTextColor(deviceContext, isDisabled ? 0x008f8a86 : 0x00271811)
+
+    var textRect = rect
+    textRect.left += 40
+    textRect.right -= 4
+
+    withWideString(title) { title in
+        _ = DrawTextW(deviceContext, title, -1, &textRect, DT_VCENTER | DT_SINGLELINE)
     }
 }
 

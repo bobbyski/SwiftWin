@@ -116,6 +116,8 @@ final class Win32ApplicationRunner {
             createToggle(toggle)
         case let picker as WinPicker:
             createPicker(picker)
+        case let colorPicker as WinColorPicker:
+            createColorPicker(colorPicker)
         case let slider as WinSlider:
             createSlider(slider)
         case let stepper as WinStepper:
@@ -487,6 +489,21 @@ final class Win32ApplicationRunner {
         }
     }
 
+    /// Creates an owner-drawn color picker.
+    private func createColorPicker(_ colorPicker: WinColorPicker) {
+        if let control = createControl(
+            className: "BUTTON",
+            title: colorPicker.title,
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
+            width: proposedWidth(defaultingTo: max(180, Int32(colorPicker.title.count * 9 + 58))),
+            height: proposedHeight(defaultingTo: 34),
+            action: nil,
+            colorPicker: colorPicker
+        ) {
+            applyFont(.body, to: control)
+        }
+    }
+
     /// Returns radio-button style flags for a picker option.
     private func pickerOptionStyle(index: Int) -> DWORD {
         var style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON
@@ -753,6 +770,7 @@ final class Win32ApplicationRunner {
         textEditor: WinTextEditor? = nil,
         toggle: WinToggle? = nil,
         pickerOption: PickerOptionState? = nil,
+        colorPicker: WinColorPicker? = nil,
         textForegroundStyle: WinForegroundStyle? = nil
     ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
@@ -790,11 +808,12 @@ final class Win32ApplicationRunner {
                     textEditor: textEditor,
                     toggle: toggle,
                     pickerOption: pickerOption,
+                    colorPicker: colorPicker,
                     textForegroundStyle: textForegroundStyle
                 )
                 installHoverTrackingIfNeeded(
                     control: control,
-                    isOwnerDrawn: button != nil || link != nil || toggle != nil || pickerOption != nil
+                    isOwnerDrawn: button != nil || link != nil || toggle != nil || pickerOption != nil || colorPicker != nil
                 )
                 advance(width: width, height: height)
                 return control
@@ -934,6 +953,7 @@ final class Win32ApplicationRunner {
         textEditor: WinTextEditor?,
         toggle: WinToggle?,
         pickerOption: PickerOptionState?,
+        colorPicker: WinColorPicker?,
         textForegroundStyle: WinForegroundStyle?
     ) {
         if let action {
@@ -961,6 +981,10 @@ final class Win32ApplicationRunner {
         if let pickerOption {
             Win32ActionRegistry.pickerOptions[controlID] = pickerOption
             Win32ActionRegistry.pickerOptionControls[controlID] = control
+        }
+        if let colorPicker {
+            Win32ActionRegistry.colorPickers[controlID] = colorPicker
+            Win32ActionRegistry.colorPickerControls[controlID] = control
         }
         if let textForegroundStyle, let control {
             Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] = textForegroundStyle.win32Color

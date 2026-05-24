@@ -26,6 +26,7 @@ Implemented:
 - `WinPicker`
 - `WinSlider`
 - `WinStepper`
+- `WinColorPicker`
 - `WinProgressView`
 - `WinButton`
 - `WinLink`
@@ -67,6 +68,8 @@ let scale = WinSlider("Scale", value: 50, range: 0...100)
 root.add(scale)
 let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
 root.add(quantity)
+let accentColor = WinColorPicker("Accent color", color: .accent)
+root.add(accentColor)
 let progress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
 root.add(progress)
 root.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
@@ -109,6 +112,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `Slider` -> `WinSlider`
 - `Stepper` -> `WinStepper`
 - `ProgressView` -> `WinProgressView`
+- `ColorPicker` -> `WinColorPicker`
 - `Button` -> `WinButton`
 - `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`
@@ -129,6 +133,7 @@ includeDiagnostics.isOn = true
 theme.selectedIndex = 0
 scale.value = 50
 quantity.value = 2
+accentColor.color = .accent
 
 scale.refresh()
 ```
@@ -145,13 +150,29 @@ WinControlInvalidation.refresh([
     theme,
     scale,
     quantity,
+    accentColor,
 ])
 ```
 
 Current refreshable controls are `WinTextField`, `WinSecureField`,
-`WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, and `WinStepper`.
+`WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, and
+`WinColorPicker`.
 User-driven edits refresh dependent dynamic text automatically through the
 Win32 event path.
+
+## Choosing Colors
+
+`WinColorPicker` provides a traditional color-picking control:
+
+```swift
+let accentColor = WinColorPicker("Accent color", color: .accent) { color in
+    print("New RGB color: \(color.red), \(color.green), \(color.blue)")
+}
+```
+
+Current implementation: clicking the control cycles through a small built-in
+palette and repaints the owner-drawn swatch. This keeps the API, callbacks, and
+refresh behavior useful before the Windows common color dialog is added.
 
 ## Opening Links
 

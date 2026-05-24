@@ -4,7 +4,7 @@
 
 Milestone ladder progress: [##-----] 2 of 7 milestones active
 
-Current milestone progress: [#########-] 86%
+Current milestone progress: [#########-] 88%
 
 ## Summary
 
@@ -30,13 +30,13 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 64% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, links, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 5: SwiftUI Control Coverage | In Progress | 66% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, palette-cycle color picking, links, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 60% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, imperative refresh API, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, provider-backed control refresh, direct `SwiftWinLegacy` control refresh, and batched imperative refresh exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
 | 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
-| 11: Phase II Traditional Swift Framework | In Progress | 27% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
+| 11: Phase II Traditional Swift Framework | In Progress | 29% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 35% | focused protocols, small functions, separable runtime/layout/platform pieces | `SwiftWinUI` controls and `SwiftWinLegacy` core/control/platform files are now split by responsibility. |
 | 14: Future Rendering Backends | Planned | 5% | Direct2D backend, WinUI backend exploration | Renderer boundary is ready, but only console and Win32 are present. |
@@ -58,17 +58,55 @@ Status: Implemented
 
 Status: In Progress
 
-- Add a real layout tree with measurement and placement.
-- Add SwiftUI-compatible state primitives and rerender invalidation.
-- Add core form controls: `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, and determinate `ProgressView`.
-- Add `SecureField` / `WinSecureField` for masked single-line text entry.
-- Add multi-line `TextEditor` / `WinTextEditor` for simple notes and document-like input.
-- Add `Link` / `WinLink` for external URL and protocol opening through Windows shell handlers.
-- Add a WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
-- Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, and `.disabled`.
-- Add disabled, hover, focused, and pressed states for controls.
-- Add a modern segmented-control visual treatment for integrated controls such as `Stepper` so `- | value | +` feels like one cohesive control rather than separate Win32 boxes.
-- Stabilize native resource ownership for fonts, brushes, pens, and window handles.
+Milestone 2 is not a single-control milestone. It is the first real framework
+viability milestone: every added control also forces a piece of the shared
+runtime to mature. A checkbox, for example, touches event routing, native state
+sync, owner-draw painting, hover/disabled/focus handling, dynamic text refresh,
+binding providers, imperative refresh, layout metrics, and documentation. The
+workstreams below make that hidden substrate visible so progress is easier to
+reason about.
+
+#### Milestone 2 Workstreams
+
+| Workstream | Status | Details |
+| --- | --- | --- |
+| Declarative API Surface | In Progress | Add SwiftUI-shaped controls, initializer overloads, result-builder compatibility, and modifier spelling while avoiding Windows-specific public API unless necessary. |
+| Traditional API Surface | In Progress | Add matching `SwiftWinLegacy` controls first or alongside the declarative wrapper so Phase I can wrap Phase II instead of duplicating native behavior. |
+| Control State Model | In Progress | Keep Swift values, native HWND values, callbacks, `Binding` providers, and imperative object mutation coherent without full view diffing yet. |
+| Event Routing | In Progress | Route `WM_COMMAND`, trackbar notifications, owner-drawn button clicks, shell-link activation, and future control-specific notifications back into Swift closures. |
+| Dynamic Invalidation | In Progress | Refresh dependent text/progress/control values after user interaction and after imperative reset actions without recreating the whole native window. |
+| Owner-Draw Styling | In Progress | Paint controls that stock Win32 renders too dated or too inflexibly, including buttons, toggles, pickers, links, steppers, and color swatches. |
+| Native Control Hosting | In Progress | Create, size, register, enable/disable, refresh, and repaint child HWND controls consistently across Legacy and declarative entry points. |
+| Layout And Scrolling | Partial | Support stack placement, spacing, padding, fixed frames, text sizing defaults, and early wheel scrolling while preparing for real measure/place and `ScrollView`. |
+| Windows Polish Defaults | In Progress | Hide Win32 oddities such as clipped labels, static-control paint backgrounds, trackbar brush quirks, and missing hover feedback behind SDK defaults. |
+| Documentation And Comparison | In Progress | Keep README, user docs, comparison matrix, and plan aligned after every visible control or Windows-specific behavior change. |
+
+#### Milestone 2 Control And Runtime Checklist
+
+- [x] Add `TextField` / `WinTextField` with callback and binding support.
+- [x] Add `SecureField` / `WinSecureField` for masked single-line text entry.
+- [x] Add multi-line `TextEditor` / `WinTextEditor` for simple notes and document-like input.
+- [x] Add `Toggle` / `WinToggle` with owner-drawn checkbox styling.
+- [x] Add `Picker` / `WinPicker` with segmented selection styling.
+- [x] Add `Slider` / `WinSlider` with live value refresh and trackbar paint fixes.
+- [x] Add `Stepper` / `WinStepper` with compact and integrated-value variants.
+- [x] Add determinate `ProgressView` / `WinProgressView` with provider-backed refresh.
+- [x] Add `Link` / `WinLink` for external URL and protocol opening through Windows shell handlers.
+- [x] Add `ColorPicker` / `WinColorPicker` with a first-pass swatch control and binding/callback support.
+- [x] Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`.
+- [x] Add disabled, pressed, and focused paint states for owner-drawn controls.
+- [x] Add internal hover tracking for owner-drawn control paint.
+- [x] Add imperative refresh for single controls and batched multi-control updates.
+- [x] Add dynamic text and progress refresh after form events.
+- [ ] Add layout-affecting reconciliation without recreating the whole native window.
+- [ ] Add public hover APIs such as a SwiftUI-compatible `.onHover`.
+- [ ] Add keyboard traversal and default/cancel command behavior.
+- [ ] Add accessibility metadata hooks for labels, roles, and values.
+- [ ] Add real `ScrollView` / `WinScrollView` with clipping and scrollbars.
+- [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
+- [ ] Add native dialog-backed color selection for `ColorPicker` / `WinColorPicker`.
+- [ ] Stabilize native resource ownership for fonts, brushes, pens, and window handles.
+- [ ] Add a modern segmented-control visual treatment for integrated controls such as `Stepper` so `- | value | +` feels like one cohesive control rather than separate Win32 boxes.
 
 ### Milestone 3: App-Quality Windows UI
 
@@ -148,6 +186,7 @@ Goal: prove that basic desktop form workflows are viable.
 - [x] Add `Toggle` / `WinToggle`.
 - [x] Add `Picker` or segmented selection.
 - [x] Add `Slider` or numeric entry.
+- [x] Add `ColorPicker` / `WinColorPicker` first-pass swatch selection.
 - [x] Add `@State` and `Binding`-style data flow in `SwiftWinUI`.
 - [x] Add imperative value change callbacks in `SwiftWinLegacy`.
 - [x] Validate input and show inline error text.
@@ -341,27 +380,30 @@ Implemented:
 - `Spacer`
 - `VStack`
 - `HStack`
+- `Divider`
 - `Dialog.show`
 - `TextField`
+- `SecureField`
+- `TextEditor`
 - `Toggle`
 - `Picker`
 - `Slider`
+- `Stepper`
+- `ProgressView`
+- `Link`
+- `ColorPicker`
 
 Remaining:
 
-- `TextField`
-- `SecureField`
-- `Toggle`
-- `Picker`
-- `Slider`
 - `Image`
 - `List`
 - `ScrollView`
-- `Divider`
 - `Panel`
 - `Toolbar`
 - `Menu`
+- `DatePicker`
 - `WebView`
+- Dialog-backed `ColorPicker`
 - SwiftUI-compatible initializer overloads for implemented controls.
 
 ### 5A: WebView And WebAssembly
@@ -402,6 +444,8 @@ Implemented:
 - Uniform padding modifier.
 - Fixed width/height frame proposal.
 - Prototype window-level mouse-wheel scrolling by moving child `HWND` controls and forcing a full redraw.
+- Shared text sizing defaults to avoid clipped labels and text entry descenders.
+- Scroll invalidation fixes for owner-drawn controls and dynamic labels.
 
 Remaining:
 
@@ -427,11 +471,15 @@ Implemented:
 - Segoe UI font creation.
 - Light background brush.
 - Owner-drawn primary and secondary buttons.
+- Owner-drawn toggle, picker, link, stepper, and color-picker surfaces.
+- Transparent text labels by default, with explicit control-surface brushes where Win32 requires them.
+- Basic disabled, pressed, focused, and hover paint states for owner-drawn controls.
 
 Remaining:
 
 - Theme object with semantic colors.
-- Disabled, hover, active, focused, and default states.
+- Public hover and active-state APIs.
+- Default/cancel command styling.
 - Segmented-control drawing for `Picker`, integrated `Stepper`, and future compact multi-action controls.
 - Modern panel/surface styling.
 - App-wide typography scale.
@@ -447,16 +495,19 @@ Implemented:
 
 - SwiftUI-compatible `@State` primitive.
 - Closure-backed `Binding`.
-- Binding overloads for `TextField`, `Toggle`, `Picker`, and `Slider`.
+- Binding overloads for `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, and `ColorPicker`.
 - Event-driven invalidation hook through `StateInvalidation` and `Renderer.invalidate()`.
 - Dynamic `Text` refresh for simple state-dependent labels.
+- Provider-backed native refresh for existing form controls.
+- Imperative `SwiftWinLegacy` refresh APIs for direct object mutation.
+- Batched control refresh for reset-style updates.
 
 Remaining:
 
 - Add environment and environment object equivalents.
 - Reconcile view updates without rebuilding the full native window every time.
 - Decide whether the renderer owns native control identity or receives stable view IDs.
-- Add sample stateful controls.
+- Handle layout-affecting state changes.
 
 ## SwiftUI Compatibility Principles
 
@@ -487,7 +538,7 @@ Remaining:
 | State | `@State`, `Binding`, observable models | Partial: `@State`, `Binding`, control bindings, dynamic text refresh |
 | Environment | `Environment`, environment values, environment-driven styling | Not started |
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
-| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
+| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; first-pass color picking maps to `WinColorPicker`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
 | Modifiers | `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors; text supports semantic foreground colors; containers support solid rounded background panels and rounded rectangular borders |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
@@ -589,7 +640,7 @@ app.run(window)
 | Application Runtime | In Progress | 35% | `WinApplication`, message loop, lifecycle callbacks | `WinApplication` can run one `WinWindow`; lifecycle callbacks remain planned. |
 | Window API | In Progress | 30% | `WinWindow`, size, title, show/close, events | `WinWindow` supports title, size, and content. Events remain planned. |
 | Protocol Contracts | In Progress | 25% | app runner, containers, text, titled/action controls, button contracts | Initial public protocols exist so custom controls and runtimes can interoperate. |
-| Controls | In Progress | 54% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
+| Controls | In Progress | 57% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, palette-cycle color picking, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
 | Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
 | Styling | In Progress | 36% | control styles, theme tokens, fonts, colors, segmented-control drawing | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid rounded `.background`, rounded `.border`, and button styles exist; full theme tokens and cohesive segmented controls remain planned. |
@@ -622,7 +673,7 @@ app.run(window)
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
-| Forms | Partial | `TextField`, `Toggle`, `Picker`, and `Slider` exist with callback and binding changes. Inline validation works in the demo, but there is no reusable validation API yet |
+| Forms | Partial | `TextField`, `Toggle`, `Picker`, `Slider`, and first-pass `ColorPicker` exist with callback and binding changes. Inline validation works in the demo, but there is no reusable validation API yet |
 | WebView | None | No WebView2 hosting, navigation API, JavaScript bridge, local asset loading, or WebAssembly sample |
 | Lists | None | No table/list view, diffing, selection, or virtualization |
 | Images | None | No bitmap loading, scaling, or icon rendering |

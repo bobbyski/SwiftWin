@@ -145,6 +145,8 @@ public protocol Renderer: AnyObject {
         valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     )
+    /// Renders a color picker.
+    func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?)
     /// Renders a determinate progress indicator.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double)
     /// Renders a spacer.
@@ -232,6 +234,9 @@ public extension Renderer {
         valueProvider: (() -> Int)?,
         onChange: ((Int) -> Void)?
     ) {}
+
+    /// Default color picker for renderers without color editing support.
+    func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?) {}
 }
 
 /// Axis for stack layout.

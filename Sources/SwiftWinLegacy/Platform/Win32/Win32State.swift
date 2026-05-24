@@ -21,6 +21,8 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var toggleControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var pickerOptions: [UInt16: PickerOptionState] = [:]
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
+    nonisolated(unsafe) static var colorPickers: [UInt16: WinColorPicker] = [:]
+    nonisolated(unsafe) static var colorPickerControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
     nonisolated(unsafe) static var backgrounds: [UInt32: BackgroundRenderState] = [:]
     nonisolated(unsafe) static var borders: [UInt32: BorderRenderState] = [:]
@@ -49,6 +51,8 @@ enum Win32ActionRegistry {
         toggleControls.removeAll()
         pickerOptions.removeAll()
         pickerOptionControls.removeAll()
+        colorPickers.removeAll()
+        colorPickerControls.removeAll()
         slidersByHandle.removeAll()
         backgrounds.removeAll()
         borders.removeAll()
@@ -141,6 +145,14 @@ public enum WinControlInvalidation {
         #endif
     }
 
+    /// Refreshes a color picker from its current Swift value.
+    public static func refresh(_ colorPicker: WinColorPicker) {
+        #if os(Windows)
+        refreshNativePeer(colorPicker)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
     /// Refreshes a slider from its current Swift value.
     public static func refresh(_ slider: WinSlider) {
         #if os(Windows)
@@ -171,6 +183,8 @@ private func refreshNativePeer(_ control: WinRefreshableControl) {
         refreshToggle(toggle)
     case let picker as WinPicker:
         refreshPicker(picker)
+    case let colorPicker as WinColorPicker:
+        refreshColorPicker(colorPicker)
     case let slider as WinSlider:
         refreshSlider(slider)
     case let stepper as WinStepper:
@@ -192,8 +206,34 @@ private func refreshProviderBackedControls() {
     refreshTextEditors()
     refreshToggles()
     refreshPickers()
+    refreshColorPickers()
     refreshSliders()
     refreshSteppers()
+}
+
+/// Mirrors provider-backed color pickers into owner-drawn controls.
+private func refreshColorPickers() {
+    for (controlID, colorPicker) in Win32ActionRegistry.colorPickers {
+        guard let value = colorPicker.colorProvider?(),
+              value != colorPicker.color,
+              let control = Win32ActionRegistry.colorPickerControls[controlID] else {
+            continue
+        }
+
+        colorPicker.color = value
+        _ = InvalidateRect(control, nil, 1)
+    }
+}
+
+/// Mirrors one color picker object into its active owner-drawn control.
+private func refreshColorPicker(_ colorPicker: WinColorPicker) {
+    for (controlID, candidate) in Win32ActionRegistry.colorPickers where candidate === colorPicker {
+        guard let control = Win32ActionRegistry.colorPickerControls[controlID] else {
+            continue
+        }
+
+        _ = InvalidateRect(control, nil, 1)
+    }
 }
 
 /// Mirrors provider-backed secure fields into their native edit controls.

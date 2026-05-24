@@ -285,6 +285,30 @@ let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integra
 
 Current implementation: the Win32 backend renders the compact variant as a value label plus two owner-drawn buttons. The integrated variant renders a title label followed by `- | value | +`. Both variants support integer values, bounds, a positive step amount, callback changes, and binding changes. Numeric text entry, floating-point stepping, and richer SwiftUI label-builder overloads are planned.
 
+## ColorPicker
+
+`ColorPicker` renders a small color swatch control.
+
+```swift
+@State private var accentColor = Color.accent
+
+ColorPicker("Accent color", selection: $accentColor)
+Text("Accent color: \(accentColor.red), \(accentColor.green), \(accentColor.blue)", style: .caption)
+    .foregroundStyle(accentColor)
+```
+
+The traditional API exposes the same concept as `WinColorPicker`:
+
+```swift
+let accentColor = WinColorPicker("Accent color", color: .accent)
+```
+
+Current implementation: this is a first-pass owner-drawn swatch button. Clicking
+the control cycles through a small built-in palette and updates callback or
+binding state. Windows has a common color dialog, but it is modal rather than a
+SwiftUI-style inline picker; a richer dialog-backed implementation remains
+planned after the control API and state path settle.
+
 ## ProgressView
 
 `ProgressView` renders determinate progress.
@@ -334,11 +358,11 @@ struct DemoContent: View {
 }
 ```
 
-Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, secure fields, text editors, toggles, pickers, sliders, steppers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
+Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, secure fields, text editors, toggles, pickers, sliders, steppers, color pickers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
 
 Dynamic `Text` values also refresh through the current invalidation hook. The
 Win32 backend refreshes these labels after `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`,
-`Slider`, and `Stepper` changes, which is enough for current live previews and
+`Slider`, `Stepper`, and `ColorPicker` changes, which is enough for current live previews and
 simple inline validation:
 
 ```swift
@@ -513,5 +537,6 @@ The traditional layer now exposes focused protocols for extension points:
 - `WinTitledControl`
 - `WinActionControl`
 - `WinButtonDisplaying`
+- `WinColorControl`
 
 These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, and `WinButton` implementations.

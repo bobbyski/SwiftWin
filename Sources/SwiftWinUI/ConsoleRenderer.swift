@@ -217,6 +217,11 @@ public final class ConsoleRenderer: Renderer {
         write("Stepper(\"\(title)\", value: \(value), range: \(range.lowerBound)...\(range.upperBound), step: \(step), variant: \(variant))")
     }
 
+    /// Prints a color picker node.
+    public func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?) {
+        write("ColorPicker(\"\(title)\", color: \(foregroundDescription(color)))")
+    }
+
     /// Prints a progress-view node.
     public func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {
         write("ProgressView(title: \(optionalDescription(title)), value: \(value()), total: \(total))")
