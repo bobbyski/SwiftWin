@@ -55,6 +55,10 @@ content.add(
     )
 )
 
+let launchDate = WinDatePicker("Launch date", date: WinDate(year: 2026, month: 5, day: 23))
+content.add(launchDate)
+content.add(WinDynamicText({ "Launch date: \(dateDescription(launchDate.date))" }, style: .caption))
+
 let scale = WinSlider("Scale", value: 50, range: 0...100)
 let scaleFrame = WinFrame(width: 380, height: nil)
 scaleFrame.add(scale)
@@ -89,6 +93,7 @@ footer.add(WinButton("Create Window", style: .primary) {
         Scale: \(scale.value)
         Quantity: \(quantity.value)
         Accent color: \(colorDescription(accentColor.color))
+        Launch date: \(dateDescription(launchDate.date))
         Notes: \(notes.value)
         Access code: \(accessCode.value.isEmpty ? "missing" : "set")
         """
@@ -111,7 +116,8 @@ footer.add(WinButton("Reset") {
         quantity: quantity,
         notes: notes,
         accessCode: accessCode,
-        accentColor: accentColor
+        accentColor: accentColor,
+        launchDate: launchDate
     )
 })
 let disabledButton = WinDisabled(isDisabled: true)
@@ -154,6 +160,11 @@ private func colorDescription(_ color: WinForegroundStyle) -> String {
     "rgb(\(color.red), \(color.green), \(color.blue))"
 }
 
+/// Describes a date for previews and dialogs.
+private func dateDescription(_ date: WinDate) -> String {
+    "\(date.year)-\(date.month)-\(date.day)"
+}
+
 /// Resets mutable controls from imperative code.
 ///
 /// Implementation note:
@@ -168,7 +179,8 @@ private func resetForm(
     quantity: WinStepper,
     notes: WinTextEditor,
     accessCode: WinSecureField,
-    accentColor: WinColorPicker
+    accentColor: WinColorPicker,
+    launchDate: WinDatePicker
 ) {
     projectName.value = "SwiftWin"
     includeDiagnostics.isOn = true
@@ -178,6 +190,7 @@ private func resetForm(
     notes.value = "Milestone 2 notes:\nText editing is now multi-line."
     accessCode.value = "swift"
     accentColor.color = .accent
+    launchDate.date = WinDate(year: 2026, month: 5, day: 23)
 
     WinControlInvalidation.refresh([
         projectName,
@@ -186,6 +199,7 @@ private func resetForm(
         includeDiagnostics,
         theme,
         accentColor,
+        launchDate,
         scale,
         quantity,
     ])

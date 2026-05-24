@@ -309,6 +309,38 @@ binding state. Windows has a common color dialog, but it is modal rather than a
 SwiftUI-style inline picker; a richer dialog-backed implementation remains
 planned after the control API and state path settle.
 
+## DatePicker
+
+`DatePicker` renders a date-only picker.
+
+```swift
+@State private var launchDate = CalendarDate(year: 2026, month: 5, day: 23)
+
+DatePicker("Launch date", selection: $launchDate)
+Text("Launch date: \(launchDate.year)-\(launchDate.month)-\(launchDate.day)", style: .caption)
+```
+
+The traditional API exposes the same concept as `WinDatePicker`:
+
+```swift
+let launchDate = WinDatePicker(
+    "Launch date",
+    date: WinDate(year: 2026, month: 5, day: 23)
+)
+```
+
+Windows note for Apple developers: the Win32 Date Time Picker sends selection
+changes through `WM_NOTIFY`, not `WM_COMMAND`, and its native value is a
+`SYSTEMTIME` struct. Its text entry is also segmented by default; use arrow-key
+style editing, or press the keyboard Clear key on systems that expose it before
+direct numeric entry. SwiftWin hides the native value plumbing behind
+`CalendarDate` and `WinDate`.
+
+Current implementation: this is a date-only first pass backed by the Win32
+`SysDateTimePick32` common control. SwiftUI-compatible `Foundation.Date`
+bindings, displayed-component options, ranges, time selection, and locale-aware
+formatting remain planned.
+
 ## ProgressView
 
 `ProgressView` renders determinate progress.
@@ -358,11 +390,11 @@ struct DemoContent: View {
 }
 ```
 
-Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, secure fields, text editors, toggles, pickers, sliders, steppers, color pickers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
+Current implementation: state writes schedule renderer invalidation. Binding-backed controls also carry provider closures so the Win32 renderer can refresh existing native text fields, secure fields, text editors, toggles, pickers, sliders, steppers, color pickers, date pickers, dynamic text, and progress bars without recreating the window. The traditional `SwiftWinLegacy` layer also exposes `refresh()` on its mutable form controls for imperative code-driven changes.
 
 Dynamic `Text` values also refresh through the current invalidation hook. The
 Win32 backend refreshes these labels after `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`,
-`Slider`, `Stepper`, and `ColorPicker` changes, which is enough for current live previews and
+`Slider`, `Stepper`, `ColorPicker`, and `DatePicker` changes, which is enough for current live previews and
 simple inline validation:
 
 ```swift
@@ -538,5 +570,6 @@ The traditional layer now exposes focused protocols for extension points:
 - `WinActionControl`
 - `WinButtonDisplaying`
 - `WinColorControl`
+- `WinDateControl`
 
 These protocols are intentionally small. They let future custom controls, test doubles, alternate app runners, and future renderers interoperate with the default `WinApplication`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, and `WinButton` implementations.

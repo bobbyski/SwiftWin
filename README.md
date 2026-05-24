@@ -17,9 +17,9 @@ Functions should stay as small as reasonably practical. When an implementation s
 ## Features
 
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
-- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Link`, `Button`, and `Spacer`
-- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinSpacer`, and `WinDialog`
-- Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, first-pass `ColorPicker`, and determinate `ProgressView`
+- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Link`, `Button`, and `Spacer`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinSpacer`, and `WinDialog`
+- Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, first-pass `ColorPicker`, date-only `DatePicker`, and determinate `ProgressView`
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
@@ -106,6 +106,7 @@ struct DemoApp: App {
                 Toggle("Include diagnostics", isOn: true)
                 Picker("Theme", options: ["System", "Light", "Dark"])
                 ColorPicker("Accent color", color: .accent)
+                DatePicker("Launch date", date: CalendarDate(year: 2026, month: 5, day: 23))
                 Slider("Scale", value: 50, range: 0...100)
                 Stepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
                 ProgressView("Scale progress", value: 50, total: 100)
@@ -247,7 +248,7 @@ Known issue: some ARM64 Windows Swift snapshots fail while importing XCTest beca
 - Styling is still native Win32 control styling, with only light polish applied.
 - No state system yet, such as `@State` or observable models.
 - SwiftUI compatibility is currently aspirational and partial.
-- No text input, list, image, menu, or grid controls yet.
+- No list, image, menu, or grid controls yet. Text input and core form controls are in progress.
 - Win32 API declarations are intentionally minimal and local to the renderer.
 - The visual design is functional prototype quality, not modern custom UI yet.
 

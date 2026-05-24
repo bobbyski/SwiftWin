@@ -30,7 +30,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
 | 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 66% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, palette-cycle color picking, links, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 5: SwiftUI Control Coverage | In Progress | 68% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, palette-cycle color picking, date-only native picking, links, determinate progress, separators, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 60% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, imperative refresh API, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, provider-backed control refresh, direct `SwiftWinLegacy` control refresh, and batched imperative refresh exist. Full SwiftUI-compatible rerendering remains planned. |
@@ -93,6 +93,7 @@ reason about.
 - [x] Add determinate `ProgressView` / `WinProgressView` with provider-backed refresh.
 - [x] Add `Link` / `WinLink` for external URL and protocol opening through Windows shell handlers.
 - [x] Add `ColorPicker` / `WinColorPicker` with a first-pass swatch control and binding/callback support.
+- [x] Add date-only `DatePicker` / `WinDatePicker` with native Win32 Date Time Picker hosting and document the segmented keyboard-entry behavior.
 - [x] Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`.
 - [x] Add disabled, pressed, and focused paint states for owner-drawn controls.
 - [x] Add internal hover tracking for owner-drawn control paint.
@@ -105,6 +106,7 @@ reason about.
 - [ ] Add real `ScrollView` / `WinScrollView` with clipping and scrollbars.
 - [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - [ ] Add native dialog-backed color selection for `ColorPicker` / `WinColorPicker`.
+- [ ] Add SwiftUI-compatible `Foundation.Date` overloads for `DatePicker` when the Windows toolchain allows Foundation safely.
 - [ ] Stabilize native resource ownership for fonts, brushes, pens, and window handles.
 - [ ] Add a modern segmented-control visual treatment for integrated controls such as `Stepper` so `- | value | +` feels like one cohesive control rather than separate Win32 boxes.
 
@@ -187,6 +189,7 @@ Goal: prove that basic desktop form workflows are viable.
 - [x] Add `Picker` or segmented selection.
 - [x] Add `Slider` or numeric entry.
 - [x] Add `ColorPicker` / `WinColorPicker` first-pass swatch selection.
+- [x] Add `DatePicker` / `WinDatePicker` first-pass date selection.
 - [x] Add `@State` and `Binding`-style data flow in `SwiftWinUI`.
 - [x] Add imperative value change callbacks in `SwiftWinLegacy`.
 - [x] Validate input and show inline error text.
@@ -392,6 +395,7 @@ Implemented:
 - `ProgressView`
 - `Link`
 - `ColorPicker`
+- `DatePicker`
 
 Remaining:
 
@@ -401,9 +405,9 @@ Remaining:
 - `Panel`
 - `Toolbar`
 - `Menu`
-- `DatePicker`
 - `WebView`
 - Dialog-backed `ColorPicker`
+- SwiftUI-compatible `Foundation.Date` overloads for `DatePicker`
 - SwiftUI-compatible initializer overloads for implemented controls.
 
 ### 5A: WebView And WebAssembly
@@ -495,7 +499,7 @@ Implemented:
 
 - SwiftUI-compatible `@State` primitive.
 - Closure-backed `Binding`.
-- Binding overloads for `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, and `ColorPicker`.
+- Binding overloads for `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, and `DatePicker`.
 - Event-driven invalidation hook through `StateInvalidation` and `Renderer.invalidate()`.
 - Dynamic `Text` refresh for simple state-dependent labels.
 - Provider-backed native refresh for existing form controls.
@@ -538,7 +542,7 @@ Remaining:
 | State | `@State`, `Binding`, observable models | Partial: `@State`, `Binding`, control bindings, dynamic text refresh |
 | Environment | `Environment`, environment values, environment-driven styling | Not started |
 | Layout | `VStack`, `HStack`, `ZStack`, `Spacer`, frames, padding, alignment | Partial |
-| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; first-pass color picking maps to `WinColorPicker`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
+| Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; first-pass color picking maps to `WinColorPicker`; date-only picking maps to `WinDatePicker`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
 | Modifiers | `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors; text supports semantic foreground colors; containers support solid rounded background panels and rounded rectangular borders |
 | Accessibility | SwiftUI-like accessibility modifiers | Not started |
@@ -640,7 +644,7 @@ app.run(window)
 | Application Runtime | In Progress | 35% | `WinApplication`, message loop, lifecycle callbacks | `WinApplication` can run one `WinWindow`; lifecycle callbacks remain planned. |
 | Window API | In Progress | 30% | `WinWindow`, size, title, show/close, events | `WinWindow` supports title, size, and content. Events remain planned. |
 | Protocol Contracts | In Progress | 25% | app runner, containers, text, titled/action controls, button contracts | Initial public protocols exist so custom controls and runtimes can interoperate. |
-| Controls | In Progress | 57% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, palette-cycle color picking, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
+| Controls | In Progress | 60% | `WinText`, `WinButton`, `WinTextField`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinSeparator`, `WinList` | `WinText`, form controls, integer stepping, palette-cycle color picking, date-only native picking, determinate progress, `WinButton`, `WinSeparator`, `WinSpacer`, and `WinDialog` exist. |
 | Layout Containers | In Progress | 25% | `WinStack`, `WinPadding`, `WinFrame`, `WinGrid`, `WinScrollView`, sizing primitives | `WinStack`, `WinPadding`, and `WinFrame` conform to `WinContainer` and use direct placement. Real layout remains planned. |
 | Events And Commands | In Progress | 20% | closures, command IDs, keyboard shortcuts, menu actions | Button closures route through Win32 command IDs. |
 | Styling | In Progress | 36% | control styles, theme tokens, fonts, colors, segmented-control drawing | Text styles, semantic foreground colors, inherited declarative `.font`, inherited declarative `.foregroundStyle`, solid rounded `.background`, rounded `.border`, and button styles exist; full theme tokens and cohesive segmented controls remain planned. |
@@ -673,7 +677,7 @@ app.run(window)
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
-| Forms | Partial | `TextField`, `Toggle`, `Picker`, `Slider`, and first-pass `ColorPicker` exist with callback and binding changes. Inline validation works in the demo, but there is no reusable validation API yet |
+| Forms | Partial | `TextField`, `Toggle`, `Picker`, `Slider`, first-pass `ColorPicker`, and date-only `DatePicker` exist with callback and binding changes. Inline validation works in the demo, but there is no reusable validation API yet |
 | WebView | None | No WebView2 hosting, navigation API, JavaScript bridge, local asset loading, or WebAssembly sample |
 | Lists | None | No table/list view, diffing, selection, or virtualization |
 | Images | None | No bitmap loading, scaling, or icon rendering |

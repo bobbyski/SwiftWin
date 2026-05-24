@@ -147,6 +147,8 @@ public protocol Renderer: AnyObject {
     )
     /// Renders a color picker.
     func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?)
+    /// Renders a date picker.
+    func datePicker(_ title: String, date: CalendarDate, dateProvider: (() -> CalendarDate)?, onChange: ((CalendarDate) -> Void)?)
     /// Renders a determinate progress indicator.
     func progressView(_ title: String?, value: @escaping () -> Double, total: Double)
     /// Renders a spacer.
@@ -237,6 +239,9 @@ public extension Renderer {
 
     /// Default color picker for renderers without color editing support.
     func colorPicker(_ title: String, color: Color, colorProvider: (() -> Color)?, onChange: ((Color) -> Void)?) {}
+
+    /// Default date picker for renderers without date editing support.
+    func datePicker(_ title: String, date: CalendarDate, dateProvider: (() -> CalendarDate)?, onChange: ((CalendarDate) -> Void)?) {}
 }
 
 /// Axis for stack layout.

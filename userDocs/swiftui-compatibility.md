@@ -40,6 +40,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Slider` | Partial |
 | `Stepper` | Partial: integer values only |
 | `ColorPicker` | Partial: palette-cycle swatch picker only |
+| `DatePicker` | Partial: date-only `CalendarDate` picker only |
 | `ProgressView` | Partial: determinate progress only |
 | `List` | Not implemented |
 | `Image` | Not implemented |
@@ -57,6 +58,7 @@ TextField("Project name", text: $projectName)
 SecureField("Access code", text: $accessCode)
 Slider("Scale", value: $scale, range: 0...100)
 ColorPicker("Accent color", selection: $accentColor)
+DatePicker("Launch date", selection: $launchDate)
 Link("Open Swift.org", destination: "https://www.swift.org")
 ```
 
@@ -73,7 +75,13 @@ Stepper("Quantity", value: $quantity, range: 0...10, variant: .integratedValue)
 Text("Live scale preview: \(scale)", style: .caption)
 ProgressView("Scale progress", value: scale, total: 100)
 ColorPicker("Accent color", selection: $accentColor)
+DatePicker("Launch date", selection: $launchDate)
 ```
+
+`DatePicker` currently uses SwiftWinUI's `CalendarDate` value instead of
+SwiftUI's `Foundation.Date` because the local ARM64 Windows Swift toolchain has
+shown Foundation overlay issues. A SwiftUI-compatible `Date` initializer remains
+planned.
 
 Full native reconciliation is still planned. Layout changes, conditional view
 changes, and arbitrary control replacement still need the future rebuild/diff

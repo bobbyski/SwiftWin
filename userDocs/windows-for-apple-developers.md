@@ -15,11 +15,22 @@ Win32 apps receive events through a message loop.
 Examples:
 
 - `WM_COMMAND`: button clicks and command events
+- `WM_NOTIFY`: Common Controls notifications such as Date Time Picker changes
 - `WM_DRAWITEM`: owner-drawn control rendering
 - `WM_CTLCOLORSTATIC`: static text color/background customization
 - `WM_DESTROY`: window teardown
 
 This is lower-level than SwiftUI actions or AppKit delegate callbacks.
+
+Some controls do not use the same message path. Buttons and edit controls
+mostly report through `WM_COMMAND`, while richer Common Controls such as the
+Win32 Date Time Picker report through `WM_NOTIFY` and pass a native struct such
+as `SYSTEMTIME`. SwiftWin maps those details into plain Swift values like
+`WinDate` and `CalendarDate`.
+
+Another Date Time Picker oddity: keyboard editing is segmented by default. The
+popup calendar behaves as expected, arrow keys adjust the active segment, and on
+keyboards that expose Clear, the Clear key enables direct numeric entry.
 
 ## Child Window Scrolling
 
@@ -67,7 +78,7 @@ Current examples:
 - `user32`: windows, messages, controls, dialogs
 - `gdi32`: drawing, fonts, brushes, pens
 - `kernel32`: core process/module APIs
-- `comctl32`: Common Controls such as trackbars and progress bars
+- `comctl32`: Common Controls such as trackbars, progress bars, and date pickers
 - `shell32`: shell integration such as opening URLs with `ShellExecuteW`
 - `uxtheme`: theming APIs
 

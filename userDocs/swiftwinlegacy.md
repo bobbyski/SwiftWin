@@ -27,6 +27,7 @@ Implemented:
 - `WinSlider`
 - `WinStepper`
 - `WinColorPicker`
+- `WinDatePicker`
 - `WinProgressView`
 - `WinButton`
 - `WinLink`
@@ -70,6 +71,8 @@ let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integra
 root.add(quantity)
 let accentColor = WinColorPicker("Accent color", color: .accent)
 root.add(accentColor)
+let launchDate = WinDatePicker("Launch date", date: WinDate(year: 2026, month: 5, day: 23))
+root.add(launchDate)
 let progress = WinProgressView("Scale progress", value: { Double(scale.value) }, total: 100)
 root.add(progress)
 root.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
@@ -113,6 +116,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `Stepper` -> `WinStepper`
 - `ProgressView` -> `WinProgressView`
 - `ColorPicker` -> `WinColorPicker`
+- `DatePicker` -> `WinDatePicker`
 - `Button` -> `WinButton`
 - `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`
@@ -134,6 +138,7 @@ theme.selectedIndex = 0
 scale.value = 50
 quantity.value = 2
 accentColor.color = .accent
+launchDate.date = WinDate(year: 2026, month: 5, day: 23)
 
 scale.refresh()
 ```
@@ -151,12 +156,13 @@ WinControlInvalidation.refresh([
     scale,
     quantity,
     accentColor,
+    launchDate,
 ])
 ```
 
 Current refreshable controls are `WinTextField`, `WinSecureField`,
 `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, and
-`WinColorPicker`.
+`WinColorPicker`, and `WinDatePicker`.
 User-driven edits refresh dependent dynamic text automatically through the
 Win32 event path.
 
@@ -173,6 +179,25 @@ let accentColor = WinColorPicker("Accent color", color: .accent) { color in
 Current implementation: clicking the control cycles through a small built-in
 palette and repaints the owner-drawn swatch. This keeps the API, callbacks, and
 refresh behavior useful before the Windows common color dialog is added.
+
+## Choosing Dates
+
+`WinDatePicker` provides a traditional date-only picker:
+
+```swift
+let launchDate = WinDatePicker(
+    "Launch date",
+    date: WinDate(year: 2026, month: 5, day: 23)
+) { date in
+    print("Selected date: \(date.year)-\(date.month)-\(date.day)")
+}
+```
+
+Windows dispatches Date Time Picker changes through `WM_NOTIFY` and reports the
+value as `SYSTEMTIME`. SwiftWinLegacy maps that into `WinDate` so app code can
+stay plain Swift. The native control uses segmented keyboard entry; on systems
+with a keyboard Clear key, Clear switches it into direct numeric entry. Time
+selection, date ranges, and `Foundation.Date` helpers are future work.
 
 ## Opening Links
 

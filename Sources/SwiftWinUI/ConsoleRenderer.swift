@@ -222,6 +222,11 @@ public final class ConsoleRenderer: Renderer {
         write("ColorPicker(\"\(title)\", color: \(foregroundDescription(color)))")
     }
 
+    /// Prints a date picker node.
+    public func datePicker(_ title: String, date: CalendarDate, dateProvider: (() -> CalendarDate)?, onChange: ((CalendarDate) -> Void)?) {
+        write("DatePicker(\"\(title)\", date: \(dateDescription(date)))")
+    }
+
     /// Prints a progress-view node.
     public func progressView(_ title: String?, value: @escaping () -> Double, total: Double) {
         write("ProgressView(title: \(optionalDescription(title)), value: \(value()), total: \(total))")
@@ -266,5 +271,10 @@ public final class ConsoleRenderer: Renderer {
     /// Formats foreground colors deterministically for snapshots.
     private func foregroundDescription(_ style: ForegroundStyle) -> String {
         "rgb(\(style.red),\(style.green),\(style.blue))"
+    }
+
+    /// Formats dates deterministically for snapshots.
+    private func dateDescription(_ date: CalendarDate) -> String {
+        "\(date.year)-\(date.month)-\(date.day)"
     }
 }

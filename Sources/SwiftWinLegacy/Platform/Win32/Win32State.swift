@@ -23,6 +23,8 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var pickerOptionControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var colorPickers: [UInt16: WinColorPicker] = [:]
     nonisolated(unsafe) static var colorPickerControls: [UInt16: HWND] = [:]
+    nonisolated(unsafe) static var datePickers: [UInt16: WinDatePicker] = [:]
+    nonisolated(unsafe) static var datePickerControls: [UInt16: HWND] = [:]
     nonisolated(unsafe) static var slidersByHandle: [UInt: SliderRenderState] = [:]
     nonisolated(unsafe) static var backgrounds: [UInt32: BackgroundRenderState] = [:]
     nonisolated(unsafe) static var borders: [UInt32: BorderRenderState] = [:]
@@ -53,6 +55,8 @@ enum Win32ActionRegistry {
         pickerOptionControls.removeAll()
         colorPickers.removeAll()
         colorPickerControls.removeAll()
+        datePickers.removeAll()
+        datePickerControls.removeAll()
         slidersByHandle.removeAll()
         backgrounds.removeAll()
         borders.removeAll()
@@ -153,6 +157,14 @@ public enum WinControlInvalidation {
         #endif
     }
 
+    /// Refreshes a date picker from its current Swift value.
+    public static func refresh(_ datePicker: WinDatePicker) {
+        #if os(Windows)
+        refreshNativePeer(datePicker)
+        WinDynamicTextInvalidation.invalidateAll()
+        #endif
+    }
+
     /// Refreshes a slider from its current Swift value.
     public static func refresh(_ slider: WinSlider) {
         #if os(Windows)
@@ -185,6 +197,8 @@ private func refreshNativePeer(_ control: WinRefreshableControl) {
         refreshPicker(picker)
     case let colorPicker as WinColorPicker:
         refreshColorPicker(colorPicker)
+    case let datePicker as WinDatePicker:
+        refreshDatePicker(datePicker)
     case let slider as WinSlider:
         refreshSlider(slider)
     case let stepper as WinStepper:
@@ -207,8 +221,34 @@ private func refreshProviderBackedControls() {
     refreshToggles()
     refreshPickers()
     refreshColorPickers()
+    refreshDatePickers()
     refreshSliders()
     refreshSteppers()
+}
+
+/// Mirrors provider-backed date pickers into native common controls.
+private func refreshDatePickers() {
+    for (controlID, datePicker) in Win32ActionRegistry.datePickers {
+        guard let value = datePicker.dateProvider?(),
+              value != datePicker.date,
+              let control = Win32ActionRegistry.datePickerControls[controlID] else {
+            continue
+        }
+
+        datePicker.date = value
+        setNativeDate(control, date: value)
+    }
+}
+
+/// Mirrors one date picker object into its active native control.
+private func refreshDatePicker(_ datePicker: WinDatePicker) {
+    for (controlID, candidate) in Win32ActionRegistry.datePickers where candidate === datePicker {
+        guard let control = Win32ActionRegistry.datePickerControls[controlID] else {
+            continue
+        }
+
+        setNativeDate(control, date: datePicker.date)
+    }
 }
 
 /// Mirrors provider-backed color pickers into owner-drawn controls.
@@ -619,4 +659,36 @@ enum Win32PaintResources {
     nonisolated(unsafe) static var controlSurfaceBrush: HBRUSH?
     nonisolated(unsafe) static var controlSurfaceColor: DWORD = 0x00fff6ef
 }
+
+/// Converts a framework date to the Win32 `SYSTEMTIME` shape.
+func systemTime(from date: WinDate) -> SYSTEMTIME {
+    SYSTEMTIME(
+        wYear: UInt16(clamping: date.year),
+        wMonth: UInt16(clamping: date.month),
+        wDayOfWeek: 0,
+        wDay: UInt16(clamping: date.day),
+        wHour: 0,
+        wMinute: 0,
+        wSecond: 0,
+        wMilliseconds: 0
+    )
+}
+
+/// Converts a Win32 `SYSTEMTIME` date into the framework value type.
+func winDate(from systemTime: SYSTEMTIME) -> WinDate {
+    WinDate(
+        year: Int(systemTime.wYear),
+        month: Int(systemTime.wMonth),
+        day: Int(systemTime.wDay)
+    )
+}
+
+/// Mirrors a Swift date into a Win32 date picker HWND.
+func setNativeDate(_ control: HWND, date: WinDate) {
+    var systemTime = systemTime(from: date)
+    withUnsafePointer(to: &systemTime) { pointer in
+        _ = SendMessageW(control, DTM_SETSYSTEMTIME, GDT_VALID, LPARAM(Int(bitPattern: pointer)))
+    }
+}
+
 #endif

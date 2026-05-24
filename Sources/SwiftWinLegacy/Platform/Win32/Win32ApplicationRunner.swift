@@ -118,6 +118,8 @@ final class Win32ApplicationRunner {
             createPicker(picker)
         case let colorPicker as WinColorPicker:
             createColorPicker(colorPicker)
+        case let datePicker as WinDatePicker:
+            createDatePicker(datePicker)
         case let slider as WinSlider:
             createSlider(slider)
         case let stepper as WinStepper:
@@ -517,9 +519,31 @@ final class Win32ApplicationRunner {
     private func initializeCommonControls() {
         var controls = INITCOMMONCONTROLSEX(
             dwSize: DWORD(MemoryLayout<INITCOMMONCONTROLSEX>.size),
-            dwICC: ICC_BAR_CLASSES | ICC_PROGRESS_CLASS
+            dwICC: ICC_BAR_CLASSES | ICC_PROGRESS_CLASS | ICC_DATE_CLASSES
         )
         _ = InitCommonControlsEx(&controls)
+    }
+
+    /// Creates a native date-only picker.
+    ///
+    /// Windows note for Apple developers:
+    /// The Win32 Date Time Picker edits date segments with arrow-key style
+    /// behavior. On keyboards that expose a numpad Clear key, pressing Clear
+    /// switches the control into the more familiar direct numeric entry mode.
+    private func createDatePicker(_ datePicker: WinDatePicker) {
+        createText(datePicker.title, style: .caption)
+        if let control = createControl(
+            className: "SysDateTimePick32",
+            title: "",
+            style: WS_CHILD | WS_VISIBLE | WS_TABSTOP | DTS_SHORTDATEFORMAT,
+            width: proposedWidth(defaultingTo: 190),
+            height: proposedHeight(defaultingTo: 32),
+            action: nil,
+            datePicker: datePicker
+        ) {
+            applyFont(.body, to: control)
+            setNativeDate(control, date: datePicker.date)
+        }
     }
 
     /// Requests crisp, modern DPI behavior for the current process.
@@ -771,6 +795,7 @@ final class Win32ApplicationRunner {
         toggle: WinToggle? = nil,
         pickerOption: PickerOptionState? = nil,
         colorPicker: WinColorPicker? = nil,
+        datePicker: WinDatePicker? = nil,
         textForegroundStyle: WinForegroundStyle? = nil
     ) -> HWND? {
         guard let window, let layout = layoutStack.last else {
@@ -809,6 +834,7 @@ final class Win32ApplicationRunner {
                     toggle: toggle,
                     pickerOption: pickerOption,
                     colorPicker: colorPicker,
+                    datePicker: datePicker,
                     textForegroundStyle: textForegroundStyle
                 )
                 installHoverTrackingIfNeeded(
@@ -954,6 +980,7 @@ final class Win32ApplicationRunner {
         toggle: WinToggle?,
         pickerOption: PickerOptionState?,
         colorPicker: WinColorPicker?,
+        datePicker: WinDatePicker?,
         textForegroundStyle: WinForegroundStyle?
     ) {
         if let action {
@@ -985,6 +1012,10 @@ final class Win32ApplicationRunner {
         if let colorPicker {
             Win32ActionRegistry.colorPickers[controlID] = colorPicker
             Win32ActionRegistry.colorPickerControls[controlID] = control
+        }
+        if let datePicker {
+            Win32ActionRegistry.datePickers[controlID] = datePicker
+            Win32ActionRegistry.datePickerControls[controlID] = control
         }
         if let textForegroundStyle, let control {
             Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] = textForegroundStyle.win32Color

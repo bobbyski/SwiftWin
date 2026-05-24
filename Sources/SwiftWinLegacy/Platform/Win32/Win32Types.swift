@@ -85,6 +85,29 @@ struct TRACKMOUSEEVENT {
     var dwHoverTime: DWORD
 }
 
+struct SYSTEMTIME {
+    var wYear: UInt16 = 0
+    var wMonth: UInt16 = 0
+    var wDayOfWeek: UInt16 = 0
+    var wDay: UInt16 = 0
+    var wHour: UInt16 = 0
+    var wMinute: UInt16 = 0
+    var wSecond: UInt16 = 0
+    var wMilliseconds: UInt16 = 0
+}
+
+struct NMHDR {
+    var hwndFrom: HWND?
+    var idFrom: UInt
+    var code: Int32
+}
+
+struct NMDATETIMECHANGE {
+    var nmhdr: NMHDR
+    var dwFlags: DWORD
+    var st: SYSTEMTIME
+}
+
 let CS_VREDRAW: UINT = 0x0001
 let CS_HREDRAW: UINT = 0x0002
 let WS_CHILD: DWORD = 0x40000000
@@ -107,12 +130,14 @@ let SS_LEFT: DWORD = 0x00000000
 let SS_CENTER: DWORD = 0x00000001
 let ICC_BAR_CLASSES: DWORD = 0x00000004
 let ICC_PROGRESS_CLASS: DWORD = 0x00000020
+let ICC_DATE_CLASSES: DWORD = 0x00000100
 let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 let SW_SHOW: Int32 = 5
 let SW_SHOWNORMAL: Int32 = 1
 let WM_SETFONT: UINT = 0x0030
 let WM_COMMAND: UINT = 0x0111
 let WM_HSCROLL: UINT = 0x0114
+let WM_NOTIFY: UINT = 0x004e
 let WM_DRAWITEM: UINT = 0x002b
 let WM_CTLCOLORSTATIC: UINT = 0x0138
 let WM_SIZE: UINT = 0x0005
@@ -134,6 +159,13 @@ let TBM_SETPOS: UINT = WM_USER + 5
 let TBM_SETRANGE: UINT = WM_USER + 6
 let PBM_SETRANGE: UINT = WM_USER + 1
 let PBM_SETPOS: UINT = WM_USER + 2
+let DTM_FIRST: UINT = 0x1000
+let DTM_GETSYSTEMTIME: UINT = DTM_FIRST + 1
+let DTM_SETSYSTEMTIME: UINT = DTM_FIRST + 2
+let DTM_SETFORMATW: UINT = DTM_FIRST + 50
+let DTN_DATETIMECHANGE: Int32 = -759
+let GDT_VALID: WPARAM = 0
+let DTS_SHORTDATEFORMAT: DWORD = 0x0000
 let ODS_SELECTED: UINT = 0x0001
 let ODS_DISABLED: UINT = 0x0004
 let ODS_FOCUS: UINT = 0x0010

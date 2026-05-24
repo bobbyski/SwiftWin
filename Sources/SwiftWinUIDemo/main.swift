@@ -10,6 +10,7 @@ struct DemoContent: View {
     @State private var notes = "Milestone 2 notes:\nText editing is now multi-line."
     @State private var accessCode = "swift"
     @State private var accentColor = Color.accent
+    @State private var launchDate = CalendarDate(year: 2026, month: 5, day: 23)
 
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
@@ -83,6 +84,8 @@ struct DemoContent: View {
             ColorPicker("Accent color", selection: $accentColor)
             Text("Accent color: \(colorDescription(accentColor))", style: .caption)
                 .foregroundStyle(accentColor)
+            DatePicker("Launch date", selection: $launchDate)
+            Text("Launch date: \(dateDescription(launchDate))", style: .caption)
             Slider("Scale", value: $scale, range: 0...100)
                 .frame(width: 380)
             Text("Live scale preview: \(scale)", style: .caption)
@@ -135,6 +138,7 @@ struct DemoContent: View {
         notes = "Milestone 2 notes:\nText editing is now multi-line."
         accessCode = "swift"
         accentColor = .accent
+        launchDate = CalendarDate(year: 2026, month: 5, day: 23)
     }
 
     /// Builds the current form summary for button actions.
@@ -146,6 +150,7 @@ struct DemoContent: View {
         Scale: \(scale)
         Quantity: \(quantity)
         Accent color: \(colorDescription(accentColor))
+        Launch date: \(dateDescription(launchDate))
         Notes: \(notes)
         Access code: \(accessCode.isEmpty ? "missing" : "set")
         """
@@ -154,6 +159,11 @@ struct DemoContent: View {
     /// Describes a semantic RGB color for demo previews and dialogs.
     private func colorDescription(_ color: Color) -> String {
         "rgb(\(color.red), \(color.green), \(color.blue))"
+    }
+
+    /// Describes a calendar date for demo previews and dialogs.
+    private func dateDescription(_ date: CalendarDate) -> String {
+        "\(date.year)-\(date.month)-\(date.day)"
     }
 }
 

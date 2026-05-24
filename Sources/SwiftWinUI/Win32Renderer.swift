@@ -276,6 +276,27 @@ public final class Win32Renderer: Renderer {
         )
     }
 
+    /// Adapts SwiftWinUI date pickers to `WinDatePicker`.
+    public func datePicker(
+        _ title: String,
+        date: CalendarDate,
+        dateProvider: (() -> CalendarDate)?,
+        onChange: ((CalendarDate) -> Void)?
+    ) {
+        add(
+            WinDatePicker(
+                title,
+                date: date.winDate,
+                onChange: { value in
+                    onChange?(value.calendarDate)
+                },
+                dateProvider: {
+                    dateProvider?().winDate ?? date.winDate
+                }
+            )
+        )
+    }
+
     /// Adapts SwiftWinUI spacer to `WinSpacer`.
     public func spacer() {
         add(WinSpacer())
@@ -349,6 +370,18 @@ private extension ForegroundStyle {
 private extension WinForegroundStyle {
     var color: Color {
         Color(red: red, green: green, blue: blue)
+    }
+}
+
+private extension CalendarDate {
+    var winDate: WinDate {
+        WinDate(year: year, month: month, day: day)
+    }
+}
+
+private extension WinDate {
+    var calendarDate: CalendarDate {
+        CalendarDate(year: year, month: month, day: day)
     }
 }
 

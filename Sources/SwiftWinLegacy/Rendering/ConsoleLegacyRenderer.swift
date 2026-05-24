@@ -61,6 +61,8 @@ final class ConsoleLegacyRenderer {
             write("WinStepper(\"\(stepper.title)\", value: \(stepper.value), range: \(stepper.minimum)...\(stepper.maximum), step: \(stepper.step), variant: \(stepper.variant))")
         case let colorPicker as WinColorPicker:
             write("WinColorPicker(\"\(colorPicker.title)\", color: \(colorDescription(colorPicker.color)))")
+        case let datePicker as WinDatePicker:
+            write("WinDatePicker(\"\(datePicker.title)\", date: \(dateDescription(datePicker.date)))")
         case let progressView as WinProgressView:
             write("WinProgressView(title: \(optionalDescription(progressView.title)), value: \(progressView.value), total: \(progressView.total))")
         case let separator as WinSeparator:
@@ -98,5 +100,10 @@ final class ConsoleLegacyRenderer {
     /// Formats RGB colors deterministically.
     private func colorDescription(_ color: WinForegroundStyle) -> String {
         "rgb(\(color.red),\(color.green),\(color.blue))"
+    }
+
+    /// Formats dates deterministically for console diagnostics.
+    private func dateDescription(_ date: WinDate) -> String {
+        "\(date.year)-\(date.month)-\(date.day)"
     }
 }

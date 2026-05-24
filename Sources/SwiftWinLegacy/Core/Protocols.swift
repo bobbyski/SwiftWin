@@ -119,6 +119,16 @@ public protocol WinColorControl: WinElement {
     var onChange: ((WinForegroundStyle) -> Void)? { get set }
 }
 
+/// Protocol for controls that edit a calendar date value.
+public protocol WinDateControl: WinElement {
+    /// Label describing the selected date.
+    var title: String { get set }
+    /// Current selected date.
+    var date: WinDate { get set }
+    /// Closure invoked after native interaction changes the date.
+    var onChange: ((WinDate) -> Void)? { get set }
+}
+
 /// Protocol for controls whose native HWND can be refreshed from Swift values.
 ///
 /// This is intentionally small: the element remains the source of truth, while

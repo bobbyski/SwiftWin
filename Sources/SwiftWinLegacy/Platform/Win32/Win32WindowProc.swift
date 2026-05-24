@@ -11,6 +11,8 @@ func swiftWinLegacyWindowProc(
     switch message {
     case WM_COMMAND:
         return handleCommand(wParam: wParam, lParam: lParam)
+    case WM_NOTIFY:
+        return handleNotify(lParam: lParam)
     case WM_HSCROLL:
         return handleHorizontalScroll(wParam: wParam, lParam: lParam)
     case WM_MOUSEWHEEL:
@@ -72,6 +74,19 @@ private func handleCommand(wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     }
 
     Win32ActionRegistry.actions[controlID]?()
+    return 0
+}
+
+/// Routes `WM_NOTIFY` messages from common controls.
+private func handleNotify(lParam: LPARAM) -> LRESULT {
+    guard let header = UnsafePointer<NMHDR>(bitPattern: lParam)?.pointee else {
+        return 0
+    }
+
+    if header.code == DTN_DATETIMECHANGE {
+        updateDatePicker(controlID: UInt16(header.idFrom), lParam: lParam)
+    }
+
     return 0
 }
 
@@ -334,6 +349,23 @@ private func nextPaletteColor(after color: WinForegroundStyle) -> WinForegroundS
     }
 
     return palette[(index + 1) % palette.count]
+}
+
+/// Copies native date picker state into the matching `WinDatePicker`.
+private func updateDatePicker(controlID: UInt16, lParam: LPARAM) {
+    guard let datePicker = Win32ActionRegistry.datePickers[controlID],
+          let change = UnsafePointer<NMDATETIMECHANGE>(bitPattern: lParam)?.pointee else {
+        return
+    }
+
+    let value = winDate(from: change.st)
+    guard value != datePicker.date else {
+        return
+    }
+
+    datePicker.date = value
+    datePicker.onChange?(value)
+    WinDynamicTextInvalidation.invalidateAll()
 }
 
 /// Redraws all native option buttons for a picker.
