@@ -47,8 +47,9 @@ Tab traversal is not automatic for a hand-built Win32 top-level window. SwiftWin
 marks its window as a control parent and runs messages through
 `IsDialogMessageW` so `WS_TABSTOP` child controls can move focus in document
 order. Default buttons, cancel buttons, and app-level shortcuts are separate
-command behaviors. SwiftWin now has a first-pass default command path for Enter;
-explicit cancel buttons and richer app shortcuts remain planned.
+command behaviors. SwiftWin now has a first-pass default command path for Enter
+and an explicit cancel command path for Escape through `ButtonRole.cancel` /
+`WinButtonRole.cancel`; richer app shortcuts remain planned.
 
 Owner-drawn controls need their own focus visuals. Stock Windows controls paint
 focus internally, but once SwiftWin takes over drawing for buttons, links,
@@ -62,7 +63,8 @@ warm background, because their only stock focus hint may otherwise be the caret.
 Default commands are another dialog behavior that plain windows do not get for
 free. SwiftWin's first pass records the first primary button as the default
 command and routes Enter to it, while leaving multiline editors free to handle
-Return normally.
+Return normally. Cancel commands work similarly: a semantic cancel button is
+recorded and Escape routes to it before dialog translation can consume the key.
 
 Hover is also per-child-window in the current backend. SwiftWin subclasses
 tracked controls and uses `TrackMouseEvent` so owner-drawn controls can repaint

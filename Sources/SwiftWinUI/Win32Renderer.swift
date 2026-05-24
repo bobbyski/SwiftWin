@@ -217,8 +217,8 @@ public final class Win32Renderer: Renderer {
     }
 
     /// Adapts SwiftWinUI button to `WinButton`.
-    public func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void) {
-        add(WinButton(title, style: style.winButtonStyle, action: action))
+    public func button(_ title: String, style: ButtonStyle, role: ButtonRole?, action: @escaping () -> Void) {
+        add(WinButton(title, style: style.winButtonStyle, role: role?.winButtonRole, action: action))
     }
 
     /// Adapts SwiftWinUI links to `WinLink`.
@@ -407,6 +407,18 @@ private extension ButtonStyle {
             return .primary
         case .secondary:
             return .secondary
+        }
+    }
+}
+
+/// Maps declarative semantic button roles to legacy roles.
+private extension ButtonRole {
+    var winButtonRole: WinButtonRole {
+        switch self {
+        case .cancel:
+            return .cancel
+        case .destructive:
+            return .destructive
         }
     }
 }

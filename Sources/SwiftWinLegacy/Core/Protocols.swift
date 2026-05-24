@@ -71,6 +71,8 @@ public protocol WinActionControl: WinElement {
 public protocol WinButtonDisplaying: WinTitledControl, WinActionControl {
     /// Visual role for the button.
     var style: WinButtonStyle { get set }
+    /// Semantic command role for keyboard routing and accessibility.
+    var role: WinButtonRole? { get set }
 }
 
 /// Protocol for controls that expose an on/off value.

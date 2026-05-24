@@ -588,6 +588,7 @@ func progressPosition(for progressView: WinProgressView) -> Int {
 struct ButtonRenderState {
     var title: String
     var style: WinButtonStyle
+    var role: WinButtonRole? = nil
     var segmentRole: SegmentedControlRole? = nil
 }
 

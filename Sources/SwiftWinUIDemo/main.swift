@@ -128,6 +128,12 @@ struct DemoContent: View {
             Button("Reset") {
                 resetForm()
             }
+            Button("Cancel", role: .cancel) {
+                Dialog.show(
+                    title: "Cancel",
+                    message: "Escape routed to the explicit cancel command."
+                )
+            }
             Button("Disabled") {}
                 .disabled()
         }

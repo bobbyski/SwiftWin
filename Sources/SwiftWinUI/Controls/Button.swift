@@ -4,6 +4,7 @@
 public struct Button: View {
     private let title: String
     private let style: ButtonStyle
+    private let role: ButtonRole?
     private let action: () -> Void
 
     /// Creates a button.
@@ -15,16 +16,18 @@ public struct Button: View {
     public init(
         _ title: String,
         style: ButtonStyle = .secondary,
+        role: ButtonRole? = nil,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.style = style
+        self.role = role
         self.action = action
     }
 
     /// Emits a semantic button operation to the renderer.
     public func render(into context: RenderContext) {
-        context.renderer.button(title, style: style, action: action)
+        context.renderer.button(title, style: style, role: role, action: action)
     }
 }
 
@@ -34,4 +37,15 @@ public enum ButtonStyle: Sendable, Hashable {
     case primary
     /// Standard secondary action button.
     case secondary
+}
+
+/// Semantic button role.
+///
+/// The shape intentionally follows SwiftUI's `ButtonRole` so app code can mark
+/// cancel and destructive commands without inventing Windows-specific APIs.
+public enum ButtonRole: Sendable, Hashable {
+    /// Cancel command, activated by Escape when a backend supports it.
+    case cancel
+    /// Destructive command, reserved for future styling and accessibility.
+    case destructive
 }

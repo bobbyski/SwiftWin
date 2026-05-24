@@ -176,8 +176,8 @@ public final class ConsoleRenderer: Renderer {
     }
 
     /// Prints a button node.
-    public func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void) {
-        write("Button(\"\(title)\", style: \(style))")
+    public func button(_ title: String, style: ButtonStyle, role: ButtonRole?, action: @escaping () -> Void) {
+        write("Button(\"\(title)\", style: \(style), role: \(optionalRoleDescription(role)))")
     }
 
     /// Prints a link node.
@@ -277,6 +277,15 @@ public final class ConsoleRenderer: Renderer {
         }
 
         return "\"\(value)\""
+    }
+
+    /// Formats optional button roles deterministically.
+    private func optionalRoleDescription(_ role: ButtonRole?) -> String {
+        guard let role else {
+            return "nil"
+        }
+
+        return "\(role)"
     }
 
     /// Formats foreground colors deterministically for snapshots.

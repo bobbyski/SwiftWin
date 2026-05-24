@@ -127,6 +127,12 @@ footer.add(WinButton("Reset") {
         launchDate: launchDate
     )
 })
+footer.add(WinButton("Cancel", role: .cancel) {
+    WinDialog.show(
+        title: "Cancel",
+        message: "Escape routed to the explicit cancel command."
+    )
+})
 let disabledButton = WinDisabled(isDisabled: true)
 disabledButton.add(WinButton("Disabled") {})
 footer.add(disabledButton)

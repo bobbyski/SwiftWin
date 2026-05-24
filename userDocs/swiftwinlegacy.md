@@ -30,6 +30,7 @@ Implemented:
 - `WinDatePicker`
 - `WinProgressView`
 - `WinButton`
+- `WinButtonRole`
 - `WinHover`
 - `WinLink`
 - `WinSpacer`
@@ -82,6 +83,9 @@ let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value), scale: \(scale.value)")
 })
+buttons.add(WinButton("Cancel", role: .cancel) {
+    WinDialog.show(title: "Cancel", message: "Escape routed to the cancel command.")
+})
 let settingsHover = WinHover { isHovered in
     print(isHovered ? "Settings hover entered" : "Settings hover exited")
 }
@@ -123,6 +127,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `ColorPicker` -> `WinColorPicker`
 - `DatePicker` -> `WinDatePicker`
 - `Button` -> `WinButton`
+- `ButtonRole` -> `WinButtonRole`
 - `.onHover` -> `WinHover`
 - `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`

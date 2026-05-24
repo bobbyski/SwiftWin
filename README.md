@@ -23,7 +23,7 @@ Functions should stay as small as reasonably practical. When an implementation s
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
-- Button actions routed through Win32 `WM_COMMAND`
+- Button actions routed through Win32 `WM_COMMAND`, with Enter default-command and Escape cancel-command support
 - Basic button styles: `.primary` and `.secondary`
 - Native Windows dialogs through `Dialog.show(...)`
 - Renderer boundary designed for future Win32, WinUI, or Direct2D backends
@@ -128,6 +128,13 @@ struct DemoApp: App {
                     .onHover { isHovered in
                         print(isHovered ? "Settings hover entered" : "Settings hover exited")
                     }
+
+                    Button("Cancel", role: .cancel) {
+                        Dialog.show(
+                            title: "Cancel",
+                            message: "Escape routes to semantic cancel commands."
+                        )
+                    }
                 }
 
                 Spacer()
@@ -157,7 +164,9 @@ Window(title: SwiftWinUI Demo, size: 960x640)
     Text("A Swift-first framework for Windows desktop apps that can finally open real windows.", size: 14.0, weight: regular)
     HStack(spacing: 10.0)
       Button("Create Window", style: primary)
-      Button("Settings", style: secondary)
+      Hover
+        Button("Settings", style: secondary, role: nil)
+      Button("Cancel", style: secondary, role: cancel)
     Spacer()
     Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", size: 12.0, weight: regular)
 ```

@@ -102,7 +102,20 @@ Available button styles:
 - `.primary`
 - `.secondary`
 
-Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling. Owner-drawn buttons also support basic pressed, disabled, focused, and hover paint states when Windows reports those states to the draw handler.
+Use `role: .cancel` for commands that should respond to Escape:
+
+```swift
+Button("Cancel", role: .cancel) {
+    Dialog.show(title: "Cancel", message: "Cancelled.")
+}
+```
+
+Available button roles:
+
+- `.cancel`
+- `.destructive`
+
+Current implementation: buttons are owner-drawn in the Win32 renderer, so primary and secondary buttons have visibly different styling. Owner-drawn buttons also support basic pressed, disabled, focused, and hover paint states. The first primary button acts as the default Enter command. Buttons marked `role: .cancel`, and currently buttons literally titled `Cancel`, act as Escape commands. Destructive role metadata exists, but destructive-specific styling and accessibility are still planned.
 
 ## Link
 

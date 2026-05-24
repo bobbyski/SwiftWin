@@ -31,6 +31,9 @@ let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value)")
 })
+buttons.add(WinButton("Cancel", role: .cancel) {
+    WinDialog.show(title: "Cancel", message: "Escape routed to the cancel command.")
+})
 let settingsHover = WinHover { isHovered in
     print(isHovered ? "Settings hover entered" : "Settings hover exited")
 }

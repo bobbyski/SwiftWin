@@ -29,7 +29,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 1: Repository And Package Structure | Implemented | 100% | `Code/SwiftWinUI`, SwiftPM library, demo target, tests folder, README, plan | Package structure exists and builds as a framework plus executable demo. |
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
-| 4: Native Win32 Window Runtime | Implemented | 65% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
+| 4: Native Win32 Window Runtime | Implemented | 67% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Enter routes to the default primary command and Escape routes to explicit cancel commands. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
 | 5: SwiftUI Control Coverage | In Progress | 72% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, `.onHover`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, dialog-backed color picking, date-only native picking, links, determinate progress, separators, hover callbacks, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
 | 6: Layout Engine | In Progress | 27% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics | Current layout is direct placement with early modifier containers and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, clipping, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
@@ -104,7 +104,8 @@ reason about.
 - [x] Add public hover APIs such as a SwiftUI-compatible `.onHover`.
 - [x] Add first-pass Tab traversal through `IsDialogMessageW`, `WS_EX_CONTROLPARENT`, and a multiline editor Tab escape.
 - [x] Add first-pass default command behavior by routing Enter to the first primary button.
-- [ ] Add explicit cancel command behavior and richer keyboard shortcuts.
+- [x] Add explicit cancel command behavior with `ButtonRole.cancel` / `WinButtonRole.cancel` and Escape routing.
+- [ ] Add richer keyboard shortcuts.
 - [ ] Add accessibility metadata hooks for labels, roles, and values.
 - [ ] Add real `ScrollView` / `WinScrollView` with clipping and scrollbars.
 - [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.

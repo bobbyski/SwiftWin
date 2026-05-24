@@ -109,7 +109,7 @@ final class Win32ApplicationRunner {
         case let text as WinDynamicText:
             createDynamicText(text)
         case let button as WinButton:
-            createButton(button.title, style: button.style, action: button.action)
+            createButton(button.title, style: button.style, role: button.role, action: button.action)
         case let link as WinLink:
             createLink(link)
         case let textField as WinTextField:
@@ -345,7 +345,12 @@ final class Win32ApplicationRunner {
     /// Win32's stock buttons did not provide enough visual differentiation for
     /// our prototype. `BS_OWNERDRAW` keeps native click/focus behavior while
     /// letting us paint primary and secondary appearances ourselves.
-    private func createButton(_ title: String, style buttonStyle: WinButtonStyle, action: @escaping () -> Void) {
+    private func createButton(
+        _ title: String,
+        style buttonStyle: WinButtonStyle,
+        role: WinButtonRole?,
+        action: @escaping () -> Void
+    ) {
         if let control = createControl(
             className: "BUTTON",
             title: title,
@@ -353,7 +358,7 @@ final class Win32ApplicationRunner {
             width: proposedWidth(defaultingTo: max(buttonStyle == .primary ? 136 : 116, Int32(title.count * 9 + 48))),
             height: proposedHeight(defaultingTo: 40),
             action: action,
-            button: ButtonRenderState(title: title, style: buttonStyle)
+            button: ButtonRenderState(title: title, style: buttonStyle, role: role)
         ) {
             applyFont(.body, to: control)
             installControlTracking(for: control)
@@ -1065,9 +1070,14 @@ final class Win32ApplicationRunner {
         if button.style == .primary, Win32ActionRegistry.defaultAction == nil {
             Win32ActionRegistry.defaultAction = action
         }
-        if button.title == "Cancel", Win32ActionRegistry.cancelAction == nil {
+        if isCancelCommand(button), Win32ActionRegistry.cancelAction == nil {
             Win32ActionRegistry.cancelAction = action
         }
+    }
+
+    /// Returns whether a button should act as the Escape/cancel command.
+    private func isCancelCommand(_ button: ButtonRenderState) -> Bool {
+        button.role == .cancel || button.title == "Cancel"
     }
 
     /// Applies a cached Segoe UI font to a native control.

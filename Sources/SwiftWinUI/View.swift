@@ -124,7 +124,7 @@ public protocol Renderer: AnyObject {
     /// Renders text that can be re-evaluated after state changes.
     func dynamicText(_ value: @escaping () -> String, style: TextStyle, foregroundStyle: ForegroundStyle)
     /// Renders a button and stores its action for native event dispatch.
-    func button(_ title: String, style: ButtonStyle, action: @escaping () -> Void)
+    func button(_ title: String, style: ButtonStyle, role: ButtonRole?, action: @escaping () -> Void)
     /// Renders an external link.
     func link(_ title: String, destination: String)
     /// Renders a single-line editable text field.
