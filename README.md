@@ -17,8 +17,8 @@ Functions should stay as small as reasonably practical. When an implementation s
 ## Features
 
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
-- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Link`, `Button`, and `Spacer`
-- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinSpacer`, and `WinDialog`
+- SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Link`, `Button`, `Spacer`, and `.onHover`
+- Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinHover`, `WinSpacer`, and `WinDialog`
 - Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, dialog-backed `ColorPicker`, date-only `DatePicker`, and determinate `ProgressView`
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
@@ -124,6 +124,9 @@ struct DemoApp: App {
                             title: "Settings",
                             message: "Next stop: real settings controls and state."
                         )
+                    }
+                    .onHover { isHovered in
+                        print(isHovered ? "Settings hover entered" : "Settings hover exited")
                     }
                 }
 

@@ -12,6 +12,7 @@ final class Win32ApplicationRunner {
     private var layoutStack: [LayoutState] = []
     private var backgroundStack: [BackgroundLayoutState] = []
     private var borderStack: [BorderLayoutState] = []
+    private var hoverStack: [(Bool) -> Void] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
 
@@ -99,6 +100,10 @@ final class Win32ApplicationRunner {
             beginDisabled(disabled.isDisabled)
             disabled.children.forEach(render)
             endDisabled()
+        case let hover as WinHover:
+            beginHover(hover.onHover)
+            hover.children.forEach(render)
+            endHover()
         case let text as WinText:
             createText(text.value, style: text.style, foregroundStyle: text.foregroundStyle)
         case let text as WinDynamicText:
@@ -282,6 +287,18 @@ final class Win32ApplicationRunner {
 
         let size = consumedSize(of: child)
         advance(width: size.width, height: size.height)
+    }
+
+    /// Pushes a hover callback scope for controls rendered inside it.
+    private func beginHover(_ onHover: @escaping (Bool) -> Void) {
+        hoverStack.append(onHover)
+    }
+
+    /// Pops the current hover callback scope.
+    private func endHover() {
+        if !hoverStack.isEmpty {
+            hoverStack.removeLast()
+        }
     }
 
     /// Creates a native static text control.
@@ -996,6 +1013,10 @@ final class Win32ApplicationRunner {
         }
         if let button {
             Win32ActionRegistry.buttons[UInt32(controlID)] = button
+            registerKeyboardCommandDefaults(button: button, action: action)
+        }
+        if let hoverAction = hoverStack.last {
+            Win32ActionRegistry.hoverActions[UInt32(controlID)] = hoverAction
         }
         if let link {
             Win32ActionRegistry.links[UInt32(controlID)] = link
@@ -1027,6 +1048,25 @@ final class Win32ApplicationRunner {
         }
         if let textForegroundStyle, let control {
             Win32ActionRegistry.staticTextColorsByHandle[UInt(bitPattern: control)] = textForegroundStyle.win32Color
+        }
+    }
+
+    /// Records first-pass default/cancel command actions for keyboard use.
+    ///
+    /// Windows note:
+    /// Dialogs have first-class default and cancel buttons. A hand-built Win32
+    /// window does not, so SwiftWin records sensible command defaults while the
+    /// larger command system is still forming.
+    private func registerKeyboardCommandDefaults(button: ButtonRenderState, action: (() -> Void)?) {
+        guard let action, button.segmentRole == nil else {
+            return
+        }
+
+        if button.style == .primary, Win32ActionRegistry.defaultAction == nil {
+            Win32ActionRegistry.defaultAction = action
+        }
+        if button.title == "Cancel", Win32ActionRegistry.cancelAction == nil {
+            Win32ActionRegistry.cancelAction = action
         }
     }
 
@@ -1118,12 +1158,30 @@ final class Win32ApplicationRunner {
     private func runMessageLoop() {
         var message = MSG()
         while GetMessageW(&message, nil, 0, 0) > 0 {
+            if routeQueuedKeyboardCommand(message) {
+                continue
+            }
             if IsDialogMessageW(window, &message) != 0 {
                 continue
             }
             _ = TranslateMessage(&message)
             _ = DispatchMessageW(&message)
         }
+    }
+
+    /// Routes command keys before dialog translation can consume them.
+    ///
+    /// Windows oddity:
+    /// `IsDialogMessageW` is helpful for Tab traversal, but it can also consume
+    /// Enter while trying to emulate dialog behavior. SwiftWin checks command
+    /// keys first so default buttons work consistently in normal top-level
+    /// windows as well as in child controls.
+    private func routeQueuedKeyboardCommand(_ message: MSG) -> Bool {
+        guard message.message == WM_KEYDOWN else {
+            return false
+        }
+
+        return routeKeyboardCommand(key: message.wParam, focusedControl: message.hwnd)
     }
 
     /// Opens a link destination through the Windows shell.

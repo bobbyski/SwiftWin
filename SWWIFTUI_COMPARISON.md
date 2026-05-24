@@ -75,7 +75,7 @@ Milestone numbers line up with the project plan:
 | M3 | `.border(_:)` / `.overlay(_:)` | Decoration modifiers | Custom drawing, border styles | Border, overlay composition | Framework + backend | Partial. `.border(_:width:)` exists through `WinBorder`; overlay, shape strokes, clipping, and exact paint-order semantics remain planned. |
 | M3 | `.cornerRadius(_:)` | Corner radius modifier | Rounded GDI drawing / clipping regions | CornerRadius / Clip | Framework + backend | Partial. Background and border decorations can round corners; descendant clipping remains planned. |
 | M3 | `.onTapGesture` | Gesture/action modifier | Mouse messages, hit testing | Pointer/tap events | Framework + backend | Not implemented. Buttons should remain buttons; gesture modifiers need a general event layer. |
-| M3 | `.onHover` | Hover modifier | Child HWND subclassing / `TrackMouseEvent` | Pointer entered/exited | Framework + backend | Public API not implemented. Internal hover tracking exists for owner-drawn control paint. |
+| M2 | `.onHover` | `Hover` / `WinHover` | Child HWND subclassing / `TrackMouseEvent` | Pointer entered/exited | Framework + backend | Implemented for compatible child controls that already participate in HWND mouse tracking. Arbitrary layout-region hover awaits the real layout/hit-test engine. |
 | M3 | `.accessibilityLabel` | Accessibility metadata | Microsoft UI Automation properties | AutomationProperties | Backend | Not implemented. Required for real apps. Needs UIA strategy. |
 
 ## SwiftUI Views Without Direct Windows Equivalents

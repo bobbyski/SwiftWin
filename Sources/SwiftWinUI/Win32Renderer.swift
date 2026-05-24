@@ -113,6 +113,20 @@ public final class Win32Renderer: Renderer {
         add(disabled)
     }
 
+    /// Begins collecting children into a hover callback container.
+    public func beginHover(_ onHover: @escaping (Bool) -> Void) {
+        containerPath.append(WinHover(onHover: onHover))
+    }
+
+    /// Closes the current hover callback container.
+    public func endHover() {
+        guard let hover = containerPath.popLast() else {
+            return
+        }
+
+        add(hover)
+    }
+
     /// Begins an inherited text style scope.
     public func beginFont(_ style: TextStyle) {
         fontStack.append(style)

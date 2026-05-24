@@ -11,6 +11,7 @@ struct DemoContent: View {
     @State private var accessCode = "swift"
     @State private var accentColor = Color.accent
     @State private var launchDate = CalendarDate(year: 2026, month: 5, day: 23)
+    @State private var hoverTarget = "None"
 
     private var themeName: String {
         ["System", "Light", "Dark"][themeIndex]
@@ -96,6 +97,7 @@ struct DemoContent: View {
             Text("Theme preview: \(themes[themeIndex])", style: .caption)
             Text("Diagnostics: \(includeDiagnostics ? "enabled" : "disabled")", style: .caption)
             Text("Project summary: \(projectName)", style: .caption)
+            Text("Hover target: \(hoverTarget)", style: .caption)
             Text("Renderer path: SwiftWinUI -> SwiftWinLegacy -> Win32", style: .caption)
             Link("Open Swift.org", destination: "https://www.swift.org")
             Spacer()
@@ -120,6 +122,9 @@ struct DemoContent: View {
                     message: "State and binding are now active. Next stop: automatic invalidation and view diffing."
                 )
             }
+            .onHover { isHovered in
+                hoverTarget = isHovered ? "Settings" : "None"
+            }
             Button("Reset") {
                 resetForm()
             }
@@ -139,6 +144,7 @@ struct DemoContent: View {
         accessCode = "swift"
         accentColor = .accent
         launchDate = CalendarDate(year: 2026, month: 5, day: 23)
+        hoverTarget = "None"
     }
 
     /// Builds the current form summary for button actions.

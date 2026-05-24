@@ -9,6 +9,11 @@ func swiftWinLegacyWindowProc(
     lParam: LPARAM
 ) -> LRESULT {
     switch message {
+    case WM_KEYDOWN:
+        if routeKeyboardCommand(key: wParam, focusedControl: nil) {
+            return 0
+        }
+        return DefWindowProcW(hwnd, message, wParam, lParam)
     case WM_COMMAND:
         return handleCommand(wParam: wParam, lParam: lParam)
     case WM_NOTIFY:
@@ -31,6 +36,45 @@ func swiftWinLegacyWindowProc(
     default:
         return DefWindowProcW(hwnd, message, wParam, lParam)
     }
+}
+
+/// Routes first-pass default and cancel keyboard commands.
+///
+/// Windows note:
+/// `IsDialogMessageW` helps with focus traversal, but it does not invent
+/// SwiftWin command semantics for a normal top-level window. This hook maps
+/// Enter to the first primary button and Escape to an explicit Cancel button
+/// when one exists.
+func routeKeyboardCommand(key: WPARAM, focusedControl: HWND?) -> Bool {
+    guard !isMultilineEditor(focusedControl) else {
+        return false
+    }
+
+    switch key {
+    case VK_RETURN:
+        guard let action = Win32ActionRegistry.defaultAction else {
+            return false
+        }
+        action()
+        return true
+    case VK_ESCAPE:
+        guard let action = Win32ActionRegistry.cancelAction else {
+            return false
+        }
+        action()
+        return true
+    default:
+        return false
+    }
+}
+
+/// Returns whether the focused control is a multiline editor.
+private func isMultilineEditor(_ control: HWND?) -> Bool {
+    guard let control else {
+        return false
+    }
+
+    return Win32ActionRegistry.textEditors[UInt16(GetDlgCtrlID(control))] != nil
 }
 
 /// Scrolls child HWND controls in response to mouse wheel or trackpad gestures.

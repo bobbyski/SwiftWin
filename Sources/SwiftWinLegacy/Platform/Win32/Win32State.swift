@@ -8,6 +8,9 @@
 /// handle-to-object mapping.
 enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
+    nonisolated(unsafe) static var defaultAction: (() -> Void)?
+    nonisolated(unsafe) static var cancelAction: (() -> Void)?
+    nonisolated(unsafe) static var hoverActions: [UInt32: (Bool) -> Void] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var links: [UInt32: LinkRenderState] = [:]
     nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
@@ -42,6 +45,9 @@ enum Win32ActionRegistry {
     /// Clears per-window state before a new demo window is rendered.
     static func reset() {
         actions.removeAll()
+        defaultAction = nil
+        cancelAction = nil
+        hoverActions.removeAll()
         buttons.removeAll()
         links.removeAll()
         stepperValues.removeAll()

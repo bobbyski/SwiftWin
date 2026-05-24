@@ -68,11 +68,13 @@ let scaleProgressFrame = WinFrame(width: 380, height: nil)
 scaleProgressFrame.add(scaleProgress)
 content.add(scaleProgressFrame)
 let quantity = WinStepper("Quantity", value: 2, range: 0...10, variant: .integratedValue)
+var hoverTarget = "None"
 content.add(quantity)
 content.add(WinDynamicText({ "Quantity preview: \(quantity.value)" }, style: .caption))
 content.add(WinDynamicText({ "Theme preview: \(["System", "Light", "Dark"][theme.selectedIndex])" }, style: .caption))
 content.add(WinDynamicText({ "Diagnostics: \(includeDiagnostics.isOn ? "enabled" : "disabled")" }, style: .caption))
 content.add(WinDynamicText({ "Project summary: \(projectName.value)" }, style: .caption))
+content.add(WinDynamicText({ "Hover target: \(hoverTarget)" }, style: .caption))
 content.add(WinText("Renderer path: SwiftWinLegacy -> Win32", style: .caption))
 content.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
 content.add(WinSpacer())
@@ -99,7 +101,11 @@ footer.add(WinButton("Create Window", style: .primary) {
         """
     )
 })
-footer.add(WinButton("Settings") {
+let settingsHover = WinHover { isHovered in
+    hoverTarget = isHovered ? "Settings" : "None"
+    WinDynamicTextInvalidation.invalidateAll()
+}
+settingsHover.add(WinButton("Settings") {
     // This message documents the intended layering: SwiftWinUI should wrap this
     // imperative layer as the runtime grows.
     WinDialog.show(
@@ -107,6 +113,7 @@ footer.add(WinButton("Settings") {
         message: "SwiftWinUI can wrap this imperative layer as it grows."
     )
 })
+footer.add(settingsHover)
 footer.add(WinButton("Reset") {
     resetForm(
         projectName: projectName,

@@ -138,3 +138,13 @@ public protocol WinRefreshableControl: WinElement {
     /// Requests that the active runtime refresh the control's native peer.
     func refresh()
 }
+
+/// Protocol for containers that attach hover callbacks to child controls.
+///
+/// The first implementation applies to native controls that already have HWND
+/// tracking. Full region-based hover for arbitrary layout containers belongs
+/// with the future layout/reconciliation engine.
+public protocol WinHoverHandling: WinContainer {
+    /// Closure invoked when a tracked child control enters or exits hover.
+    var onHover: ((Bool) -> Void) { get set }
+}

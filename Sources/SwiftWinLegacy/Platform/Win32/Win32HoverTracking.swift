@@ -48,6 +48,9 @@ func swiftWinLegacyControlProc(
         if wParam == VK_TAB, moveFocusFromTextEditor(hwnd) {
             return 0
         }
+        if routeKeyboardCommand(key: wParam, focusedControl: hwnd) {
+            return 0
+        }
     default:
         break
     }
@@ -107,6 +110,7 @@ private func markControlHovered(_ control: HWND?) {
     }
 
     Win32ActionRegistry.hoveredControlIDs.insert(controlID)
+    Win32ActionRegistry.hoverActions[controlID]?(true)
     requestMouseLeave(for: control)
     _ = InvalidateRect(control, nil, 1)
 }
@@ -118,6 +122,7 @@ private func markControlUnhovered(_ control: HWND?) {
         return
     }
 
+    Win32ActionRegistry.hoverActions[controlID]?(false)
     _ = InvalidateRect(control, nil, 1)
 }
 

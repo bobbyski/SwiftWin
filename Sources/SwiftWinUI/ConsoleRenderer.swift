@@ -72,6 +72,17 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints a hover-observation node.
+    public func beginHover(_ onHover: @escaping (Bool) -> Void) {
+        write("Hover")
+        indent += 1
+    }
+
+    /// Ends the current hover-observation node.
+    public func endHover() {
+        indent -= 1
+    }
+
     /// Prints a font node.
     public func beginFont(_ style: TextStyle) {
         write("Font(size: \(style.size), weight: \(style.weight))")

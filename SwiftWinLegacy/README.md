@@ -10,7 +10,7 @@ Early prototype. The first milestone is implemented: `SwiftWinLegacyDemo` reprod
 
 ## Design Principles
 
-SwiftWinLegacy should stay traditional and explicit while still being protocol-oriented where that creates useful extension points. Public behavior is starting to be represented by small protocols such as `WinApplicationRunning`, `WinContainer`, `WinTextDisplaying`, `WinTitledControl`, `WinActionControl`, and `WinButtonDisplaying`.
+SwiftWinLegacy should stay traditional and explicit while still being protocol-oriented where that creates useful extension points. Public behavior is starting to be represented by small protocols such as `WinApplicationRunning`, `WinContainer`, `WinTextDisplaying`, `WinTitledControl`, `WinActionControl`, `WinButtonDisplaying`, and `WinHoverHandling`.
 
 Functions should stay as small as reasonably practical. As the Windows backend grows, platform declarations, layout, resource ownership, control creation, drawing, and event routing should be split into focused implementation pieces.
 
@@ -31,9 +31,13 @@ let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value)")
 })
-buttons.add(WinButton("Settings") {
+let settingsHover = WinHover { isHovered in
+    print(isHovered ? "Settings hover entered" : "Settings hover exited")
+}
+settingsHover.add(WinButton("Settings") {
     WinDialog.show(title: "Settings", message: "Settings clicked.")
 })
+buttons.add(settingsHover)
 
 root.add(buttons)
 root.add(WinSpacer())

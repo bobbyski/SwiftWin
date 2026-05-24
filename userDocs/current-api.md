@@ -361,6 +361,35 @@ let progress = WinProgressView("Scale progress", value: { Double(scale.value) },
 
 Current implementation: the Win32 backend uses the Common Controls progress bar. Progress values refresh through the same narrow invalidation bridge used by dynamic text, so progress can follow slider-backed state. Indeterminate progress, ring-style progress, and SwiftUI progress styles are planned.
 
+## Hover
+
+`.onHover(perform:)` observes pointer entry and exit for compatible controls.
+
+```swift
+@State private var hoverTarget = "None"
+
+Button("Settings") {
+    Dialog.show(title: "Settings", message: "Hovered: \(hoverTarget)")
+}
+.onHover { isHovered in
+    hoverTarget = isHovered ? "Settings" : "None"
+}
+```
+
+The traditional API exposes the same concept as `WinHover`:
+
+```swift
+let hover = WinHover { isHovered in
+    print(isHovered ? "entered" : "exited")
+}
+hover.add(WinButton("Settings") {})
+```
+
+Current implementation: the Win32 backend attaches hover callbacks to native
+child controls that already use SwiftWin's control tracking. This covers the
+current owner-drawn controls and command controls. Region hover for arbitrary
+layout containers is planned with the real layout and hit-testing engine.
+
 ## Divider
 
 `Divider` renders a separator line.

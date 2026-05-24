@@ -30,6 +30,7 @@ Implemented:
 - `WinDatePicker`
 - `WinProgressView`
 - `WinButton`
+- `WinHover`
 - `WinLink`
 - `WinSpacer`
 - `WinDialog`
@@ -81,9 +82,13 @@ let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
     WinDialog.show(title: "Create Window", message: "Project name: \(projectName.value), scale: \(scale.value)")
 })
-buttons.add(WinButton("Settings") {
+let settingsHover = WinHover { isHovered in
+    print(isHovered ? "Settings hover entered" : "Settings hover exited")
+}
+settingsHover.add(WinButton("Settings") {
     WinDialog.show(title: "Settings", message: "Settings clicked.")
 })
+buttons.add(settingsHover)
 
 root.add(buttons)
 root.add(WinSpacer())
@@ -118,6 +123,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `ColorPicker` -> `WinColorPicker`
 - `DatePicker` -> `WinDatePicker`
 - `Button` -> `WinButton`
+- `.onHover` -> `WinHover`
 - `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`
 - `Spacer` -> `WinSpacer`
@@ -165,6 +171,22 @@ Current refreshable controls are `WinTextField`, `WinSecureField`,
 `WinColorPicker`, and `WinDatePicker`.
 User-driven edits refresh dependent dynamic text automatically through the
 Win32 event path.
+
+## Observing Hover
+
+`WinHover` attaches a hover callback to compatible child controls:
+
+```swift
+let hover = WinHover { isHovered in
+    print(isHovered ? "entered" : "exited")
+}
+hover.add(WinButton("Settings") {})
+root.add(hover)
+```
+
+Current implementation: callbacks are registered for child HWND controls that
+already participate in SwiftWin's mouse tracking. Arbitrary layout-region
+hover is planned after the layout engine grows real hit-testing.
 
 ## Choosing Colors
 

@@ -206,12 +206,13 @@ clip descendant controls, so it is not yet equivalent to SwiftUI clipping.
 
 ## Hover State
 
-Owner-drawn Win32 controls now react to explicit child-window hover tracking
-and native hot-tracking paint state when Windows includes `ODS_HOTLIGHT` in
-`DRAWITEMSTRUCT.itemState`.
+Owner-drawn Win32 controls now react to explicit child-window hover tracking,
+and SwiftWinUI exposes a SwiftUI-shaped `.onHover(perform:)` modifier.
 
-This is not yet a SwiftUI `.onHover` API. A full hover API will require
-public Swift closure hooks so app code can receive enter/exit events.
+Current compatibility limit: hover callbacks are attached to compatible child
+controls that already participate in HWND tracking. SwiftUI can observe hover
+over arbitrary view regions; SwiftWin will need a richer layout and hit-test
+engine before container-level hover can match that behavior.
 
 ## Design Rules
 
