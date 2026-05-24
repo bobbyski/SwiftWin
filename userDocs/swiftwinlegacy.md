@@ -176,9 +176,10 @@ let accentColor = WinColorPicker("Accent color", color: .accent) { color in
 }
 ```
 
-Current implementation: clicking the control cycles through a small built-in
-palette and repaints the owner-drawn swatch. This keeps the API, callbacks, and
-refresh behavior useful before the Windows common color dialog is added.
+Current implementation: clicking the control opens the Windows common color
+dialog and repaints the owner-drawn swatch when the user accepts a color. The
+dialog uses Win32 `COLORREF` values internally, while SwiftWinLegacy exposes a
+plain RGB `WinForegroundStyle`.
 
 ## Choosing Dates
 

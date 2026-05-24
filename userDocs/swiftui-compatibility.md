@@ -39,7 +39,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Picker` | Partial |
 | `Slider` | Partial |
 | `Stepper` | Partial: integer values only |
-| `ColorPicker` | Partial: palette-cycle swatch picker only |
+| `ColorPicker` | Partial: native dialog-backed RGB swatch picker |
 | `DatePicker` | Partial: date-only `CalendarDate` picker only |
 | `ProgressView` | Partial: determinate progress only |
 | `List` | Not implemented |

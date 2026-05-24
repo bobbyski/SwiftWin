@@ -1,8 +1,8 @@
-/// Simple color picker control in the traditional API.
+/// Color picker control in the traditional API.
 ///
-/// This first implementation cycles through a small built-in palette when
-/// clicked. It proves color state, callbacks, binding refresh, and owner-drawn
-/// swatch rendering before the Windows common color dialog is introduced.
+/// The Win32 backend paints an owner-drawn swatch and opens the Windows common
+/// color dialog when clicked. That keeps the control useful today while leaving
+/// room for a future inline, SwiftUI-like color picker.
 public final class WinColorPicker: WinColorControl, WinRefreshableControl {
     /// Label describing the color.
     public var title: String
@@ -13,7 +13,7 @@ public final class WinColorPicker: WinColorControl, WinRefreshableControl {
     /// Optional source of truth used when external state invalidates the view.
     public var colorProvider: (() -> WinForegroundStyle)?
 
-    /// Built-in demo palette used by the first control implementation.
+    /// Built-in custom color presets shown by the Win32 color dialog.
     public static let defaultPalette: [WinForegroundStyle] = [
         WinForegroundStyle(red: 37, green: 99, blue: 235),
         WinForegroundStyle(red: 22, green: 163, blue: 74),

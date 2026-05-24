@@ -7,6 +7,7 @@
 // a private platform shim or generated bindings.
 typealias BOOL = Int32
 typealias DWORD = UInt32
+typealias COLORREF = DWORD
 typealias UINT = UInt32
 typealias WPARAM = UInt
 typealias LPARAM = Int
@@ -108,6 +109,18 @@ struct NMDATETIMECHANGE {
     var st: SYSTEMTIME
 }
 
+struct CHOOSECOLORW {
+    var lStructSize: DWORD
+    var hwndOwner: HWND?
+    var hInstance: HWND?
+    var rgbResult: COLORREF
+    var lpCustColors: UnsafeMutablePointer<COLORREF>?
+    var Flags: DWORD
+    var lCustData: LPARAM
+    var lpfnHook: UnsafeMutableRawPointer?
+    var lpTemplateName: UnsafePointer<UInt16>?
+}
+
 let CS_VREDRAW: UINT = 0x0001
 let CS_HREDRAW: UINT = 0x0002
 let WS_CHILD: DWORD = 0x40000000
@@ -132,6 +145,8 @@ let SS_CENTER: DWORD = 0x00000001
 let ICC_BAR_CLASSES: DWORD = 0x00000004
 let ICC_PROGRESS_CLASS: DWORD = 0x00000020
 let ICC_DATE_CLASSES: DWORD = 0x00000100
+let CC_RGBINIT: DWORD = 0x00000001
+let CC_FULLOPEN: DWORD = 0x00000002
 let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 let SW_SHOW: Int32 = 5
 let SW_SHOWNORMAL: Int32 = 1
@@ -232,6 +247,8 @@ func SetProcessDPIAware() -> BOOL
 func RegisterClassExW(_ windowClass: UnsafePointer<WNDCLASSEXW>) -> UInt16
 @_silgen_name("CreateWindowExW")
 func CreateWindowExW(_ extendedStyle: DWORD, _ className: UnsafePointer<UInt16>, _ windowName: UnsafePointer<UInt16>, _ style: DWORD, _ x: Int32, _ y: Int32, _ width: Int32, _ height: Int32, _ parent: HWND?, _ menu: HMENU?, _ instance: HINSTANCE?, _ parameter: UnsafeMutableRawPointer?) -> HWND?
+@_silgen_name("ChooseColorW")
+func ChooseColorW(_ chooseColor: UnsafeMutablePointer<CHOOSECOLORW>) -> BOOL
 @_silgen_name("ShowWindow")
 func ShowWindow(_ window: HWND, _ command: Int32) -> BOOL
 @_silgen_name("UpdateWindow")

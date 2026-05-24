@@ -11,7 +11,7 @@ Current status:
 - Basic `App` and `WindowGroup`
 - Basic `View` and `ViewBuilder`
 - `Text`, `Button`, `Spacer`, `VStack`, `HStack`
-- `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, first-pass `ColorPicker`, date-only `DatePicker`, `Link`, and determinate `ProgressView`
+- `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, dialog-backed `ColorPicker`, date-only `DatePicker`, `Link`, and determinate `ProgressView`
 - Native Win32 renderer
 - Console renderer
 - Owner-drawn primary and secondary buttons
@@ -23,7 +23,7 @@ Next work:
 - Continue modifiers such as `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`
 - Continue state primitives beyond `@State` and `Binding`
 - Add a real layout engine
-- Add common controls such as `List`, `Image`, SwiftUI-compatible `DatePicker` overloads, and dialog-backed `ColorPicker`
+- Add common controls such as `List`, `Image`, SwiftUI-compatible `DatePicker` overloads, and richer `ColorPicker` styles
 - Add `WebView` backed by WebView2
 - Keep renderer and layout work protocol-oriented so custom implementations can plug in later
 

@@ -37,6 +37,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var hoveredControlIDs: Set<UInt32> = []
     nonisolated(unsafe) static var focusedControlIDs: Set<UInt32> = []
     nonisolated(unsafe) static var scrollState = WindowScrollState()
+    nonisolated(unsafe) static var customColorDialogValues: [COLORREF] = WinColorPicker.defaultPalette.map(\.win32Color) + Array(repeating: 0x00ffffff, count: 10)
 
     /// Clears per-window state before a new demo window is rendered.
     static func reset() {
@@ -70,6 +71,7 @@ enum Win32ActionRegistry {
         hoveredControlIDs.removeAll()
         focusedControlIDs.removeAll()
         scrollState = WindowScrollState()
+        customColorDialogValues = WinColorPicker.defaultPalette.map(\.win32Color) + Array(repeating: 0x00ffffff, count: 10)
     }
 }
 

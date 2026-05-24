@@ -303,11 +303,11 @@ The traditional API exposes the same concept as `WinColorPicker`:
 let accentColor = WinColorPicker("Accent color", color: .accent)
 ```
 
-Current implementation: this is a first-pass owner-drawn swatch button. Clicking
-the control cycles through a small built-in palette and updates callback or
-binding state. Windows has a common color dialog, but it is modal rather than a
-SwiftUI-style inline picker; a richer dialog-backed implementation remains
-planned after the control API and state path settle.
+Current implementation: this is an owner-drawn swatch button backed by the
+Windows common color dialog. Clicking the control opens `ChooseColorW`, updates
+callback or binding state when the dialog is accepted, and preserves the current
+demo palette as custom dialog presets. SwiftUI's richer color model, opacity,
+color spaces, and inline picker styles remain planned.
 
 ## DatePicker
 

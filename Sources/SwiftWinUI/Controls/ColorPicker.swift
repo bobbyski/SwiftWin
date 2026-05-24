@@ -1,8 +1,8 @@
-/// Simple color picker in the declarative SwiftWinUI layer.
+/// Color picker in the declarative SwiftWinUI layer.
 ///
 /// This first compatibility slice uses `Color` values from the current RGB
-/// semantic color model. It supports callback and binding forms; a full
-/// SwiftUI-style color model and native color dialog remain future work.
+/// semantic color model. It supports callback and binding forms and maps to the
+/// native Windows common color dialog through SwiftWinLegacy.
 public struct ColorPicker: View {
     private let title: String
     private let color: Color

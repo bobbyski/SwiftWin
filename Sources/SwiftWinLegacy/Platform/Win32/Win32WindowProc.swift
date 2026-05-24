@@ -386,27 +386,74 @@ private func updatePicker(controlID: UInt16) -> Bool {
     return true
 }
 
-/// Advances a color picker through its default palette.
+/// Opens the native common color dialog for a color picker.
+///
+/// Windows note for Apple developers:
+/// Win32's color picker is a modal Common Dialog, not an inline popover. It
+/// reports colors as `COLORREF`, which uses `0x00bbggrr` byte ordering.
 private func updateColorPicker(controlID: UInt16, control: HWND) -> Bool {
     guard let colorPicker = Win32ActionRegistry.colorPickers[controlID] else {
         return false
     }
 
-    colorPicker.color = nextPaletteColor(after: colorPicker.color)
+    guard let color = chooseColor(initialColor: colorPicker.color, owner: GetParent(control)) else {
+        return true
+    }
+
+    colorPicker.color = color
     _ = InvalidateRect(control, nil, 1)
     colorPicker.onChange?(colorPicker.color)
     WinDynamicTextInvalidation.invalidateAll()
     return true
 }
 
-/// Returns the next palette color after the current color.
-private func nextPaletteColor(after color: WinForegroundStyle) -> WinForegroundStyle {
-    let palette = WinColorPicker.defaultPalette
-    guard let index = palette.firstIndex(of: color) else {
-        return palette.first ?? color
+/// Presents the Windows common color dialog.
+private func chooseColor(initialColor: WinForegroundStyle, owner: HWND?) -> WinForegroundStyle? {
+    var customColors = normalizedCustomColors()
+    var chooseColor = CHOOSECOLORW(
+        lStructSize: DWORD(MemoryLayout<CHOOSECOLORW>.size),
+        hwndOwner: owner,
+        hInstance: nil,
+        rgbResult: initialColor.win32Color,
+        lpCustColors: nil,
+        Flags: CC_RGBINIT | CC_FULLOPEN,
+        lCustData: 0,
+        lpfnHook: nil,
+        lpTemplateName: nil
+    )
+
+    let accepted = customColors.withUnsafeMutableBufferPointer { buffer in
+        chooseColor.lpCustColors = buffer.baseAddress
+        return ChooseColorW(&chooseColor) != 0
     }
 
-    return palette[(index + 1) % palette.count]
+    Win32ActionRegistry.customColorDialogValues = customColors
+    guard accepted else {
+        return nil
+    }
+
+    return foregroundStyle(from: chooseColor.rgbResult)
+}
+
+/// Returns the 16 custom color slots required by `ChooseColorW`.
+private func normalizedCustomColors() -> [COLORREF] {
+    var colors = Win32ActionRegistry.customColorDialogValues
+    while colors.count < 16 {
+        colors.append(0x00ffffff)
+    }
+    if colors.count > 16 {
+        colors = Array(colors.prefix(16))
+    }
+    return colors
+}
+
+/// Converts a Win32 `COLORREF` into a SwiftWin RGB style.
+private func foregroundStyle(from color: COLORREF) -> WinForegroundStyle {
+    WinForegroundStyle(
+        red: UInt8(color & 0x000000ff),
+        green: UInt8((color & 0x0000ff00) >> 8),
+        blue: UInt8((color & 0x00ff0000) >> 16)
+    )
 }
 
 /// Copies native date picker state into the matching `WinDatePicker`.
