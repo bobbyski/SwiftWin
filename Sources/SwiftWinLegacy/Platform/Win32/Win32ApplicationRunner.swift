@@ -54,7 +54,7 @@ final class Win32ApplicationRunner {
         withWideString("SwiftWinLegacyWindow") { className in
             withWideString(descriptor.title) { title in
                 window = CreateWindowExW(
-                    0,
+                    WS_EX_CONTROLPARENT,
                     className,
                     title,
                     WS_OVERLAPPEDWINDOW,
@@ -338,6 +338,7 @@ final class Win32ApplicationRunner {
             button: ButtonRenderState(title: title, style: buttonStyle)
         ) {
             applyFont(.body, to: control)
+            installControlTracking(for: control)
         }
     }
 
@@ -364,6 +365,7 @@ final class Win32ApplicationRunner {
             link: LinkRenderState(title: link.title, destination: link.destination)
         ) {
             applyFont(.body, to: control)
+            installControlTracking(for: control)
         }
     }
 
@@ -446,6 +448,7 @@ final class Win32ApplicationRunner {
             textEditor: editor
         ) {
             applyFont(.body, to: control)
+            installControlTracking(for: control)
         }
     }
 
@@ -837,7 +840,7 @@ final class Win32ApplicationRunner {
                     datePicker: datePicker,
                     textForegroundStyle: textForegroundStyle
                 )
-                installHoverTrackingIfNeeded(
+                installControlTrackingIfNeeded(
                     control: control,
                     isOwnerDrawn: button != nil || link != nil || toggle != nil || pickerOption != nil || colorPicker != nil
                 )
@@ -847,13 +850,14 @@ final class Win32ApplicationRunner {
         }
     }
 
-    /// Installs child-control mouse tracking for owner-drawn controls.
+    /// Installs child-control tracking for focus and hover repainting.
     ///
     /// Implementation note:
     /// Some Win32 owner-draw paths do not reliably set `ODS_HOTLIGHT`, so hover
     /// is tracked by subclassing the child HWND and invalidating on
-    /// `WM_MOUSEMOVE` / `WM_MOUSELEAVE`.
-    private func installHoverTrackingIfNeeded(control: HWND?, isOwnerDrawn: Bool) {
+    /// `WM_MOUSEMOVE` / `WM_MOUSELEAVE`. Focus is also tracked this way so the
+    /// SDK can paint obvious focus rings for owner-drawn controls.
+    private func installControlTrackingIfNeeded(control: HWND?, isOwnerDrawn: Bool) {
         guard isOwnerDrawn else {
             return
         }
@@ -1105,10 +1109,14 @@ final class Win32ApplicationRunner {
     /// Apple developer note:
     /// This is the explicit event pump. Windows apps typically call
     /// `GetMessage`, `TranslateMessage`, and `DispatchMessage` until the window
-    /// posts quit.
+    /// posts quit. Plain Win32 windows also need `IsDialogMessageW` when they
+    /// want dialog-style Tab traversal across child controls.
     private func runMessageLoop() {
         var message = MSG()
         while GetMessageW(&message, nil, 0, 0) > 0 {
+            if IsDialogMessageW(window, &message) != 0 {
+                continue
+            }
             _ = TranslateMessage(&message)
             _ = DispatchMessageW(&message)
         }

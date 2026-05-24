@@ -117,6 +117,7 @@ let WS_GROUP: DWORD = 0x00020000
 let WS_VSCROLL: DWORD = 0x00200000
 let WS_BORDER: DWORD = 0x00800000
 let WS_OVERLAPPEDWINDOW: DWORD = 0x00cf0000
+let WS_EX_CONTROLPARENT: DWORD = 0x00010000
 let BS_OWNERDRAW: DWORD = 0x0000000b
 let BS_AUTOCHECKBOX: DWORD = 0x00000003
 let BS_AUTORADIOBUTTON: DWORD = 0x00000009
@@ -144,6 +145,9 @@ let WM_SIZE: UINT = 0x0005
 let WM_MOUSEMOVE: UINT = 0x0200
 let WM_MOUSEWHEEL: UINT = 0x020a
 let WM_MOUSELEAVE: UINT = 0x02a3
+let WM_KEYDOWN: UINT = 0x0100
+let WM_SETFOCUS: UINT = 0x0007
+let WM_KILLFOCUS: UINT = 0x0008
 let WM_DESTROY: UINT = 0x0002
 let EM_SETCUEBANNER: UINT = 0x1501
 let EN_CHANGE: UInt16 = 0x0300
@@ -191,6 +195,8 @@ let MB_ICONINFORMATION: UINT = 0x00000040
 let GWLP_WNDPROC: Int32 = -4
 let TME_LEAVE: DWORD = 0x00000002
 let HOVER_DEFAULT: DWORD = 0xffffffff
+let VK_TAB: WPARAM = 0x09
+let VK_SHIFT: Int32 = 0x10
 let RDW_INVALIDATE: UINT = 0x0001
 let RDW_ERASE: UINT = 0x0004
 let RDW_ALLCHILDREN: UINT = 0x0080
@@ -242,6 +248,14 @@ func GetClientRect(_ window: HWND?, _ rect: UnsafeMutablePointer<RECT>) -> BOOL
 func SetWindowLongPtrW(_ window: HWND?, _ index: Int32, _ newValue: WNDPROC?) -> WNDPROC?
 @_silgen_name("CallWindowProcW")
 func CallWindowProcW(_ previous: WNDPROC?, _ window: HWND?, _ message: UINT, _ wParam: WPARAM, _ lParam: LPARAM) -> LRESULT
+@_silgen_name("GetParent")
+func GetParent(_ window: HWND?) -> HWND?
+@_silgen_name("GetNextDlgTabItem")
+func GetNextDlgTabItem(_ dialog: HWND?, _ control: HWND?, _ previous: BOOL) -> HWND?
+@_silgen_name("SetFocus")
+func SetFocus(_ window: HWND?) -> HWND?
+@_silgen_name("GetKeyState")
+func GetKeyState(_ virtualKey: Int32) -> Int16
 @_silgen_name("TrackMouseEvent")
 func TrackMouseEvent(_ eventTrack: UnsafeMutablePointer<TRACKMOUSEEVENT>) -> BOOL
 @_silgen_name("SendMessageW")
@@ -282,6 +296,8 @@ func SetWindowTextW(_ window: HWND, _ text: UnsafePointer<UInt16>) -> BOOL
 func GetDlgCtrlID(_ control: HWND) -> Int32
 @_silgen_name("GetMessageW")
 func GetMessageW(_ message: UnsafeMutablePointer<MSG>, _ window: HWND?, _ minimumMessage: UINT, _ maximumMessage: UINT) -> BOOL
+@_silgen_name("IsDialogMessageW")
+func IsDialogMessageW(_ window: HWND?, _ message: UnsafeMutablePointer<MSG>) -> BOOL
 @_silgen_name("TranslateMessage")
 func TranslateMessage(_ message: UnsafePointer<MSG>) -> BOOL
 @_silgen_name("DispatchMessageW")

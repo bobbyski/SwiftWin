@@ -95,13 +95,14 @@ reason about.
 - [x] Add `ColorPicker` / `WinColorPicker` with a first-pass swatch control and binding/callback support.
 - [x] Add date-only `DatePicker` / `WinDatePicker` with native Win32 Date Time Picker hosting and document the segmented keyboard-entry behavior.
 - [x] Add common SwiftUI modifiers: `.padding`, `.frame`, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, and `.disabled`.
-- [x] Add disabled, pressed, and focused paint states for owner-drawn controls.
+- [x] Add disabled, pressed, hover, and visible keyboard-focused paint states for owner-drawn controls.
 - [x] Add internal hover tracking for owner-drawn control paint.
 - [x] Add imperative refresh for single controls and batched multi-control updates.
 - [x] Add dynamic text and progress refresh after form events.
 - [ ] Add layout-affecting reconciliation without recreating the whole native window.
 - [ ] Add public hover APIs such as a SwiftUI-compatible `.onHover`.
-- [ ] Add keyboard traversal and default/cancel command behavior.
+- [x] Add first-pass Tab traversal through `IsDialogMessageW`, `WS_EX_CONTROLPARENT`, and a multiline editor Tab escape.
+- [ ] Add default/cancel command behavior and richer keyboard shortcuts.
 - [ ] Add accessibility metadata hooks for labels, roles, and values.
 - [ ] Add real `ScrollView` / `WinScrollView` with clipping and scrollbars.
 - [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.

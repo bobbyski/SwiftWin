@@ -1,12 +1,17 @@
 #if os(Windows)
-/// Installs a small child-window procedure that tracks hover state.
+/// Installs a small child-window procedure that tracks focus state.
 ///
 /// Windows oddity for Apple developers:
-/// Child controls are real HWNDs and receive their own mouse messages. The
-/// parent window procedure will not see those moves unless the control is
-/// subclassed or the control forwards them.
-func installHoverTracking(for control: HWND?) {
+/// Child controls are real HWNDs and receive their own keyboard/focus
+/// messages. The parent window procedure will not see those changes unless
+/// the control is subclassed or the control forwards them.
+func installControlTracking(for control: HWND?) {
     guard let control else {
+        return
+    }
+
+    let key = UInt(bitPattern: control)
+    guard Win32ActionRegistry.originalControlProceduresByHandle[key] == nil else {
         return
     }
 
@@ -15,7 +20,12 @@ func installHoverTracking(for control: HWND?) {
         return
     }
 
-    Win32ActionRegistry.originalControlProceduresByHandle[UInt(bitPattern: control)] = previous
+    Win32ActionRegistry.originalControlProceduresByHandle[key] = previous
+}
+
+/// Installs tracking for owner-drawn controls that need hover repainting.
+func installHoverTracking(for control: HWND?) {
+    installControlTracking(for: control)
 }
 
 /// Window procedure used by owner-drawn child controls.
@@ -30,11 +40,61 @@ func swiftWinLegacyControlProc(
         markControlHovered(hwnd)
     case WM_MOUSELEAVE:
         markControlUnhovered(hwnd)
+    case WM_SETFOCUS:
+        markControlFocused(hwnd)
+    case WM_KILLFOCUS:
+        markControlUnfocused(hwnd)
+    case WM_KEYDOWN:
+        if wParam == VK_TAB, moveFocusFromTextEditor(hwnd) {
+            return 0
+        }
     default:
         break
     }
 
     return callOriginalControlProcedure(hwnd: hwnd, message: message, wParam: wParam, lParam: lParam)
+}
+
+/// Marks a control focused so owner-drawn paint can show keyboard location.
+private func markControlFocused(_ control: HWND?) {
+    guard let controlID = controlID(for: control),
+          Win32ActionRegistry.focusedControlIDs.insert(controlID).inserted else {
+        return
+    }
+
+    _ = InvalidateRect(control, nil, 1)
+}
+
+/// Clears focus state from a control and repaints it.
+private func markControlUnfocused(_ control: HWND?) {
+    guard let controlID = controlID(for: control),
+          Win32ActionRegistry.focusedControlIDs.remove(controlID) != nil else {
+        return
+    }
+
+    _ = InvalidateRect(control, nil, 1)
+}
+
+/// Lets multiline text editors use Tab for focus traversal.
+///
+/// Windows note:
+/// Multiline `EDIT` controls can consume navigation keys. For now SwiftWin
+/// keeps Tab as app traversal and leaves literal tab insertion for a later
+/// editor-specific option.
+private func moveFocusFromTextEditor(_ control: HWND?) -> Bool {
+    guard let control,
+          let controlID = controlID(for: control),
+          Win32ActionRegistry.textEditors[UInt16(controlID)] != nil else {
+        return false
+    }
+
+    let previous: BOOL = GetKeyState(VK_SHIFT) < 0 ? 1 : 0
+    guard let next = GetNextDlgTabItem(GetParent(control), control, previous) else {
+        return false
+    }
+
+    _ = SetFocus(next)
+    return true
 }
 
 /// Marks a control hovered and requests a mouse-leave notification.

@@ -22,7 +22,7 @@ func drawButton(_ item: DRAWITEMSTRUCT) {
     }
 
     let isPressed = (item.itemState & ODS_SELECTED) != 0
-    let isFocused = (item.itemState & ODS_FOCUS) != 0
+    let isFocused = hasKeyboardFocus(item)
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
     let palette = buttonPalette(for: button.style, isPressed: isPressed, isHovered: isHovered, isDisabled: isDisabled)
@@ -90,9 +90,11 @@ private func drawColorPicker(_ item: DRAWITEMSTRUCT) {
 
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
+    let isFocused = hasKeyboardFocus(item)
     paintControlSurface(item.rcItem, in: deviceContext)
     paintColorSwatch(colorPicker.color, in: item.rcItem, deviceContext: deviceContext, isHovered: isHovered, isDisabled: isDisabled)
     paintColorPickerTitle(colorPicker.title, in: item.rcItem, deviceContext: deviceContext, isDisabled: isDisabled)
+    paintFocusOutlineIfNeeded(item.rcItem, deviceContext: deviceContext, isFocused: isFocused, isDisabled: isDisabled)
 }
 
 /// Paints an owner-drawn link.
@@ -105,8 +107,10 @@ private func drawLink(_ item: DRAWITEMSTRUCT) {
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isPressed = (item.itemState & ODS_SELECTED) != 0
     let isHovered = isHot(item)
+    let isFocused = hasKeyboardFocus(item)
     paintControlSurface(item.rcItem, in: deviceContext)
     paintLinkTitle(link.title, in: item.rcItem, deviceContext: deviceContext, isHovered: isHovered, isPressed: isPressed, isDisabled: isDisabled)
+    paintFocusOutlineIfNeeded(item.rcItem, deviceContext: deviceContext, isFocused: isFocused, isDisabled: isDisabled)
 }
 
 /// Paints the value segment in an integrated stepper.
@@ -218,7 +222,7 @@ private func paintButtonBackground(
     isFocused: Bool
 ) {
     let fillBrush = CreateSolidBrush(palette.fill)
-    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, palette.border)
+    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, isFocused ? focusRingColor() : palette.border)
     let oldBrush = SelectObject(deviceContext, fillBrush)
     let oldPen = SelectObject(deviceContext, borderPen)
     let offset: Int32 = isPressed ? 1 : 0
@@ -249,7 +253,7 @@ private func paintSegmentBackground(
     isFocused: Bool
 ) {
     let fillBrush = CreateSolidBrush(palette.fill)
-    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, palette.border)
+    let borderPen = CreatePen(PS_SOLID, isFocused ? 2 : 1, isFocused ? focusRingColor() : palette.border)
     let oldBrush = SelectObject(deviceContext, fillBrush)
     let oldPen = SelectObject(deviceContext, borderPen)
     let offset: Int32 = isPressed ? 1 : 0
@@ -291,9 +295,11 @@ private func drawToggle(_ item: DRAWITEMSTRUCT) {
 
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
+    let isFocused = hasKeyboardFocus(item)
     paintControlSurface(item.rcItem, in: deviceContext)
-    paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn, isHovered: isHovered, isDisabled: isDisabled)
+    paintToggleBox(in: item.rcItem, deviceContext: deviceContext, isOn: toggle.isOn, isHovered: isHovered, isFocused: isFocused, isDisabled: isDisabled)
     paintToggleTitle(toggle.title, in: item.rcItem, deviceContext: deviceContext, isDisabled: isDisabled)
+    paintFocusOutlineIfNeeded(item.rcItem, deviceContext: deviceContext, isFocused: isFocused, isDisabled: isDisabled)
 }
 
 /// Paints the default surface behind an owner-drawn control.
@@ -313,10 +319,14 @@ private func paintControlSurface(_ rect: RECT, in deviceContext: HDC) {
 }
 
 /// Paints the custom checkbox square.
-private func paintToggleBox(in rect: RECT, deviceContext: HDC, isOn: Bool, isHovered: Bool, isDisabled: Bool) {
+private func paintToggleBox(in rect: RECT, deviceContext: HDC, isOn: Bool, isHovered: Bool, isFocused: Bool, isDisabled: Bool) {
     let box = RECT(left: rect.left + 1, top: rect.top + 6, right: rect.left + 21, bottom: rect.top + 26)
     let fill = CreateSolidBrush(toggleFill(isOn: isOn, isHovered: isHovered, isDisabled: isDisabled))
-    let border = CreatePen(PS_SOLID, isHovered && !isDisabled ? 2 : 1, toggleBorder(isOn: isOn, isHovered: isHovered, isDisabled: isDisabled))
+    let border = CreatePen(
+        PS_SOLID,
+        (isHovered || isFocused) && !isDisabled ? 2 : 1,
+        isFocused && !isDisabled ? focusRingColor() : toggleBorder(isOn: isOn, isHovered: isHovered, isDisabled: isDisabled)
+    )
     let oldBrush = SelectObject(deviceContext, fill)
     let oldPen = SelectObject(deviceContext, border)
 
@@ -377,14 +387,19 @@ private func drawPickerOption(_ item: DRAWITEMSTRUCT) {
     let isSelected = option.index == option.picker.selectedIndex
     let isDisabled = (item.itemState & ODS_DISABLED) != 0
     let isHovered = isHot(item)
-    paintPickerOptionBackground(item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled)
+    let isFocused = hasKeyboardFocus(item)
+    paintPickerOptionBackground(item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isHovered: isHovered, isFocused: isFocused, isDisabled: isDisabled)
     paintPickerOptionTitle(option.picker.options[option.index], in: item.rcItem, deviceContext: deviceContext, isSelected: isSelected, isDisabled: isDisabled)
 }
 
 /// Paints a pill-style picker option background.
-private func paintPickerOptionBackground(_ rect: RECT, deviceContext: HDC, isSelected: Bool, isHovered: Bool, isDisabled: Bool) {
+private func paintPickerOptionBackground(_ rect: RECT, deviceContext: HDC, isSelected: Bool, isHovered: Bool, isFocused: Bool, isDisabled: Bool) {
     let fill = CreateSolidBrush(pickerFill(isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled))
-    let border = CreatePen(PS_SOLID, isHovered && !isDisabled ? 2 : 1, pickerBorder(isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled))
+    let border = CreatePen(
+        PS_SOLID,
+        (isHovered || isFocused) && !isDisabled ? 2 : 1,
+        isFocused && !isDisabled ? focusRingColor() : pickerBorder(isSelected: isSelected, isHovered: isHovered, isDisabled: isDisabled)
+    )
     let oldBrush = SelectObject(deviceContext, fill)
     let oldPen = SelectObject(deviceContext, border)
 
@@ -619,6 +634,31 @@ private func linkTextColor(isHovered: Bool, isPressed: Bool, isDisabled: Bool) -
     }
 
     return 0x00b84818
+}
+
+/// Paints a full-control focus outline for owner-drawn rows.
+private func paintFocusOutlineIfNeeded(_ rect: RECT, deviceContext: HDC, isFocused: Bool, isDisabled: Bool) {
+    guard isFocused, !isDisabled else {
+        return
+    }
+
+    let pen = CreatePen(PS_SOLID, 2, focusRingColor())
+    let oldBrush = SelectObject(deviceContext, GetStockObject(NULL_BRUSH))
+    let oldPen = SelectObject(deviceContext, pen)
+    _ = RoundRect(deviceContext, rect.left, rect.top, rect.right - 1, rect.bottom - 1, 8, 8)
+    restore(object: oldBrush, into: deviceContext)
+    restore(object: oldPen, into: deviceContext)
+    _ = DeleteObject(pen)
+}
+
+/// Returns whether an owner-drawn item currently has keyboard focus.
+private func hasKeyboardFocus(_ item: DRAWITEMSTRUCT) -> Bool {
+    (item.itemState & ODS_FOCUS) != 0 || Win32ActionRegistry.focusedControlIDs.contains(item.CtlID)
+}
+
+/// Returns the shared focus ring color.
+private func focusRingColor() -> DWORD {
+    0x00f07820
 }
 
 /// Returns whether an owner-drawn item should paint hover state.

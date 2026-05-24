@@ -41,6 +41,19 @@ controls and asking Windows to erase and repaint the client area. This is a
 temporary window-level path. A real `ScrollView` / `WinScrollView` should own
 clipping, scrollbars, nested content, and repaint behavior.
 
+## Keyboard Traversal
+
+Tab traversal is not automatic for a hand-built Win32 top-level window. SwiftWin
+marks its window as a control parent and runs messages through
+`IsDialogMessageW` so `WS_TABSTOP` child controls can move focus in document
+order. Default buttons, cancel buttons, and app-level shortcuts are separate
+command behaviors and remain planned.
+
+Owner-drawn controls need their own focus visuals. Stock Windows controls paint
+focus internally, but once SwiftWin takes over drawing for buttons, links,
+segmented pickers, toggles, and swatches, the backend tracks `WM_SETFOCUS` and
+`WM_KILLFOCUS` directly and paints a clear focus ring.
+
 Apple-platform mental model: this is closer to manually moving subviews and
 forcing invalidation than to dropping content inside a ready-made
 `NSScrollView`, `UIScrollView`, or SwiftUI `ScrollView`.
