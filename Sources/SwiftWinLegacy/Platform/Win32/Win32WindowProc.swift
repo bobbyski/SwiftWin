@@ -46,6 +46,14 @@ func swiftWinLegacyWindowProc(
 /// Enter to the first primary button and Escape to an explicit Cancel button
 /// when one exists.
 func routeKeyboardCommand(key: WPARAM, focusedControl: HWND?) -> Bool {
+    if routeKeyboardShortcut(key: key) {
+        return true
+    }
+
+    if routeKeyboardScroll(key: key, focusedControl: focusedControl) {
+        return true
+    }
+
     guard !isMultilineEditor(focusedControl) else {
         return false
     }
@@ -66,6 +74,126 @@ func routeKeyboardCommand(key: WPARAM, focusedControl: HWND?) -> Bool {
     default:
         return false
     }
+}
+
+/// Routes keyboard scrolling for users without a wheel or touchpad gesture.
+///
+/// Windows note:
+/// A plain Win32 child-window viewport does not gain Page Up/Page Down/Home/End
+/// behavior automatically. SwiftWin treats these as scroll-view navigation when
+/// focus is inside a scroll view, or when the demo has a single scroll view.
+private func routeKeyboardScroll(key: WPARAM, focusedControl: HWND?) -> Bool {
+    guard !hasCommandModifierDown(),
+          let scrollID = scrollViewID(for: focusedControl),
+          let state = Win32ActionRegistry.scrollViews[scrollID] else {
+        return false
+    }
+
+    let pageStep = max(24, state.height - 32)
+    switch key {
+    case VK_PRIOR:
+        applyScrollViewOffset(id: scrollID, requestedOffset: state.offset - pageStep)
+        return true
+    case VK_NEXT:
+        applyScrollViewOffset(id: scrollID, requestedOffset: state.offset + pageStep)
+        return true
+    case VK_HOME:
+        guard !isEditableControl(focusedControl) else {
+            return false
+        }
+        applyScrollViewOffset(id: scrollID, requestedOffset: 0)
+        return true
+    case VK_END:
+        guard !isEditableControl(focusedControl) else {
+            return false
+        }
+        applyScrollViewOffset(id: scrollID, requestedOffset: state.contentHeight)
+        return true
+    default:
+        return false
+    }
+}
+
+/// Finds the most relevant scroll view for a focused control.
+private func scrollViewID(for focusedControl: HWND?) -> UInt32? {
+    if let focusedControl,
+       let scrollID = Win32ActionRegistry.scrollViewIDByControlHandle[UInt(bitPattern: focusedControl)] {
+        return scrollID
+    }
+
+    return firstScrollViewID()
+}
+
+/// Returns whether a focused control should keep text-style navigation keys.
+private func isEditableControl(_ control: HWND?) -> Bool {
+    guard let control else {
+        return false
+    }
+
+    let controlID = UInt16(GetDlgCtrlID(control))
+    return Win32ActionRegistry.textFields[controlID] != nil
+        || Win32ActionRegistry.secureFields[controlID] != nil
+        || Win32ActionRegistry.textEditors[controlID] != nil
+        || Win32ActionRegistry.datePickers[controlID] != nil
+}
+
+/// Returns whether Control or Alt is currently held for command/menu shortcuts.
+private func hasCommandModifierDown() -> Bool {
+    isKeyDown(VK_CONTROL) || isKeyDown(VK_MENU)
+}
+
+/// Routes registered command shortcuts.
+///
+/// Windows note:
+/// This is intentionally explicit. Unlike AppKit command routing, a plain Win32
+/// window does not have a framework-level keyboard shortcut table unless the
+/// app provides one.
+private func routeKeyboardShortcut(key: WPARAM) -> Bool {
+    for (shortcut, action) in Win32ActionRegistry.keyboardShortcuts {
+        if keyboardShortcut(shortcut, matches: key) {
+            action()
+            return true
+        }
+    }
+
+    return false
+}
+
+/// Returns whether the current key state matches a shortcut descriptor.
+private func keyboardShortcut(_ shortcut: WinKeyboardShortcutDescriptor, matches key: WPARAM) -> Bool {
+    guard shortcutVirtualKey(shortcut.key) == key else {
+        return false
+    }
+
+    let requiresControl = shortcut.modifiers.contains(.control) || shortcut.modifiers.contains(.command)
+    let requiresShift = shortcut.modifiers.contains(.shift)
+    let requiresOption = shortcut.modifiers.contains(.option)
+    return isKeyDown(VK_CONTROL) == requiresControl
+        && isKeyDown(VK_SHIFT) == requiresShift
+        && isKeyDown(VK_MENU) == requiresOption
+}
+
+/// Converts supported shortcut text into a Win32 virtual key code.
+private func shortcutVirtualKey(_ key: String) -> WPARAM? {
+    guard let unit = key.utf16.first else {
+        return nil
+    }
+
+    if unit >= 65 && unit <= 90 {
+        return WPARAM(unit)
+    }
+    if unit >= 97 && unit <= 122 {
+        return WPARAM(unit - 32)
+    }
+    if unit >= 48 && unit <= 57 {
+        return WPARAM(unit)
+    }
+    return nil
+}
+
+/// Returns whether a modifier key is currently down.
+private func isKeyDown(_ virtualKey: Int32) -> Bool {
+    GetKeyState(virtualKey) < 0
 }
 
 /// Returns whether the focused control is a multiline editor.

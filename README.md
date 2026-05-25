@@ -19,7 +19,8 @@ Functions should stay as small as reasonably practical. When an implementation s
 - Parallel libraries: `SwiftWinLegacy` for traditional imperative UI, `SwiftWinUI` for SwiftUI-compatible declarative UI
 - SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `ScrollView`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Link`, `Button`, `Spacer`, and `.onHover`
 - Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinScrollView`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinHover`, `WinSpacer`, and `WinDialog`
-- First-pass scroll containers with mouse-wheel movement, child visibility clipping, repaint hardening, and lightweight visual scroll indicators
+- First-pass scroll containers with mouse-wheel movement, Page Up/Page Down/Home/End keyboard scrolling, child visibility clipping, repaint hardening, and lightweight visual scroll indicators
+- First-pass command shortcuts through `.keyboardShortcut(...)` and `WinKeyboardShortcut`, with Apple-style `.command` mapped to Control on Windows
 - Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, dialog-backed `ColorPicker`, date-only `DatePicker`, and determinate `ProgressView`
 - Accessibility metadata hooks for labels, roles, values, and hints, ready for a future Windows UI Automation bridge
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons

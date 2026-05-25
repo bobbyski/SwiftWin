@@ -155,6 +155,21 @@ public final class Win32Renderer: Renderer {
         add(accessibility)
     }
 
+    /// Begins collecting children into a keyboard shortcut scope.
+    public func beginKeyboardShortcut(_ shortcut: KeyboardShortcut) {
+        let descriptor = shortcut.winKeyboardShortcutDescriptor
+        containerPath.append(WinKeyboardShortcut(descriptor.key, modifiers: descriptor.modifiers))
+    }
+
+    /// Closes the current keyboard shortcut scope.
+    public func endKeyboardShortcut() {
+        guard let shortcut = containerPath.popLast() else {
+            return
+        }
+
+        add(shortcut)
+    }
+
     /// Begins an inherited text style scope.
     public func beginFont(_ style: TextStyle) {
         fontStack.append(style)

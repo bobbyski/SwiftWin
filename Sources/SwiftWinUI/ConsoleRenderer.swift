@@ -107,6 +107,17 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints a keyboard shortcut node.
+    public func beginKeyboardShortcut(_ shortcut: KeyboardShortcut) {
+        write("KeyboardShortcut(key: \"\(shortcut.key)\", modifiers: \(shortcut.modifiers.rawValue))")
+        indent += 1
+    }
+
+    /// Ends the current keyboard shortcut node.
+    public func endKeyboardShortcut() {
+        indent -= 1
+    }
+
     /// Prints a font node.
     public func beginFont(_ style: TextStyle) {
         write("Font(size: \(style.size), weight: \(style.weight))")

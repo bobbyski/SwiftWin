@@ -10,6 +10,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var actions: [UInt16: () -> Void] = [:]
     nonisolated(unsafe) static var defaultAction: (() -> Void)?
     nonisolated(unsafe) static var cancelAction: (() -> Void)?
+    nonisolated(unsafe) static var keyboardShortcuts: [WinKeyboardShortcutDescriptor: () -> Void] = [:]
     nonisolated(unsafe) static var hoverActions: [UInt32: (Bool) -> Void] = [:]
     nonisolated(unsafe) static var accessibilityByControlID: [UInt32: WinAccessibilityMetadata] = [:]
     nonisolated(unsafe) static var scrollViews: [UInt32: ScrollViewRuntimeState] = [:]
@@ -50,6 +51,7 @@ enum Win32ActionRegistry {
         actions.removeAll()
         defaultAction = nil
         cancelAction = nil
+        keyboardShortcuts.removeAll()
         hoverActions.removeAll()
         accessibilityByControlID.removeAll()
         scrollViews.removeAll()

@@ -14,6 +14,7 @@ final class Win32ApplicationRunner {
     private var borderStack: [BorderLayoutState] = []
     private var hoverStack: [(Bool) -> Void] = []
     private var accessibilityStack: [WinAccessibilityMetadata] = []
+    private var keyboardShortcutStack: [WinKeyboardShortcutDescriptor] = []
     private var scrollViewStack: [ScrollViewBuildState] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
@@ -114,6 +115,10 @@ final class Win32ApplicationRunner {
             beginAccessibility(accessibility.accessibility)
             accessibility.children.forEach(render)
             endAccessibility()
+        case let keyboardShortcut as WinKeyboardShortcut:
+            beginKeyboardShortcut(keyboardShortcut.shortcut)
+            keyboardShortcut.children.forEach(render)
+            endKeyboardShortcut()
         case let text as WinText:
             createText(text.value, style: text.style, foregroundStyle: text.foregroundStyle)
         case let text as WinDynamicText:
@@ -378,6 +383,18 @@ final class Win32ApplicationRunner {
         }
     }
 
+    /// Pushes a keyboard shortcut scope for command controls rendered inside it.
+    private func beginKeyboardShortcut(_ shortcut: WinKeyboardShortcutDescriptor) {
+        keyboardShortcutStack.append(shortcut)
+    }
+
+    /// Pops the current keyboard shortcut scope.
+    private func endKeyboardShortcut() {
+        if !keyboardShortcutStack.isEmpty {
+            keyboardShortcutStack.removeLast()
+        }
+    }
+
     /// Creates a native static text control.
     ///
     /// SDK polish rule:
@@ -439,7 +456,17 @@ final class Win32ApplicationRunner {
         ) {
             applyFont(.body, to: control)
             installControlTracking(for: control)
+            registerKeyboardShortcutIfNeeded(action)
         }
+    }
+
+    /// Registers the current shortcut scope for a command action.
+    private func registerKeyboardShortcutIfNeeded(_ action: @escaping () -> Void) {
+        guard let shortcut = keyboardShortcutStack.last else {
+            return
+        }
+
+        Win32ActionRegistry.keyboardShortcuts[shortcut] = action
     }
 
     /// Creates an owner-drawn external link.
@@ -1118,6 +1145,7 @@ final class Win32ApplicationRunner {
                         cornerRadius: max(0, Int32(cornerRadius))
                     )
                     registerControlFrame(control, x: x, y: y, width: width, height: height)
+                    _ = EnableWindow(control, 0)
                 }
                 return control
             }

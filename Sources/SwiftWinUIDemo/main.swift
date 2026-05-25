@@ -125,6 +125,7 @@ struct DemoContent: View {
             .accessibilityLabel("Create Window")
             .accessibilityRole(.button)
             .accessibilityHint("Shows the current form summary.")
+            .keyboardShortcut("n", modifiers: [.command])
             Button("Settings") {
                 Dialog.show(
                     title: "Settings",
@@ -137,6 +138,7 @@ struct DemoContent: View {
             Button("Reset") {
                 resetForm()
             }
+            .keyboardShortcut("r", modifiers: [.command])
             Button("Cancel", role: .cancel) {
                 Dialog.show(
                     title: "Cancel",

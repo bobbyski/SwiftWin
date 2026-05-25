@@ -4,7 +4,7 @@
 
 Milestone ladder progress: [##-----] 2 of 7 milestones active
 
-Current milestone progress: [#########-] 90%
+Current milestone progress: [#########-] 92%
 
 ## Summary
 
@@ -29,9 +29,9 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 1: Repository And Package Structure | Implemented | 100% | `Code/SwiftWinUI`, SwiftPM library, demo target, tests folder, README, plan | Package structure exists and builds as a framework plus executable demo. |
 | 2: SwiftUI-Compatible API Foundation | Implemented | 60% | `App`, `Scene`, `WindowGroup`, `View`, `ViewBuilder`, `AnyView`, tuple rendering | Core API shape resembles SwiftUI. Needs source-compatibility audit, modifiers, `ForEach`, `Group`, environment, and more result-builder forms. |
 | 3: Renderer Boundary | Implemented | 80% | `Renderer` protocol, console renderer, native renderer selection | Public API is separated from backend rendering. Needs a richer render tree and resource lifecycle management. |
-| 4: Native Win32 Window Runtime | Implemented | 67% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Enter routes to the default primary command and Escape routes to explicit cancel commands. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
-| 5: SwiftUI Control Coverage | In Progress | 74% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `ScrollView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, `.onHover`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, dialog-backed color picking, date-only native picking, links, determinate progress, separators, first-pass scroll containers, hover callbacks, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
-| 6: Layout Engine | In Progress | 32% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics, first-pass scroll viewport clipping and indicators | Current layout is direct placement with early modifier containers, explicit scroll-view scoping, lightweight scroll indicators, and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, robust clipping, native scrollbar interaction, and DPI support. |
+| 4: Native Win32 Window Runtime | Implemented | 70% | HWND creation, window class registration, message loop, command routing | Demo opens a native window and buttons work. Enter routes to the default primary command, Escape routes to explicit cancel commands, and first-pass keyboard shortcuts route to command actions. Needs multiple windows, lifecycle events, errors, and graceful shutdown paths. |
+| 5: SwiftUI Control Coverage | In Progress | 75% | `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `ScrollView`, `Button`, `Link`, `Divider`, `Spacer`, `Dialog`, `.onHover`, `.keyboardShortcut`, planned `WebView` | Core Milestone 2 form controls, masked secure input, multi-line text editing, integer stepping, dialog-backed color picking, date-only native picking, links, determinate progress, separators, first-pass scroll containers, hover callbacks, keyboard shortcuts, and provider-backed binding refresh exist. Most SwiftUI views and controls are not implemented yet. WebView2 should provide the Windows web view path. |
+| 6: Layout Engine | In Progress | 34% | stack positioning, spacing, padding, fixed frame hints, basic child advancement, shared Win32 text metrics, first-pass scroll viewport clipping, indicators, and keyboard scrolling | Current layout is direct placement with early modifier containers, explicit scroll-view scoping, lightweight scroll indicators, keyboard Page/Home/End navigation, and SDK-owned text sizing defaults. Needs measure/place passes, alignment, min/max sizes, wrapping, robust clipping, native scrollbar interaction, and DPI support. |
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 60% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, imperative refresh API, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, provider-backed control refresh, direct `SwiftWinLegacy` control refresh, and batched imperative refresh exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
@@ -105,11 +105,12 @@ reason about.
 - [x] Add first-pass Tab traversal through `IsDialogMessageW`, `WS_EX_CONTROLPARENT`, and a multiline editor Tab escape.
 - [x] Add first-pass default command behavior by routing Enter to the first primary button.
 - [x] Add explicit cancel command behavior with `ButtonRole.cancel` / `WinButtonRole.cancel` and Escape routing.
-- [ ] Add richer keyboard shortcuts.
+- [x] Add first-pass `.keyboardShortcut` / `WinKeyboardShortcut` command routing for letter and number shortcuts.
 - [x] Add accessibility metadata hooks for labels, roles, and values.
 - [x] Add first-pass `ScrollView` / `WinScrollView` with scoped wheel scrolling and child visibility clipping.
 - [x] Harden first-pass `ScrollView` repainting by moving child HWNDs with no-copy positioning and explicitly invalidating old/new viewport slots.
 - [x] Add lightweight visual scroll indicators for `ScrollView` / `WinScrollView`.
+- [x] Add first-pass keyboard scrolling with Page Up, Page Down, Home, and End for `ScrollView` / `WinScrollView`.
 - [ ] Add draggable native scrollbar thumbs, nested scroll views, and stronger clipping for `ScrollView` / `WinScrollView`.
 - [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - [x] Add native dialog-backed color selection for `ColorPicker` / `WinColorPicker`.

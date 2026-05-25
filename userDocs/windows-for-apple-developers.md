@@ -41,6 +41,11 @@ controls and asking Windows to erase and repaint the client area. This is a
 temporary window-level path. A real `ScrollView` / `WinScrollView` should own
 clipping, scrollbars, nested content, and repaint behavior.
 
+For users without a mouse wheel, SwiftWin's first-pass scroll view now supports
+Page Up, Page Down, Home, and End. Arrow keys are intentionally left to focused
+controls for now because text fields, date pickers, sliders, segmented pickers,
+and steppers all have their own arrow-key meanings on Windows.
+
 ## Keyboard Traversal
 
 Tab traversal is not automatic for a hand-built Win32 top-level window. SwiftWin
@@ -49,7 +54,14 @@ marks its window as a control parent and runs messages through
 order. Default buttons, cancel buttons, and app-level shortcuts are separate
 command behaviors. SwiftWin now has a first-pass default command path for Enter
 and an explicit cancel command path for Escape through `ButtonRole.cancel` /
-`WinButtonRole.cancel`; richer app shortcuts remain planned.
+`WinButtonRole.cancel`.
+
+SwiftWin also supports first-pass command shortcuts. In SwiftWinUI,
+`.keyboardShortcut("n", modifiers: [.command])` maps to Control+N on Windows.
+In SwiftWinLegacy, use `WinKeyboardShortcut("n", modifiers: .command)`. This is
+an intentional compatibility bridge for Mac/iOS developers: the source can keep
+Apple-style intent while the runtime uses Windows keyboard convention. If you
+omit the modifier, SwiftWin defaults to `.command`.
 
 Owner-drawn controls need their own focus visuals. Stock Windows controls paint
 focus internally, but once SwiftWin takes over drawing for buttons, links,

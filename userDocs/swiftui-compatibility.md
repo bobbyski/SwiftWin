@@ -31,7 +31,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations, `.onHover(perform:)`, and first-pass accessibility metadata modifiers |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations, `.onHover(perform:)`, `.keyboardShortcut(...)`, and first-pass accessibility metadata modifiers |
 | `TextField` | Partial |
 | `SecureField` | Partial |
 | `TextEditor` | Partial |

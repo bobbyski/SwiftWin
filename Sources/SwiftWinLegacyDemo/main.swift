@@ -110,7 +110,9 @@ createWindowAccessibility.add(WinButton("Create Window", style: .primary) {
         """
     )
 })
-footer.add(createWindowAccessibility)
+let createWindowShortcut = WinKeyboardShortcut("n", modifiers: .command)
+createWindowShortcut.add(createWindowAccessibility)
+footer.add(createWindowShortcut)
 let settingsHover = WinHover { isHovered in
     hoverTarget = isHovered ? "Settings" : "None"
     WinDynamicTextInvalidation.invalidateAll()
@@ -124,7 +126,8 @@ settingsHover.add(WinButton("Settings") {
     )
 })
 footer.add(settingsHover)
-footer.add(WinButton("Reset") {
+let resetShortcut = WinKeyboardShortcut("r", modifiers: .command)
+resetShortcut.add(WinButton("Reset") {
     resetForm(
         projectName: projectName,
         includeDiagnostics: includeDiagnostics,
@@ -137,6 +140,7 @@ footer.add(WinButton("Reset") {
         launchDate: launchDate
     )
 })
+footer.add(resetShortcut)
 footer.add(WinButton("Cancel", role: .cancel) {
     WinDialog.show(
         title: "Cancel",

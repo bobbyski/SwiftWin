@@ -402,9 +402,37 @@ backend records the child HWNDs created inside the scroll view, moves them in
 response to mouse-wheel scrolling, and hides children outside the viewport.
 The backend now moves child windows with no-copy positioning to reduce stale
 pixels, explicitly repaints old and new control slots, and overlays a
-lightweight visual scroll indicator. Draggable native scrollbar thumbs, nested
-scroll views, stronger clipping, and full SwiftUI axis/indicator options remain
-planned.
+lightweight visual scroll indicator. Page Up, Page Down, Home, and End also
+scroll the active or first scroll view for users without a wheel. Draggable
+native scrollbar thumbs, nested scroll views, stronger clipping, and full
+SwiftUI axis/indicator options remain planned.
+
+## Keyboard Shortcuts
+
+`keyboardShortcut` applies a command shortcut to a button or other command
+control inside the modifier scope.
+
+```swift
+Button("Create Window", style: .primary) {
+    Dialog.show(title: "Create Window", message: "Created")
+}
+.keyboardShortcut("n", modifiers: [.command])
+```
+
+On Windows, `.command` maps to Control so Mac-oriented source has a reasonable
+PC keyboard equivalent. `.command` is also the default modifier when one is not
+specified. The first implementation supports letter and number shortcuts.
+Symbolic keys, menu integration, and automatic shortcut labels remain planned.
+
+The traditional API exposes the same idea with `WinKeyboardShortcut`:
+
+```swift
+let shortcut = WinKeyboardShortcut("r", modifiers: .command)
+shortcut.add(WinButton("Reset") {
+    resetForm()
+})
+footer.add(shortcut)
+```
 
 ## Accessibility Metadata
 

@@ -37,6 +37,7 @@ Implemented:
 - `WinAccessibilityMetadata`
 - `WinAccessibilityRole`
 - `WinHover`
+- `WinKeyboardShortcut`
 - `WinLink`
 - `WinSpacer`
 - `WinDialog`
@@ -215,6 +216,24 @@ root.add(hover)
 Current implementation: callbacks are registered for child HWND controls that
 already participate in SwiftWin's mouse tracking. Arbitrary layout-region
 hover is planned after the layout engine grows real hit-testing.
+
+## Keyboard Shortcuts
+
+`WinKeyboardShortcut` applies a command shortcut to child command controls:
+
+```swift
+let shortcut = WinKeyboardShortcut("n", modifiers: .command)
+shortcut.add(WinButton("Create Window") {
+    WinDialog.show(title: "Create Window", message: "Created")
+})
+footer.add(shortcut)
+```
+
+Windows note: `.command` maps to Control in the Win32 backend. This keeps
+Apple-oriented source readable while still matching PC keyboard convention.
+`.command` is also the default modifier when one is not specified. The first
+implementation supports letter and number shortcuts; symbolic keys and menu
+accelerator labels remain planned.
 
 ## Choosing Colors
 

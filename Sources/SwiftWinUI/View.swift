@@ -101,6 +101,10 @@ public protocol Renderer: AnyObject {
     func beginAccessibility(_ metadata: AccessibilityMetadata)
     /// Ends the current accessibility metadata scope.
     func endAccessibility()
+    /// Begins a keyboard shortcut scope.
+    func beginKeyboardShortcut(_ shortcut: KeyboardShortcut)
+    /// Ends the current keyboard shortcut scope.
+    func endKeyboardShortcut()
     /// Begins a text font scope.
     func beginFont(_ style: TextStyle)
     /// Ends the current text font scope.
@@ -201,6 +205,12 @@ public extension Renderer {
 
     /// Ends a default accessibility scope.
     func endAccessibility() {}
+
+    /// Default keyboard shortcut scope for renderers without shortcut support.
+    func beginKeyboardShortcut(_ shortcut: KeyboardShortcut) {}
+
+    /// Ends a default keyboard shortcut scope.
+    func endKeyboardShortcut() {}
 
     /// Resolves text style with `.body` as the baseline.
     func resolveTextStyle(_ style: TextStyle?) -> TextStyle {
