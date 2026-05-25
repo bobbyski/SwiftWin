@@ -344,9 +344,12 @@ final class Win32ApplicationRunner {
             height: max(1, viewportHeight),
             contentHeight: contentSize.height,
             offset: 0,
-            controlHandles: buildState.controlHandles
+            controlHandles: buildState.controlHandles,
+            indicatorTrack: nil,
+            indicatorThumb: nil
         )
         Win32ActionRegistry.scrollViews[buildState.id] = runtime
+        createScrollIndicator(for: buildState.id)
         applyScrollViewOffset(id: buildState.id, requestedOffset: 0)
         advance(width: runtime.width, height: runtime.height)
     }
@@ -1040,6 +1043,85 @@ final class Win32ApplicationRunner {
         let resolvedHeight = max(1, height)
         _ = MoveWindow(control, background.x, background.y, resolvedWidth, resolvedHeight, 1)
         registerControlFrame(control, x: background.x, y: background.y, width: resolvedWidth, height: resolvedHeight)
+    }
+
+    /// Creates a lightweight scroll position indicator for an explicit scroll view.
+    ///
+    /// Implementation note:
+    /// The first `ScrollView` is still backed by child HWND movement, not a
+    /// native composited viewport. A fixed overlay indicator gives users
+    /// position feedback without changing the public control model.
+    private func createScrollIndicator(for scrollID: UInt32) {
+        guard var state = Win32ActionRegistry.scrollViews[scrollID],
+              state.contentHeight > state.height else {
+            return
+        }
+
+        let trackWidth: Int32 = 6
+        let trackInset: Int32 = 5
+        let trackX = state.x + state.width - trackWidth - trackInset
+        let trackY = state.y + trackInset
+        let trackHeight = max(24, state.height - trackInset * 2)
+        state.indicatorTrack = createScrollIndicatorPanel(
+            color: WinForegroundStyle(red: 205, green: 218, blue: 234),
+            cornerRadius: 3,
+            x: trackX,
+            y: trackY,
+            width: trackWidth,
+            height: trackHeight
+        )
+        state.indicatorThumb = createScrollIndicatorPanel(
+            color: WinForegroundStyle(red: 85, green: 126, blue: 186),
+            cornerRadius: 3,
+            x: trackX,
+            y: trackY,
+            width: trackWidth,
+            height: scrollIndicatorThumbHeight(state: state, trackHeight: trackHeight)
+        )
+        Win32ActionRegistry.scrollViews[scrollID] = state
+    }
+
+    /// Creates one noninteractive owner-drawn panel used by the scroll indicator.
+    private func createScrollIndicatorPanel(
+        color: WinForegroundStyle,
+        cornerRadius: Double,
+        x: Int32,
+        y: Int32,
+        width: Int32,
+        height: Int32
+    ) -> HWND? {
+        guard let window else {
+            return nil
+        }
+
+        let controlID = nextControlID
+        nextControlID += 1
+        return withWideString("STATIC") { controlClass in
+            withWideString("") { controlTitle in
+                let control = CreateWindowExW(
+                    0,
+                    controlClass,
+                    controlTitle,
+                    WS_CHILD | WS_VISIBLE | SS_OWNERDRAW,
+                    x,
+                    y,
+                    width,
+                    height,
+                    window,
+                    HMENU(bitPattern: Int(controlID)),
+                    instance,
+                    nil
+                )
+                if let control {
+                    Win32ActionRegistry.backgrounds[UInt32(controlID)] = BackgroundRenderState(
+                        color: color,
+                        cornerRadius: max(0, Int32(cornerRadius))
+                    )
+                    registerControlFrame(control, x: x, y: y, width: width, height: height)
+                }
+                return control
+            }
+        }
     }
 
     /// Creates a disabled owner-drawn panel that paints a border above content.

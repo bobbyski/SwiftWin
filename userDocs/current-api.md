@@ -400,8 +400,11 @@ root.add(scrollView)
 Current implementation: this is a first-pass vertical container. The Win32
 backend records the child HWNDs created inside the scroll view, moves them in
 response to mouse-wheel scrolling, and hides children outside the viewport.
-Native scrollbar thumbs, nested scroll views, stronger clipping, scroll
-indicators, and full SwiftUI axis/indicator options remain planned.
+The backend now moves child windows with no-copy positioning to reduce stale
+pixels, explicitly repaints old and new control slots, and overlays a
+lightweight visual scroll indicator. Draggable native scrollbar thumbs, nested
+scroll views, stronger clipping, and full SwiftUI axis/indicator options remain
+planned.
 
 ## Accessibility Metadata
 

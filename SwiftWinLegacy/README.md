@@ -6,7 +6,7 @@ It is designed to be used directly by developers who prefer imperative UI progra
 
 ## Status
 
-Early prototype. The first milestone is implemented: `SwiftWinLegacyDemo` reproduces the current SwiftWinUI demo with an imperative API.
+Early prototype. The first milestone is implemented: `SwiftWinLegacyDemo` reproduces the current SwiftWinUI demo with an imperative API. Milestone 2 is adding form controls, state refresh, keyboard routing, and first-pass scrolling with lightweight visual indicators.
 
 ## Design Principles
 

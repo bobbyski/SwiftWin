@@ -356,6 +356,7 @@ func applyScrollViewOffset(id: UInt32, requestedOffset: Int32) {
         redrawControlSlot(frame, y: adjustedY, parent: parent)
     }
 
+    updateScrollIndicator(state)
     redrawScrollViewViewport(state, parent: parent)
 }
 
@@ -423,6 +424,42 @@ private func redrawScrollViewViewport(_ state: ScrollViewRuntimeState, parent: H
         bottom: state.y + state.height
     )
     _ = RedrawWindow(parent, &rect, nil, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW)
+}
+
+/// Sizes the visible scroll indicator thumb for the current viewport.
+func scrollIndicatorThumbHeight(state: ScrollViewRuntimeState, trackHeight: Int32) -> Int32 {
+    guard state.contentHeight > 0 else {
+        return trackHeight
+    }
+
+    let visibleRatio = Double(state.height) / Double(state.contentHeight)
+    return max(24, Int32(Double(trackHeight) * min(1.0, visibleRatio)))
+}
+
+/// Updates the lightweight scroll indicator to match the current offset.
+private func updateScrollIndicator(_ state: ScrollViewRuntimeState) {
+    guard let track = state.indicatorTrack,
+          let thumb = state.indicatorThumb else {
+        return
+    }
+
+    let trackWidth: Int32 = 6
+    let trackInset: Int32 = 5
+    let trackX = state.x + state.width - trackWidth - trackInset
+    let trackY = state.y + trackInset
+    let trackHeight = max(24, state.height - trackInset * 2)
+    let thumbHeight = scrollIndicatorThumbHeight(state: state, trackHeight: trackHeight)
+    let maximumOffset = max(1, state.contentHeight - state.height)
+    let maximumThumbTravel = max(0, trackHeight - thumbHeight)
+    let thumbY = trackY + Int32((Double(state.offset) / Double(maximumOffset)) * Double(maximumThumbTravel))
+    let isScrollable = state.contentHeight > state.height
+
+    _ = SetWindowPos(track, nil, trackX, trackY, trackWidth, trackHeight, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS)
+    _ = SetWindowPos(thumb, nil, trackX, thumbY, trackWidth, thumbHeight, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS)
+    _ = ShowWindow(track, isScrollable ? SW_SHOW : SW_HIDE)
+    _ = ShowWindow(thumb, isScrollable ? SW_SHOW : SW_HIDE)
+    _ = RedrawWindow(track, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW)
+    _ = RedrawWindow(thumb, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW)
 }
 
 /// Clamps a requested scroll offset to the rendered content bounds.

@@ -72,7 +72,10 @@ and `.onHover` / `WinHover` callbacks can receive enter and exit events.
 
 Apple-platform mental model: this is closer to manually moving subviews and
 forcing invalidation than to dropping content inside a ready-made
-`NSScrollView`, `UIScrollView`, or SwiftUI `ScrollView`.
+`NSScrollView`, `UIScrollView`, or SwiftUI `ScrollView`. SwiftWin now hardens
+this path with no-copy child movement, explicit repainting, and a lightweight
+scroll indicator, but true Mac-like smoothness will require a more composited
+viewport or a future WinUI/Direct2D-style backend.
 
 ## Text Measurement And Clipping
 

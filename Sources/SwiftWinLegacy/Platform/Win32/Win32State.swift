@@ -679,6 +679,8 @@ struct ScrollViewRuntimeState {
     var contentHeight: Int32
     var offset: Int32
     var controlHandles: [UInt]
+    var indicatorTrack: HWND?
+    var indicatorThumb: HWND?
 }
 
 /// Shared paint resources for the current Win32 prototype.
