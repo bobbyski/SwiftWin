@@ -72,6 +72,17 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints a scroll-view node.
+    public func beginScrollView() {
+        write("ScrollView")
+        indent += 1
+    }
+
+    /// Ends the current scroll-view node.
+    public func endScrollView() {
+        indent -= 1
+    }
+
     /// Prints a hover-observation node.
     public func beginHover(_ onHover: @escaping (Bool) -> Void) {
         write("Hover")

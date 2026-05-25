@@ -14,6 +14,7 @@ final class Win32ApplicationRunner {
     private var borderStack: [BorderLayoutState] = []
     private var hoverStack: [(Bool) -> Void] = []
     private var accessibilityStack: [WinAccessibilityMetadata] = []
+    private var scrollViewStack: [ScrollViewBuildState] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
 
@@ -101,6 +102,10 @@ final class Win32ApplicationRunner {
             beginDisabled(disabled.isDisabled)
             disabled.children.forEach(render)
             endDisabled()
+        case let scrollView as WinScrollView:
+            beginScrollView(scrollView)
+            scrollView.children.forEach(render)
+            endScrollView(scrollView)
         case let hover as WinHover:
             beginHover(hover.onHover)
             hover.children.forEach(render)
@@ -292,6 +297,58 @@ final class Win32ApplicationRunner {
 
         let size = consumedSize(of: child)
         advance(width: size.width, height: size.height)
+    }
+
+    /// Pushes an explicit vertical scroll view layout context.
+    private func beginScrollView(_ scrollView: WinScrollView) {
+        let origin = layoutStack.last ?? LayoutState(axis: .vertical, x: 36, y: 34, spacing: 12)
+        let scrollID = UInt32(nextControlID)
+        nextControlID += 1
+        scrollViewStack.append(
+            ScrollViewBuildState(
+                id: scrollID,
+                x: origin.x,
+                y: origin.y,
+                proposedWidth: origin.proposedWidth,
+                proposedHeight: origin.proposedHeight
+            )
+        )
+        layoutStack.append(
+            LayoutState(
+                axis: .vertical,
+                x: origin.x,
+                y: origin.y,
+                spacing: origin.spacing,
+                proposedWidth: int32(scrollView.width) ?? origin.proposedWidth,
+                proposedHeight: nil,
+                isDisabled: origin.isDisabled
+            )
+        )
+    }
+
+    /// Pops a scroll view, records child HWNDs, and advances by viewport size.
+    private func endScrollView(_ scrollView: WinScrollView) {
+        guard layoutStack.count > 1,
+              let child = layoutStack.popLast(),
+              let buildState = scrollViewStack.popLast() else {
+            return
+        }
+
+        let contentSize = consumedSize(of: child)
+        let viewportWidth = int32(scrollView.width) ?? buildState.proposedWidth ?? child.proposedWidth ?? contentSize.width
+        let viewportHeight = int32(scrollView.height) ?? buildState.proposedHeight ?? child.proposedHeight ?? min(contentSize.height, 320)
+        let runtime = ScrollViewRuntimeState(
+            x: buildState.x,
+            y: buildState.y,
+            width: max(1, viewportWidth),
+            height: max(1, viewportHeight),
+            contentHeight: contentSize.height,
+            offset: 0,
+            controlHandles: buildState.controlHandles
+        )
+        Win32ActionRegistry.scrollViews[buildState.id] = runtime
+        applyScrollViewOffset(id: buildState.id, requestedOffset: 0)
+        advance(width: runtime.width, height: runtime.height)
     }
 
     /// Pushes a hover callback scope for controls rendered inside it.
@@ -915,7 +972,21 @@ final class Win32ApplicationRunner {
         }
 
         let frame = ControlFrame(control: control, x: x, y: y, width: width, height: height)
-        Win32ActionRegistry.controlFramesByHandle[UInt(bitPattern: control)] = frame
+        let handle = UInt(bitPattern: control)
+        Win32ActionRegistry.controlFramesByHandle[handle] = frame
+        registerControlWithCurrentScrollView(handle)
+    }
+
+    /// Associates a newly-created child control with the active scroll view.
+    private func registerControlWithCurrentScrollView(_ handle: UInt) {
+        guard let state = scrollViewStack.popLast() else {
+            return
+        }
+
+        var updated = state
+        updated.controlHandles.append(handle)
+        Win32ActionRegistry.scrollViewIDByControlHandle[handle] = updated.id
+        scrollViewStack.append(updated)
     }
 
     /// Creates a child static control that acts as a solid background panel.
@@ -1345,6 +1416,16 @@ private struct BorderLayoutState {
     var color: WinForegroundStyle
     var width: Int32
     var cornerRadius: Int32
+}
+
+/// Scroll view metadata collected while child controls are rendered.
+private struct ScrollViewBuildState {
+    var id: UInt32
+    var x: Int32
+    var y: Int32
+    var proposedWidth: Int32?
+    var proposedHeight: Int32?
+    var controlHandles: [UInt] = []
 }
 
 /// Current direct-placement layout context.

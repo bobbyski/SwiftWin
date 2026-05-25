@@ -149,6 +149,7 @@ let CC_RGBINIT: DWORD = 0x00000001
 let CC_FULLOPEN: DWORD = 0x00000002
 let CW_USEDEFAULT = Int32(bitPattern: 0x80000000)
 let SW_SHOW: Int32 = 5
+let SW_HIDE: Int32 = 0
 let SW_SHOWNORMAL: Int32 = 1
 let WM_SETFONT: UINT = 0x0030
 let WM_COMMAND: UINT = 0x0111
@@ -220,6 +221,9 @@ let RDW_INVALIDATE: UINT = 0x0001
 let RDW_ERASE: UINT = 0x0004
 let RDW_ALLCHILDREN: UINT = 0x0080
 let RDW_UPDATENOW: UINT = 0x0100
+let SWP_NOZORDER: UINT = 0x0004
+let SWP_NOACTIVATE: UINT = 0x0010
+let SWP_NOCOPYBITS: UINT = 0x0100
 
 /// Provides a temporary null-terminated UTF-16 pointer for Win32 APIs.
 func withWideString<Result>(_ value: String, _ body: (UnsafePointer<UInt16>) -> Result) -> Result {
@@ -263,6 +267,8 @@ func RedrawWindow(_ window: HWND?, _ updateRect: UnsafePointer<RECT>?, _ updateR
 func EnableWindow(_ window: HWND?, _ enable: BOOL) -> BOOL
 @_silgen_name("MoveWindow")
 func MoveWindow(_ window: HWND?, _ x: Int32, _ y: Int32, _ width: Int32, _ height: Int32, _ repaint: BOOL) -> BOOL
+@_silgen_name("SetWindowPos")
+func SetWindowPos(_ window: HWND?, _ insertAfter: HWND?, _ x: Int32, _ y: Int32, _ width: Int32, _ height: Int32, _ flags: UINT) -> BOOL
 @_silgen_name("GetClientRect")
 func GetClientRect(_ window: HWND?, _ rect: UnsafeMutablePointer<RECT>) -> BOOL
 @_silgen_name("SetWindowLongPtrW")

@@ -83,7 +83,9 @@ content.add(WinText("Renderer path: SwiftWinLegacy -> Win32", style: .caption))
 content.add(WinLink("Open Swift.org", destination: "https://www.swift.org"))
 content.add(WinSpacer())
 
-root.add(content)
+let scrollView = WinScrollView(width: 760, height: 360)
+scrollView.add(content)
+root.add(scrollView)
 root.add(WinSeparator(axis: .horizontal))
 
 let footer = WinStack(axis: .horizontal, spacing: 10)

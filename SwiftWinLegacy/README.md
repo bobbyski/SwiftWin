@@ -21,6 +21,7 @@ import SwiftWinLegacy
 
 let window = WinWindow(title: "SwiftWinLegacy Demo", width: 960, height: 640)
 let root = WinStack(axis: .vertical, spacing: 14)
+let scrollView = WinScrollView(width: 760, height: 360)
 
 root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
@@ -29,7 +30,7 @@ let accessibleProjectName = WinAccessibility(
     WinAccessibilityMetadata(label: "Project name", role: .textField)
 )
 accessibleProjectName.add(projectName)
-root.add(accessibleProjectName)
+scrollView.add(accessibleProjectName)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {
@@ -46,6 +47,7 @@ settingsHover.add(WinButton("Settings") {
 })
 buttons.add(settingsHover)
 
+root.add(scrollView)
 root.add(buttons)
 root.add(WinSpacer())
 root.add(WinText("Phase II traditional API: active.", style: .caption))

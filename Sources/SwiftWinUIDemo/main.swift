@@ -42,7 +42,10 @@ struct DemoContent: View {
         VStack(spacing: 14) {
             header
             Divider()
-            content(themes: themes)
+            ScrollView {
+                content(themes: themes)
+            }
+            .frame(width: 760, height: 360)
             Divider()
             footer(themes: themes)
             Text("Native Win32 backend: active. Console renderer: still available for diagnostics.", style: .caption)

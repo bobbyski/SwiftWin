@@ -113,6 +113,20 @@ public final class Win32Renderer: Renderer {
         add(disabled)
     }
 
+    /// Begins collecting children into a scroll-view container.
+    public func beginScrollView() {
+        containerPath.append(WinScrollView())
+    }
+
+    /// Closes the current scroll-view container.
+    public func endScrollView() {
+        guard let scrollView = containerPath.popLast() else {
+            return
+        }
+
+        add(scrollView)
+    }
+
     /// Begins collecting children into a hover callback container.
     public func beginHover(_ onHover: @escaping (Bool) -> Void) {
         containerPath.append(WinHover(onHover: onHover))

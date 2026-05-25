@@ -89,6 +89,10 @@ public protocol Renderer: AnyObject {
     func beginDisabled(_ isDisabled: Bool)
     /// Ends the current disabled-state scope.
     func endDisabled()
+    /// Begins a vertical scroll-view scope.
+    func beginScrollView()
+    /// Ends the current vertical scroll-view scope.
+    func endScrollView()
     /// Begins a hover callback scope.
     func beginHover(_ onHover: @escaping (Bool) -> Void)
     /// Ends the current hover callback scope.
@@ -179,6 +183,12 @@ public extension Renderer {
 
     /// Ends a default font scope.
     func endFont() {}
+
+    /// Default scroll view scope for renderers without scrolling support.
+    func beginScrollView() {}
+
+    /// Ends a default scroll view scope.
+    func endScrollView() {}
 
     /// Default hover scope for renderers that do not track pointer movement.
     func beginHover(_ onHover: @escaping (Bool) -> Void) {}

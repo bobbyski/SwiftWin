@@ -25,6 +25,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `Text` | Partial |
 | `Button` | Partial |
 | `VStack` / `HStack` | Partial |
+| `ScrollView` | Partial: vertical wheel-scrolled viewport only |
 | `Spacer` | Partial |
 | `Divider` | Partial |
 | `@State` | Partial |

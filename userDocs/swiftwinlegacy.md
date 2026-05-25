@@ -19,6 +19,7 @@ Implemented:
 - `WinButtonDisplaying`
 - `WinAccessibilityProviding`
 - `WinStack`
+- `WinScrollView`
 - `WinText`
 - `WinTextField`
 - `WinSecureField`
@@ -130,6 +131,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `ProgressView` -> `WinProgressView`
 - `ColorPicker` -> `WinColorPicker`
 - `DatePicker` -> `WinDatePicker`
+- `ScrollView` -> `WinScrollView`
 - `Button` -> `WinButton`
 - `ButtonRole` -> `WinButtonRole`
 - accessibility modifiers -> `WinAccessibility`

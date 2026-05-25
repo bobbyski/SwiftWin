@@ -374,6 +374,35 @@ let progress = WinProgressView("Scale progress", value: { Double(scale.value) },
 
 Current implementation: the Win32 backend uses the Common Controls progress bar. Progress values refresh through the same narrow invalidation bridge used by dynamic text, so progress can follow slider-backed state. Indeterminate progress, ring-style progress, and SwiftUI progress styles are planned.
 
+## ScrollView
+
+`ScrollView` creates a vertical scroll container.
+
+```swift
+ScrollView {
+    VStack(spacing: 14) {
+        TextField("Project name", text: $projectName)
+        TextEditor("Notes", text: $notes)
+        Slider("Scale", value: $scale, range: 0...100)
+    }
+}
+.frame(width: 760, height: 360)
+```
+
+The traditional API exposes the same concept as `WinScrollView`:
+
+```swift
+let scrollView = WinScrollView(width: 760, height: 360)
+scrollView.add(content)
+root.add(scrollView)
+```
+
+Current implementation: this is a first-pass vertical container. The Win32
+backend records the child HWNDs created inside the scroll view, moves them in
+response to mouse-wheel scrolling, and hides children outside the viewport.
+Native scrollbar thumbs, nested scroll views, stronger clipping, scroll
+indicators, and full SwiftUI axis/indicator options remain planned.
+
 ## Accessibility Metadata
 
 SwiftWinUI supports first-pass accessibility metadata modifiers:

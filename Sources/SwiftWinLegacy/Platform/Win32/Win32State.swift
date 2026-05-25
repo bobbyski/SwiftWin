@@ -12,6 +12,8 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var cancelAction: (() -> Void)?
     nonisolated(unsafe) static var hoverActions: [UInt32: (Bool) -> Void] = [:]
     nonisolated(unsafe) static var accessibilityByControlID: [UInt32: WinAccessibilityMetadata] = [:]
+    nonisolated(unsafe) static var scrollViews: [UInt32: ScrollViewRuntimeState] = [:]
+    nonisolated(unsafe) static var scrollViewIDByControlHandle: [UInt: UInt32] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var links: [UInt32: LinkRenderState] = [:]
     nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
@@ -50,6 +52,8 @@ enum Win32ActionRegistry {
         cancelAction = nil
         hoverActions.removeAll()
         accessibilityByControlID.removeAll()
+        scrollViews.removeAll()
+        scrollViewIDByControlHandle.removeAll()
         buttons.removeAll()
         links.removeAll()
         stepperValues.removeAll()
@@ -664,6 +668,17 @@ struct ControlFrame {
 struct WindowScrollState {
     var contentHeight: Int32 = 0
     var offset: Int32 = 0
+}
+
+/// Runtime state for an explicit vertical scroll view.
+struct ScrollViewRuntimeState {
+    var x: Int32
+    var y: Int32
+    var width: Int32
+    var height: Int32
+    var contentHeight: Int32
+    var offset: Int32
+    var controlHandles: [UInt]
 }
 
 /// Shared paint resources for the current Win32 prototype.

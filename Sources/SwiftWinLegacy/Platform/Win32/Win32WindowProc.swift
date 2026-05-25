@@ -86,6 +86,12 @@ private func isMultilineEditor(_ control: HWND?) -> Bool {
 private func handleMouseWheel(hwnd: HWND?, wParam: WPARAM) -> LRESULT {
     let delta = wheelDelta(from: wParam)
     let step = max(12, abs(delta) / 3)
+    if let scrollID = firstScrollViewID() {
+        let current = Win32ActionRegistry.scrollViews[scrollID]?.offset ?? 0
+        applyScrollViewOffset(id: scrollID, requestedOffset: current - Int32(delta > 0 ? step : -step))
+        return 0
+    }
+
     let nextOffset = Win32ActionRegistry.scrollState.offset - Int32(delta > 0 ? step : -step)
     applyScrollOffset(nextOffset, window: hwnd)
     return 0
@@ -313,9 +319,49 @@ private func applyScrollOffset(_ requestedOffset: Int32, window: HWND?) {
 
     redrawScrolledWindow(window)
     for frame in Win32ActionRegistry.controlFramesByHandle.values {
+        if Win32ActionRegistry.scrollViewIDByControlHandle[UInt(bitPattern: frame.control)] != nil {
+            continue
+        }
         _ = MoveWindow(frame.control, frame.x, frame.y - offset, frame.width, frame.height, 1)
     }
     redrawScrolledWindow(window)
+}
+
+/// Applies a vertical scroll offset to one explicit scroll view.
+func applyScrollViewOffset(id: UInt32, requestedOffset: Int32) {
+    guard var state = Win32ActionRegistry.scrollViews[id] else {
+        return
+    }
+
+    let oldOffset = state.offset
+    let maximum = max(0, state.contentHeight - state.height)
+    let offset = min(max(0, requestedOffset), maximum)
+    state.offset = offset
+    Win32ActionRegistry.scrollViews[id] = state
+    let parent = parentWindow(for: state)
+
+    redrawScrollViewViewport(state, parent: parent)
+
+    for handle in state.controlHandles {
+        guard let frame = Win32ActionRegistry.controlFramesByHandle[handle] else {
+            continue
+        }
+
+        let oldY = frame.y - oldOffset
+        let adjustedY = frame.y - offset
+        let isVisible = adjustedY + frame.height > state.y && adjustedY < state.y + state.height
+        redrawControlSlot(frame, y: oldY, parent: parent)
+        setScrolledControlFrame(frame, y: adjustedY)
+        _ = ShowWindow(frame.control, isVisible ? SW_SHOW : SW_HIDE)
+        redrawControlSlot(frame, y: adjustedY, parent: parent)
+    }
+
+    redrawScrollViewViewport(state, parent: parent)
+}
+
+/// Returns the first explicit scroll view for the current prototype window.
+private func firstScrollViewID() -> UInt32? {
+    Win32ActionRegistry.scrollViews.keys.sorted().first
 }
 
 /// Erases and repaints the full client area before and after child HWND scrolling.
@@ -326,6 +372,57 @@ private func applyScrollOffset(_ requestedOffset: Int32, window: HWND?) {
 /// prototype fix until a real `ScrollView` owns clipping and painting.
 private func redrawScrolledWindow(_ window: HWND?) {
     _ = RedrawWindow(window, nil, nil, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW)
+}
+
+/// Moves a child control during scroll without asking Win32 to copy stale pixels.
+///
+/// Windows note:
+/// `MoveWindow` can preserve bits from the previous location. That optimization
+/// is visible as tearing when a scroll view is made from many child HWNDs, so
+/// the scroll path uses `SWP_NOCOPYBITS` and drives repaint explicitly.
+private func setScrolledControlFrame(_ frame: ControlFrame, y: Int32) {
+    _ = SetWindowPos(
+        frame.control,
+        nil,
+        frame.x,
+        y,
+        frame.width,
+        frame.height,
+        SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS
+    )
+}
+
+/// Finds the native parent window that owns a scroll view's child controls.
+private func parentWindow(for state: ScrollViewRuntimeState) -> HWND? {
+    for handle in state.controlHandles {
+        if let frame = Win32ActionRegistry.controlFramesByHandle[handle] {
+            return GetParent(frame.control)
+        }
+    }
+
+    return nil
+}
+
+/// Invalidates one old or new child-control slot inside a scroll viewport.
+private func redrawControlSlot(_ frame: ControlFrame, y: Int32, parent: HWND?) {
+    var rect = RECT(
+        left: frame.x,
+        top: y,
+        right: frame.x + frame.width,
+        bottom: y + frame.height
+    )
+    _ = RedrawWindow(parent, &rect, nil, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW)
+}
+
+/// Invalidates the complete viewport before and after moving scroll children.
+private func redrawScrollViewViewport(_ state: ScrollViewRuntimeState, parent: HWND?) {
+    var rect = RECT(
+        left: state.x,
+        top: state.y,
+        right: state.x + state.width,
+        bottom: state.y + state.height
+    )
+    _ = RedrawWindow(parent, &rect, nil, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW)
 }
 
 /// Clamps a requested scroll offset to the rendered content bounds.
