@@ -374,6 +374,38 @@ let progress = WinProgressView("Scale progress", value: { Double(scale.value) },
 
 Current implementation: the Win32 backend uses the Common Controls progress bar. Progress values refresh through the same narrow invalidation bridge used by dynamic text, so progress can follow slider-backed state. Indeterminate progress, ring-style progress, and SwiftUI progress styles are planned.
 
+## Accessibility Metadata
+
+SwiftWinUI supports first-pass accessibility metadata modifiers:
+
+```swift
+TextField("Project name", text: $projectName)
+    .accessibilityLabel("Project name")
+    .accessibilityRole(.textField)
+    .accessibilityValue(projectName)
+```
+
+Supported metadata hooks:
+
+- `.accessibilityLabel(_:)`
+- `.accessibilityValue(_:)`
+- `.accessibilityRole(_:)`
+- `.accessibilityHint(_:)`
+
+The traditional API exposes the same concept as `WinAccessibility`:
+
+```swift
+let metadata = WinAccessibility(
+    WinAccessibilityMetadata(label: "Project name", role: .textField)
+)
+metadata.add(projectName)
+```
+
+Current implementation: the Win32 backend records merged metadata per child
+control ID. This is not a full Windows UI Automation provider yet, so screen
+readers should not be expected to receive all metadata until the UIA bridge is
+implemented.
+
 ## Hover
 
 `.onHover(perform:)` observes pointer entry and exit for compatible controls.

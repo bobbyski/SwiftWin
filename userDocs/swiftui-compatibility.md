@@ -30,7 +30,7 @@ Full compatibility may not be achievable on Windows, but compatibility is the de
 | `@State` | Partial |
 | `Binding` | Partial |
 | `Environment` | Not implemented |
-| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
+| Modifiers | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations, `.onHover(perform:)`, and first-pass accessibility metadata modifiers |
 | `TextField` | Partial |
 | `SecureField` | Partial |
 | `TextEditor` | Partial |
@@ -213,6 +213,21 @@ Current compatibility limit: hover callbacks are attached to compatible child
 controls that already participate in HWND tracking. SwiftUI can observe hover
 over arbitrary view regions; SwiftWin will need a richer layout and hit-test
 engine before container-level hover can match that behavior.
+
+## Accessibility
+
+SwiftWinUI now has SwiftUI-shaped accessibility metadata hooks:
+
+```swift
+TextField("Project name", text: $projectName)
+    .accessibilityLabel("Project name")
+    .accessibilityRole(.textField)
+    .accessibilityValue(projectName)
+```
+
+Compatibility limit: the metadata is stored by the Win32 backend, but it is not
+yet exposed through Microsoft UI Automation. Real assistive-technology support
+needs that provider layer.
 
 ## Design Rules
 

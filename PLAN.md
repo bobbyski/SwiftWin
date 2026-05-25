@@ -35,7 +35,7 @@ Unsupported and partially supported UI capabilities are tracked in [Unsupported 
 | 7: Styling And Theming | In Progress | 56% | text styles, `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, button styles, background brush, owner-drawn button/toggle/picker paint, disabled and hover colors | Primary/secondary buttons, toggles, and picker options now have custom drawing, disabled colors, inherited text font and foreground styles, solid rounded background panels, rounded rectangular borders, and native hot-tracking hover paint. Needs broader color tokens, richer focus rings, true clipping, theme switching, and modern surfaces. |
 | 8: SwiftUI State And Invalidation | In Progress | 60% | `@State`, `Binding`, event invalidation, dynamic text, provider-backed control refresh, imperative refresh API, planned observable models and reconciliation | `@State`, `Binding`, form control binding overloads, dynamic text refresh, inline validation refresh, progress refresh, provider-backed control refresh, direct `SwiftWinLegacy` control refresh, and batched imperative refresh exist. Full SwiftUI-compatible rerendering remains planned. |
 | 9: Testing And Verification | Blocked / Partial | 10% | unit tests, console snapshots, renderer tests, UI smoke tests | Test sources exist, but local ARM64 Windows Swift/XCTest currently hits a UCRT overlay issue. `swift build` is the reliable verification path. |
-| 10: Documentation And Examples | In Progress | 50% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
+| 10: Documentation And Examples | In Progress | 52% | GitHub README, architecture notes, examples, API docs | README and user docs cover current controls, state, disabled state, early layout modifiers, accessibility metadata hooks, and `.font`. Needs API reference, design docs, and sample apps. Documentation screenshots are deferred to the cleanup milestone. |
 | 11: Phase II Traditional Swift Framework | In Progress | 29% | `SwiftWinLegacy`, imperative windows, controls, events, layout, app lifecycle | Simultaneous development is now the chosen approach. `SwiftWinUI` depends on and wraps `SwiftWinLegacy` for the current Win32 path. |
 | 12: WebView And WebAssembly | Planned | 0% | WebView2 host control, navigation API, JS bridge, WebAssembly support | Windows equivalent should be Microsoft Edge WebView2, not WebKit. Needs Swift/COM interop design. |
 | 13: Protocol-Oriented Architecture | In Progress | 35% | focused protocols, small functions, separable runtime/layout/platform pieces | `SwiftWinUI` controls and `SwiftWinLegacy` core/control/platform files are now split by responsibility. |
@@ -106,7 +106,7 @@ reason about.
 - [x] Add first-pass default command behavior by routing Enter to the first primary button.
 - [x] Add explicit cancel command behavior with `ButtonRole.cancel` / `WinButtonRole.cancel` and Escape routing.
 - [ ] Add richer keyboard shortcuts.
-- [ ] Add accessibility metadata hooks for labels, roles, and values.
+- [x] Add accessibility metadata hooks for labels, roles, and values.
 - [ ] Add real `ScrollView` / `WinScrollView` with clipping and scrollbars.
 - [ ] Add WebView control backed by Microsoft Edge WebView2 with WebAssembly-capable content.
 - [x] Add native dialog-backed color selection for `ColorPicker` / `WinColorPicker`.
@@ -549,7 +549,7 @@ Remaining:
 | Controls | `Text`, `Button`, `TextField`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Divider`, `List` | Partial: form controls exist with callbacks and `Binding` overloads; integer stepping maps to `WinStepper`; first-pass color picking maps to `WinColorPicker`; date-only picking maps to `WinDatePicker`; determinate progress maps to `WinProgressView`; `Divider` maps to `WinSeparator` |
 | Modifiers | `.font`, `.foregroundStyle`, `.background`, `.border`, `.cornerRadius`, `.padding`, `.frame`, `.disabled` | Partial: `.padding`, `.frame(width:height:)`, `.disabled(_:)`, `.font(_:)`, `.foregroundStyle(_:)` for text, `.background(_:)` solid colors, `.border(_:width:)`, `.cornerRadius(_:)` for decorations |
 | Styling | SwiftUI-like semantic styles with Windows rendering | Partial: owner-drawn controls include basic enabled, disabled, pressed, focused, and hover colors; text supports semantic foreground colors; containers support solid rounded background panels and rounded rectangular borders |
-| Accessibility | SwiftUI-like accessibility modifiers | Not started |
+| Accessibility | SwiftUI-like accessibility modifiers | Partial: metadata containers and modifiers exist for labels, roles, values, and hints; Windows UI Automation exposure remains planned |
 | Preview/testing | Console snapshots and examples instead of Xcode previews | Partial alternative |
 
 ### 9: Testing And Verification
@@ -677,7 +677,7 @@ app.run(window)
 
 | Area | Current Support | Gap |
 | --- | --- | --- |
-| Text | Basic static text | No wrapping, selection, rich text, dynamic color reconciliation, or accessibility metadata |
+| Text | Basic static text | No wrapping, selection, rich text, or dynamic color reconciliation; accessibility metadata can now be attached through modifier scopes |
 | Buttons | Owner-drawn primary/secondary buttons with click actions | No hover tracking, disabled state, icons, keyboard default action, or command abstraction |
 | Layout | Basic stack positioning with padding and fixed frame hints | No full measurement, alignment, min/max frames, flexible sizing, resize handling, or scroll layout |
 | State | Partial | `@State`, `Binding`, invalidation hook, and dynamic text refresh exist. No observable models, environment, or general native reconciliation yet |
@@ -686,7 +686,7 @@ app.run(window)
 | Lists | None | No table/list view, diffing, selection, or virtualization |
 | Images | None | No bitmap loading, scaling, or icon rendering |
 | Menus | None | No menu bar, context menus, toolbar commands, or accelerators |
-| Accessibility | None | No labels, roles, focus traversal, or assistive technology metadata |
+| Accessibility | Metadata hooks only | Labels, roles, values, and hints can be attached and stored per control; no UI Automation provider yet |
 | Theming | Partial | No dark mode, high contrast, semantic token system, or user themes; disabled and hover palettes are early and control-specific |
 | Testing | Partial / blocked | Build works; XCTest currently blocked on this local ARM64 Windows snapshot |
 

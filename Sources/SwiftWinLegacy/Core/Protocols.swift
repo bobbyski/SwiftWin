@@ -25,6 +25,16 @@ public protocol WinContainer: WinElement {
     func add(_ element: WinElement)
 }
 
+/// Protocol for containers that attach accessibility metadata to child controls.
+///
+/// This is the framework-level hook. Windows UI Automation wiring will consume
+/// this metadata later; controls can start carrying labels, roles, and values
+/// before that COM-facing backend exists.
+public protocol WinAccessibilityProviding: WinContainer {
+    /// Metadata applied to child controls in this scope.
+    var accessibility: WinAccessibilityMetadata { get set }
+}
+
 /// Protocol for elements that display mutable text.
 ///
 /// Custom controls can conform to this when they want to participate in shared

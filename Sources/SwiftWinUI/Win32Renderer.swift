@@ -127,6 +127,20 @@ public final class Win32Renderer: Renderer {
         add(hover)
     }
 
+    /// Begins collecting children into an accessibility metadata container.
+    public func beginAccessibility(_ metadata: AccessibilityMetadata) {
+        containerPath.append(WinAccessibility(metadata.winAccessibilityMetadata))
+    }
+
+    /// Closes the current accessibility metadata container.
+    public func endAccessibility() {
+        guard let accessibility = containerPath.popLast() else {
+            return
+        }
+
+        add(accessibility)
+    }
+
     /// Begins an inherited text style scope.
     public func beginFont(_ style: TextStyle) {
         fontStack.append(style)
@@ -419,6 +433,48 @@ private extension ButtonRole {
             return .cancel
         case .destructive:
             return .destructive
+        }
+    }
+}
+
+/// Maps declarative accessibility metadata to legacy metadata.
+private extension AccessibilityMetadata {
+    var winAccessibilityMetadata: WinAccessibilityMetadata {
+        WinAccessibilityMetadata(
+            label: label,
+            role: role?.winAccessibilityRole,
+            value: value,
+            hint: hint
+        )
+    }
+}
+
+/// Maps declarative accessibility roles to legacy roles.
+private extension AccessibilityRole {
+    var winAccessibilityRole: WinAccessibilityRole {
+        switch self {
+        case .text:
+            return .text
+        case .button:
+            return .button
+        case .textField:
+            return .textField
+        case .toggle:
+            return .toggle
+        case .picker:
+            return .picker
+        case .slider:
+            return .slider
+        case .stepper:
+            return .stepper
+        case .progress:
+            return .progress
+        case .link:
+            return .link
+        case .colorPicker:
+            return .colorPicker
+        case .datePicker:
+            return .datePicker
         }
     }
 }

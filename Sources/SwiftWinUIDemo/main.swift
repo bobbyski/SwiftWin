@@ -72,6 +72,9 @@ struct DemoContent: View {
         VStack(spacing: 14) {
             TextField("Project name", text: $projectName)
                 .frame(width: 380)
+                .accessibilityLabel("Project name")
+                .accessibilityRole(.textField)
+                .accessibilityValue(projectName)
             Text(projectNameValidationMessage, style: .caption)
                 .foregroundStyle(.destructive)
             TextEditor("Notes", text: $notes)
@@ -116,6 +119,9 @@ struct DemoContent: View {
                     message: formSummary(themeName: themes[themeIndex])
                 )
             }
+            .accessibilityLabel("Create Window")
+            .accessibilityRole(.button)
+            .accessibilityHint("Shows the current form summary.")
             Button("Settings") {
                 Dialog.show(
                     title: "Settings",

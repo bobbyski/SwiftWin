@@ -89,6 +89,14 @@ mechanics should be hidden behind polished defaults whenever practical.
 
 ## GDI Resources
 
+## Accessibility
+
+Apple developers may expect accessibility modifiers to flow straight into the
+native accessibility tree. On Windows, the equivalent assistive-technology path
+is Microsoft UI Automation. SwiftWin now records labels, roles, values, and
+hints in framework metadata, but a UI Automation provider still needs to expose
+that metadata to Narrator and other assistive tools.
+
 Win32 drawing often uses GDI handles:
 
 - `HDC`: drawing context

@@ -10,7 +10,7 @@ Early prototype. The first milestone is implemented: `SwiftWinLegacyDemo` reprod
 
 ## Design Principles
 
-SwiftWinLegacy should stay traditional and explicit while still being protocol-oriented where that creates useful extension points. Public behavior is starting to be represented by small protocols such as `WinApplicationRunning`, `WinContainer`, `WinTextDisplaying`, `WinTitledControl`, `WinActionControl`, `WinButtonDisplaying`, and `WinHoverHandling`.
+SwiftWinLegacy should stay traditional and explicit while still being protocol-oriented where that creates useful extension points. Public behavior is starting to be represented by small protocols such as `WinApplicationRunning`, `WinContainer`, `WinTextDisplaying`, `WinTitledControl`, `WinActionControl`, `WinButtonDisplaying`, `WinAccessibilityProviding`, and `WinHoverHandling`.
 
 Functions should stay as small as reasonably practical. As the Windows backend grows, platform declarations, layout, resource ownership, control creation, drawing, and event routing should be split into focused implementation pieces.
 
@@ -25,7 +25,11 @@ let root = WinStack(axis: .vertical, spacing: 14)
 root.add(WinText("SwiftWinLegacy", style: .title))
 root.add(WinText("A traditional Swift interface wrapping native Windows UI."))
 let projectName = WinTextField("Project name", text: "SwiftWin")
-root.add(projectName)
+let accessibleProjectName = WinAccessibility(
+    WinAccessibilityMetadata(label: "Project name", role: .textField)
+)
+accessibleProjectName.add(projectName)
+root.add(accessibleProjectName)
 
 let buttons = WinStack(axis: .horizontal, spacing: 10)
 buttons.add(WinButton("Create Window", style: .primary) {

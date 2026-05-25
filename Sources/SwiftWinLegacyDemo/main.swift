@@ -21,7 +21,11 @@ let accessCode = WinSecureField("Access code", text: "swift")
 let content = WinStack(axis: .vertical, spacing: 14)
 
 let projectFrame = WinFrame(width: 380, height: nil)
-projectFrame.add(projectName)
+let accessibleProjectName = WinAccessibility(
+    WinAccessibilityMetadata(label: "Project name", role: .textField, value: projectName.value)
+)
+accessibleProjectName.add(projectName)
+projectFrame.add(accessibleProjectName)
 content.add(projectFrame)
 content.add(
     WinDynamicText(
@@ -83,7 +87,10 @@ root.add(content)
 root.add(WinSeparator(axis: .horizontal))
 
 let footer = WinStack(axis: .horizontal, spacing: 10)
-footer.add(WinButton("Create Window", style: .primary) {
+let createWindowAccessibility = WinAccessibility(
+    WinAccessibilityMetadata(label: "Create Window", role: .button, hint: "Shows the current form summary.")
+)
+createWindowAccessibility.add(WinButton("Create Window", style: .primary) {
     // Visible native feedback is important for GUI-launched processes, where
     // `print` output is easy to miss.
     WinDialog.show(
@@ -101,6 +108,7 @@ footer.add(WinButton("Create Window", style: .primary) {
         """
     )
 })
+footer.add(createWindowAccessibility)
 let settingsHover = WinHover { isHovered in
     hoverTarget = isHovered ? "Settings" : "None"
     WinDynamicTextInvalidation.invalidateAll()

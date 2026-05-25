@@ -93,6 +93,10 @@ public protocol Renderer: AnyObject {
     func beginHover(_ onHover: @escaping (Bool) -> Void)
     /// Ends the current hover callback scope.
     func endHover()
+    /// Begins an accessibility metadata scope.
+    func beginAccessibility(_ metadata: AccessibilityMetadata)
+    /// Ends the current accessibility metadata scope.
+    func endAccessibility()
     /// Begins a text font scope.
     func beginFont(_ style: TextStyle)
     /// Ends the current text font scope.
@@ -181,6 +185,12 @@ public extension Renderer {
 
     /// Ends a default hover scope.
     func endHover() {}
+
+    /// Default accessibility scope for renderers without accessibility support.
+    func beginAccessibility(_ metadata: AccessibilityMetadata) {}
+
+    /// Ends a default accessibility scope.
+    func endAccessibility() {}
 
     /// Resolves text style with `.body` as the baseline.
     func resolveTextStyle(_ style: TextStyle?) -> TextStyle {

@@ -83,6 +83,19 @@ public final class ConsoleRenderer: Renderer {
         indent -= 1
     }
 
+    /// Prints an accessibility metadata node.
+    public func beginAccessibility(_ metadata: AccessibilityMetadata) {
+        write(
+            "Accessibility(label: \(optionalDescription(metadata.label)), role: \(optionalAccessibilityRoleDescription(metadata.role)), value: \(optionalDescription(metadata.value)), hint: \(optionalDescription(metadata.hint)))"
+        )
+        indent += 1
+    }
+
+    /// Ends the current accessibility metadata node.
+    public func endAccessibility() {
+        indent -= 1
+    }
+
     /// Prints a font node.
     public func beginFont(_ style: TextStyle) {
         write("Font(size: \(style.size), weight: \(style.weight))")
@@ -281,6 +294,15 @@ public final class ConsoleRenderer: Renderer {
 
     /// Formats optional button roles deterministically.
     private func optionalRoleDescription(_ role: ButtonRole?) -> String {
+        guard let role else {
+            return "nil"
+        }
+
+        return "\(role)"
+    }
+
+    /// Formats optional accessibility roles deterministically.
+    private func optionalAccessibilityRoleDescription(_ role: AccessibilityRole?) -> String {
         guard let role else {
             return "nil"
         }

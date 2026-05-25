@@ -20,6 +20,7 @@ Functions should stay as small as reasonably practical. When an implementation s
 - SwiftUI-oriented declarative API with `App`, `WindowGroup`, `VStack`, `HStack`, `Text`, `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, `ColorPicker`, `DatePicker`, `ProgressView`, `Link`, `Button`, `Spacer`, and `.onHover`
 - Traditional Swift API with `WinApplication`, `WinWindow`, `WinStack`, `WinText`, `WinTextField`, `WinSecureField`, `WinTextEditor`, `WinToggle`, `WinPicker`, `WinSlider`, `WinStepper`, `WinColorPicker`, `WinDatePicker`, `WinProgressView`, `WinLink`, `WinButton`, `WinHover`, `WinSpacer`, and `WinDialog`
 - Early form input with `TextField`, `SecureField`, `TextEditor`, `Toggle`, `Picker`, `Slider`, `Stepper`, dialog-backed `ColorPicker`, date-only `DatePicker`, and determinate `ProgressView`
+- Accessibility metadata hooks for labels, roles, values, and hints, ready for a future Windows UI Automation bridge
 - Protocol-oriented traditional API with extension points for app runners, containers, text displays, titled controls, action controls, and buttons
 - Native Windows backend using Win32 APIs
 - Console renderer for inspecting rendered view trees
@@ -103,6 +104,8 @@ struct DemoApp: App {
                 Text("SwiftWinUI", style: .title)
                 Text("A Swift-first framework for Windows desktop apps.")
                 TextField("Project name", text: "SwiftWin")
+                    .accessibilityLabel("Project name")
+                    .accessibilityRole(.textField)
                 Toggle("Include diagnostics", isOn: true)
                 Picker("Theme", options: ["System", "Light", "Dark"])
                 ColorPicker("Accent color", color: .accent)

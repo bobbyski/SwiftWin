@@ -13,6 +13,7 @@ final class Win32ApplicationRunner {
     private var backgroundStack: [BackgroundLayoutState] = []
     private var borderStack: [BorderLayoutState] = []
     private var hoverStack: [(Bool) -> Void] = []
+    private var accessibilityStack: [WinAccessibilityMetadata] = []
     private var nextControlID: UInt16 = 100
     private var fonts: [WinTextStyle: HFONT] = [:]
 
@@ -104,6 +105,10 @@ final class Win32ApplicationRunner {
             beginHover(hover.onHover)
             hover.children.forEach(render)
             endHover()
+        case let accessibility as WinAccessibility:
+            beginAccessibility(accessibility.accessibility)
+            accessibility.children.forEach(render)
+            endAccessibility()
         case let text as WinText:
             createText(text.value, style: text.style, foregroundStyle: text.foregroundStyle)
         case let text as WinDynamicText:
@@ -298,6 +303,18 @@ final class Win32ApplicationRunner {
     private func endHover() {
         if !hoverStack.isEmpty {
             hoverStack.removeLast()
+        }
+    }
+
+    /// Pushes an accessibility metadata scope.
+    private func beginAccessibility(_ metadata: WinAccessibilityMetadata) {
+        accessibilityStack.append(metadata)
+    }
+
+    /// Pops the current accessibility metadata scope.
+    private func endAccessibility() {
+        if !accessibilityStack.isEmpty {
+            accessibilityStack.removeLast()
         }
     }
 
@@ -1023,6 +1040,9 @@ final class Win32ApplicationRunner {
         if let hoverAction = hoverStack.last {
             Win32ActionRegistry.hoverActions[UInt32(controlID)] = hoverAction
         }
+        if let accessibility = currentAccessibilityMetadata() {
+            Win32ActionRegistry.accessibilityByControlID[UInt32(controlID)] = accessibility
+        }
         if let link {
             Win32ActionRegistry.links[UInt32(controlID)] = link
         }
@@ -1078,6 +1098,17 @@ final class Win32ApplicationRunner {
     /// Returns whether a button should act as the Escape/cancel command.
     private func isCancelCommand(_ button: ButtonRenderState) -> Bool {
         button.role == .cancel || button.title == "Cancel"
+    }
+
+    /// Returns merged accessibility metadata for the current render scope.
+    private func currentAccessibilityMetadata() -> WinAccessibilityMetadata? {
+        guard !accessibilityStack.isEmpty else {
+            return nil
+        }
+
+        return accessibilityStack.reduce(WinAccessibilityMetadata()) { partial, metadata in
+            partial.merging(metadata)
+        }
     }
 
     /// Applies a cached Segoe UI font to a native control.

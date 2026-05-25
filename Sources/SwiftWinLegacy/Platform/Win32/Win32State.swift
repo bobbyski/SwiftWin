@@ -11,6 +11,7 @@ enum Win32ActionRegistry {
     nonisolated(unsafe) static var defaultAction: (() -> Void)?
     nonisolated(unsafe) static var cancelAction: (() -> Void)?
     nonisolated(unsafe) static var hoverActions: [UInt32: (Bool) -> Void] = [:]
+    nonisolated(unsafe) static var accessibilityByControlID: [UInt32: WinAccessibilityMetadata] = [:]
     nonisolated(unsafe) static var buttons: [UInt32: ButtonRenderState] = [:]
     nonisolated(unsafe) static var links: [UInt32: LinkRenderState] = [:]
     nonisolated(unsafe) static var stepperValues: [UInt32: StepperValueRenderState] = [:]
@@ -48,6 +49,7 @@ enum Win32ActionRegistry {
         defaultAction = nil
         cancelAction = nil
         hoverActions.removeAll()
+        accessibilityByControlID.removeAll()
         buttons.removeAll()
         links.removeAll()
         stepperValues.removeAll()

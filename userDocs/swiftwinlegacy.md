@@ -17,6 +17,7 @@ Implemented:
 - `WinTitledControl`
 - `WinActionControl`
 - `WinButtonDisplaying`
+- `WinAccessibilityProviding`
 - `WinStack`
 - `WinText`
 - `WinTextField`
@@ -31,6 +32,9 @@ Implemented:
 - `WinProgressView`
 - `WinButton`
 - `WinButtonRole`
+- `WinAccessibility`
+- `WinAccessibilityMetadata`
+- `WinAccessibilityRole`
 - `WinHover`
 - `WinLink`
 - `WinSpacer`
@@ -128,6 +132,7 @@ The current `Win32Renderer` adapter converts declarative SwiftWinUI render calls
 - `DatePicker` -> `WinDatePicker`
 - `Button` -> `WinButton`
 - `ButtonRole` -> `WinButtonRole`
+- accessibility modifiers -> `WinAccessibility`
 - `.onHover` -> `WinHover`
 - `Link` -> `WinLink`
 - `VStack` / `HStack` -> `WinStack`
@@ -176,6 +181,22 @@ Current refreshable controls are `WinTextField`, `WinSecureField`,
 `WinColorPicker`, and `WinDatePicker`.
 User-driven edits refresh dependent dynamic text automatically through the
 Win32 event path.
+
+## Accessibility Metadata
+
+`WinAccessibility` attaches metadata to compatible child controls:
+
+```swift
+let accessibility = WinAccessibility(
+    WinAccessibilityMetadata(label: "Project name", role: .textField)
+)
+accessibility.add(projectName)
+root.add(accessibility)
+```
+
+Current implementation: metadata is stored per native child control ID for a
+future Windows UI Automation bridge. It is framework plumbing, not complete
+screen-reader integration yet.
 
 ## Observing Hover
 
